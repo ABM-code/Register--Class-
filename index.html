@@ -573,6 +573,7 @@ function exportExcel() {
 function exportPdf() {
   const sorted = sortByStageThenName(students);
   let currentStage = null;
+  let serial = 0;
   const rowsHtml = sorted.map(s => {
     const payments = getPayments(s);
     const latest = payments[0] || {};
@@ -580,9 +581,12 @@ function exportPdf() {
     const stageLabel = s.stage || "بدون مرحلة";
     if (stageLabel !== currentStage) {
       currentStage = stageLabel;
-      sectionHeader = `<tr class="stage-header"><td colspan="7">${escapeHtml(stageLabel)}</td></tr>`;
+      serial = 0;
+      sectionHeader = `<tr class="stage-header"><td colspan="8">${escapeHtml(stageLabel)}</td></tr>`;
     }
+    serial++;
     return sectionHeader + `<tr>
+      <td>${serial}</td>
       <td>${escapeHtml(s.name)}</td>
       <td>${escapeHtml(s.studentPhone)||""}</td>
       <td>${escapeHtml(s.parentPhone)||""}</td>
@@ -601,6 +605,7 @@ function exportPdf() {
       table { width: 100%; border-collapse: collapse; font-size: 12px; }
       th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: right; }
       th { background: #16302B; color: #fff; }
+      th:first-child, td:first-child { text-align: center; width: 32px; }
       tr:nth-child(even) { background: #f7f5ef; }
       tr.stage-header td { background: #D4A93B; color: #1B2420; font-weight: bold; font-size: 13px; padding: 8px; }
     </style></head>
@@ -609,7 +614,7 @@ function exportPdf() {
       <p class="sub">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${students.length}</p>
       <table>
         <thead><tr>
-          <th>الاسم</th><th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
+          <th>م</th><th>الاسم</th><th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
           <th>تاريخ الدخول</th><th>آخر دفعة</th><th>ترم أول (دفع/استلم)</th><th>ترم تاني (دفع/استلم)</th>
         </tr></thead>
         <tbody>${rowsHtml}</tbody>
