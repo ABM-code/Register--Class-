@@ -530,8 +530,21 @@ async function fixAllPhoneNumbers() {
   }
 }
 
+const STAGE_ORDER = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
+function sortByStageThenName(list) {
+  return [...list].sort((a, b) => {
+    const ai = STAGE_ORDER.indexOf(a.stage || "");
+    const bi = STAGE_ORDER.indexOf(b.stage || "");
+    const aRank = ai === -1 ? STAGE_ORDER.length : ai;
+    const bRank = bi === -1 ? STAGE_ORDER.length : bi;
+    if (aRank !== bRank) return aRank - bRank;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
+
 function exportExcel() {
-  const rows = students.map(s => {
+  const sorted = sortByStageThenName(students);
+  const rows = sorted.map(s => {
     const payments = getPayments(s);
     const latest = payments[0] || {};
     return {
@@ -558,12 +571,19 @@ function exportExcel() {
 }
 
 function exportPdf() {
-  const rowsHtml = students.map(s => {
+  const sorted = sortByStageThenName(students);
+  let currentStage = null;
+  const rowsHtml = sorted.map(s => {
     const payments = getPayments(s);
     const latest = payments[0] || {};
-    return `<tr>
+    let sectionHeader = "";
+    const stageLabel = s.stage || "بدون مرحلة";
+    if (stageLabel !== currentStage) {
+      currentStage = stageLabel;
+      sectionHeader = `<tr class="stage-header"><td colspan="7">${escapeHtml(stageLabel)}</td></tr>`;
+    }
+    return sectionHeader + `<tr>
       <td>${escapeHtml(s.name)}</td>
-      <td>${escapeHtml(s.stage)||""}</td>
       <td>${escapeHtml(s.studentPhone)||""}</td>
       <td>${escapeHtml(s.parentPhone)||""}</td>
       <td>${fmtDate(s.entryDate)}</td>
@@ -582,13 +602,14 @@ function exportPdf() {
       th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: right; }
       th { background: #16302B; color: #fff; }
       tr:nth-child(even) { background: #f7f5ef; }
+      tr.stage-header td { background: #D4A93B; color: #1B2420; font-weight: bold; font-size: 13px; padding: 8px; }
     </style></head>
     <body>
       <h1>كشف الطلاب — ${TEACHER_NAME}</h1>
       <p class="sub">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${students.length}</p>
       <table>
         <thead><tr>
-          <th>الاسم</th><th>المرحلة</th><th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
+          <th>الاسم</th><th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
           <th>تاريخ الدخول</th><th>آخر دفعة</th><th>ترم أول (دفع/استلم)</th><th>ترم تاني (دفع/استلم)</th>
         </tr></thead>
         <tbody>${rowsHtml}</tbody>
