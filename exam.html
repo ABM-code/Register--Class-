@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#16302B">
+<title>امتحان</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+  h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
+  p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
+  .card { background: #F5F1E6; border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+  label { display: block; font-size: 0.82rem; color: #6B6B60; margin-bottom: 0.4rem; font-weight: 500; }
+  select, input[type=text] {
+    width: 100%; padding: 0.65rem 0.8rem; border-radius: 9px; border: 1px solid rgba(0,0,0,0.15);
+    background: #FFFDF8; font-size: 0.95rem; color: #1B2420; font-family: inherit;
+  }
+  select:focus, input:focus { outline: none; border-color: #D4A93B; box-shadow: 0 0 0 3px rgba(212,169,59,0.18); }
+  button {
+    font-family: inherit; background: #D4A93B; color: #1B2420; border: none; border-radius: 10px;
+    padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button:active:not(:disabled) { transform: scale(0.98); }
+  .passage { background: #EAEAE4; border-radius: 9px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; font-size: 0.9rem; line-height: 1.6; color: #3a3a34; white-space: pre-wrap; }
+  .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.7rem; }
+  .q-num { color: #6B6B60; font-size: 0.8rem; margin-bottom: 0.2rem; }
+  .option-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.75rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 9px; margin-bottom: 0.5rem; cursor: pointer; background: #FFFDF8; }
+  .option-row input { accent-color: #3F6B4A; width: 17px; height: 17px; flex-shrink: 0; }
+  .option-row.selected { border-color: #D4A93B; background: #FBF3DF; }
+  #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
+  .result-score { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700; color: #3F6B4A; text-align: center; margin: 0.4rem 0; }
+  .result-label { text-align: center; color: #6B6B60; font-size: 0.9rem; }
+  .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="examTitle">جاري التحميل…</h1>
+  <p class="sub" id="examSub"></p>
+  <div id="errorBox"></div>
+  <div id="content"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const TEACHER_NAME = "أ/ عبد الرحمن منير";
+const firebaseConfig = {
+  apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
+  authDomain: "register-class-302e6.firebaseapp.com",
+  projectId: "register-class-302e6",
+  storageBucket: "register-class-302e6.firebasestorage.app",
+  messagingSenderId: "230991294181",
+  appId: "1:230991294181:web:167cb0a370c68b6a6f6e0c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.textContent = msg;
+  box.style.display = "block";
+}
+
+const params = new URLSearchParams(window.location.search);
+const examId = params.get("examId");
+let exam = null;
+let studentsInStage = [];
+let selectedStudent = null;
+
+async function init() {
+  if (!examId) {
+    document.getElementById("examTitle").textContent = "رابط غير صالح";
+    showError("مفيش امتحان محدد في الرابط ده.");
+    return;
+  }
+  try {
+    const doc = await db.collection("exams").doc(examId).get();
+    if (!doc.exists) {
+      document.getElementById("examTitle").textContent = "الامتحان غير موجود";
+      showError("الامتحان ده مش موجود أو اتحذف.");
+      return;
+    }
+    exam = { id: doc.id, ...doc.data() };
+    document.getElementById("examTitle").textContent = exam.title || "امتحان";
+    document.getElementById("examSub").textContent = (exam.stage || "") + " — " + TEACHER_NAME;
+
+    const snap = await db.collection("students").where("stage", "==", exam.stage).get();
+    studentsInStage = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+
+    renderStudentPicker();
+  } catch (err) {
+    showError("تعذر تحميل الامتحان. تأكد من اتصالك بالإنترنت وحاول تاني.");
+  }
+}
+
+function renderStudentPicker() {
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <div class="card">
+      <label>اختر اسمك من القائمة</label>
+      <select id="studentSelect">
+        <option value="">— اختر اسمك —</option>
+        ${studentsInStage.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
+      </select>
+    </div>
+    <button id="startBtn" disabled>ابدأ الامتحان</button>
+  `;
+  const select = document.getElementById("studentSelect");
+  const startBtn = document.getElementById("startBtn");
+  select.addEventListener("change", () => {
+    selectedStudent = studentsInStage.find(s => s.id === select.value) || null;
+    startBtn.disabled = !selectedStudent;
+  });
+  startBtn.addEventListener("click", renderExam);
+}
+
+let answers = {};
+
+function renderExam() {
+  answers = {};
+  const content = document.getElementById("content");
+  const questions = exam.questions || [];
+  content.innerHTML = `
+    <div class="card" style="margin-bottom:0.5rem;">
+      <strong>${escapeHtml(selectedStudent.name)}</strong>
+    </div>
+    ${questions.map((q, i) => renderQuestion(q, i)).join("")}
+    <button id="submitBtn">تسليم الإجابات</button>
+  `;
+
+  questions.forEach((q, i) => {
+    if (q.type === "mcq") {
+      document.querySelectorAll(`.option-row[data-qidx="${i}"]`).forEach(row => {
+        row.addEventListener("click", () => {
+          document.querySelectorAll(`.option-row[data-qidx="${i}"]`).forEach(r => r.classList.remove("selected"));
+          row.classList.add("selected");
+          row.querySelector('input').checked = true;
+          answers[i] = parseInt(row.dataset.optIdx, 10);
+        });
+      });
+    } else if (q.type === "complete") {
+      const input = document.getElementById(`answer_${i}`);
+      input.addEventListener("input", () => { answers[i] = input.value; });
+    }
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", submitExam);
+}
+
+function renderQuestion(q, i) {
+  const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+  let bodyHtml = "";
+  if (q.type === "mcq") {
+    bodyHtml = (q.options || []).map((opt, oi) => `
+      <div class="option-row" data-qidx="${i}" data-opt-idx="${oi}">
+        <input type="radio" name="q${i}">
+        <span>${escapeHtml(opt)}</span>
+      </div>`).join("");
+  } else if (q.type === "complete") {
+    bodyHtml = `<input type="text" id="answer_${i}" placeholder="اكتب إجابتك هنا">`;
+  }
+  return `
+    <div class="card">
+      <div class="q-num">سؤال ${i + 1} من ${(exam.questions||[]).length}</div>
+      ${passageHtml}
+      <div class="q-title">${escapeHtml(q.prompt)}</div>
+      ${bodyHtml}
+    </div>`;
+}
+
+function gradeExam() {
+  const questions = exam.questions || [];
+  let score = 0;
+  let total = 0;
+  const answerDetails = [];
+  questions.forEach((q, i) => {
+    const points = q.points || 1;
+    total += points;
+    let correct = false;
+    const given = answers[i];
+    if (q.type === "mcq") {
+      correct = given === q.correctIndex;
+    } else if (q.type === "complete") {
+      const accepted = (q.correctAnswers || []).map(a => a.trim().toLowerCase());
+      const givenNorm = (given || "").trim().toLowerCase();
+      correct = accepted.includes(givenNorm);
+    }
+    if (correct) score += points;
+    answerDetails.push({ questionIndex: i, given: given ?? null, correct });
+  });
+  return { score, total, answerDetails };
+}
+
+async function submitExam() {
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "جاري التسليم...";
+  const { score, total, answerDetails } = gradeExam();
+  try {
+    await db.collection("examResults").add({
+      examId: exam.id,
+      examTitle: exam.title || "",
+      stage: exam.stage || "",
+      studentId: selectedStudent.id,
+      studentName: selectedStudent.name || "",
+      studentPhone: selectedStudent.studentPhone || "",
+      parentPhone: selectedStudent.parentPhone || "",
+      score,
+      total,
+      answers: answerDetails,
+      submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    renderResult(score, total);
+  } catch (err) {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "تسليم الإجابات";
+    showError("تعذر تسليم الإجابات. تأكد من اتصالك بالإنترنت وحاول تاني.");
+  }
+}
+
+function renderResult(score, total) {
+  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <div class="card">
+      <div class="result-label">نتيجتك</div>
+      <div class="result-score">${score} / ${total}</div>
+      <div class="result-label">(${pct}%)</div>
+    </div>
+    <p style="color:#9FB8AD; text-align:center; font-size:0.85rem;">تم إرسال نتيجتك للمدرّس بنجاح.</p>
+  `;
+}
+
+init();
+</script>
+</body>
+</html>

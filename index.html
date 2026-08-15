@@ -27,6 +27,35 @@
   @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
 
   header { padding: 2.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(245,241,230,0.12); }
+  .tab-nav { display: flex; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
+  .tab-btn {
+    flex: 1; background: rgba(245,241,230,0.06); color: #9FB8AD; border: 1px solid rgba(245,241,230,0.16);
+    border-radius: 10px; padding: 0.6rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  }
+  .tab-btn.active { background: #D4A93B; color: #1B2420; border-color: #D4A93B; }
+  .badge-dot { background: #C15B3C; color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.4rem; min-width: 18px; display: inline-block; }
+  .exam-card { background: #F5F1E6; border-radius: 12px; padding: 1rem; margin-bottom: 0.7rem; }
+  .exam-card-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; }
+  .exam-card-stage { font-size: 0.78rem; color: #6B6B60; margin-bottom: 0.7rem; }
+  .exam-card-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .exam-card-actions button {
+    flex: 1; min-width: 90px; border: none; border-radius: 8px; padding: 0.5rem; font-size: 0.8rem;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .stage-group-title { color: #9FB8AD; font-size: 0.8rem; font-weight: 700; margin: 1rem 0 0.5rem; letter-spacing: 0.05em; }
+  .form-card-exam { background: #F5F1E6; border-radius: 14px; padding: 1.25rem; }
+  .question-card { background: #FFFDF8; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 0.9rem; margin-bottom: 0.8rem; }
+  .question-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+  .question-card-head strong { font-size: 0.85rem; color: #1B2420; }
+  .remove-q-btn { background: none; border: none; color: #C15B3C; cursor: pointer; font-size: 0.8rem; }
+  .option-input-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .option-input-row input[type=radio] { accent-color: #3F6B4A; flex-shrink: 0; }
+  .result-row { background: #F5F1E6; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .result-row-name { font-weight: 600; }
+  .result-row-score { font-family: 'Fraunces', serif; font-weight: 700; color: #3F6B4A; }
+  .result-row-date { font-size: 0.75rem; color: #6B6B60; width: 100%; }
+  .wa-send-btn { background: #25D366; color: #fff; border: none; border-radius: 7px; padding: 0.35rem 0.6rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
   .app-content { display: none; }
   .header-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 1.1rem; }
   .avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid #D4A93B; flex-shrink: 0; }
@@ -53,6 +82,10 @@
   .overdue-card:hover { background: rgba(193,91,60,0.15); }
   .overdue-card.active { background: #C15B3C; border-color: #C15B3C; }
   .overdue-card.active .stat-label, .overdue-card.active .stat-value { color: #ffffff; }
+  .exempt-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+  .exempt-card:hover { background: rgba(91,143,196,0.15); }
+  .exempt-card.active { background: #5B8FC4; border-color: #5B8FC4; }
+  .exempt-card.active .stat-label, .exempt-card.active .stat-value { color: #ffffff; }
   .backup-btn {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
     background: rgba(245,241,230,0.08); color: #9FB8AD; border: 1px solid rgba(245,241,230,0.18);
@@ -164,7 +197,14 @@
   </div>
 </header>
 
-<main class="app-content">
+<div class="app-content tab-nav">
+  <button class="tab-btn active" id="tabStudentsBtn" onclick="switchTab('students')">الطلاب</button>
+  <button class="tab-btn" id="tabExamsBtn" onclick="switchTab('exams')">
+    الامتحانات <span id="examsBadge" class="badge-dot" style="display:none;"></span>
+  </button>
+</div>
+
+<main class="app-content" id="viewStudents">
   <div class="toolbar">
     <div class="search-wrap">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -190,6 +230,13 @@
     <div class="stat-card overdue-card" id="overduePill">
       <div class="stat-label">متأخرين في الدفع</div>
       <div class="stat-value" id="statOverdue">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card exempt-card" id="exemptPill">
+      <div class="stat-label">معفيين من الدفع</div>
+      <div class="stat-value" id="statExempt">0 طالب</div>
     </div>
   </div>
 
@@ -290,6 +337,12 @@
       </div>
     </div>
     <div class="field-group">
+      <div class="checkbox-row" onclick="document.getElementById('fExempt').click()" style="background:#FBF0DE; border-color:#D4A93B;">
+        <input type="checkbox" id="fExempt" onclick="event.stopPropagation()">
+        <label for="fExempt" onclick="event.stopPropagation()">معفى من الدفع</label>
+      </div>
+    </div>
+    <div class="field-group">
       <label>Notes</label>
       <textarea class="reg-textarea" id="fNotes" rows="3" placeholder="Grade, schedule, anything else worth remembering"></textarea>
     </div>
@@ -311,6 +364,44 @@
   <div id="studentList"></div>
 </main>
 
+<main class="app-content" id="viewExams" style="display:none;">
+  <div id="examsListView">
+    <button id="newExamBtn" class="reg-btn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.75rem; font-weight:700; margin-bottom:1rem; cursor:pointer;">+ امتحان جديد</button>
+    <div id="examsByStage"></div>
+  </div>
+
+  <div id="examBuilderView" style="display:none;">
+    <button onclick="closeExamBuilder()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <div class="form-card-exam">
+      <div class="field-group">
+        <label>عنوان الامتحان</label>
+        <input class="reg-input" id="examTitleInput" placeholder="مثلاً: امتحان الوحدة الأولى">
+      </div>
+      <div class="field-group">
+        <label>المرحلة</label>
+        <select class="reg-input" id="examStageInput">
+          <option value="">— اختر المرحلة —</option>
+          <option value="Prep 1">Prep 1</option>
+          <option value="Prep 2">Prep 2</option>
+          <option value="Prep 3">Prep 3</option>
+          <option value="Sec 1">Sec 1</option>
+          <option value="Sec 2">Sec 2</option>
+          <option value="Sec 3">Sec 3</option>
+        </select>
+      </div>
+      <div id="questionsBuilder"></div>
+      <button onclick="addQuestionCard()" style="width:100%; background:#EAEAE4; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer; margin:0.5rem 0 1rem;">+ ضيف سؤال</button>
+      <button onclick="saveExam()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;">حفظ الامتحان</button>
+    </div>
+  </div>
+
+  <div id="examResultsView" style="display:none;">
+    <button onclick="closeExamResults()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;"></h2>
+    <div id="examResultsList"></div>
+  </div>
+</main>
+
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const APP_PASSWORD = "moneer2026"; // غيّر كلمة السر دي لأي حاجة تحبها
@@ -326,10 +417,16 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const studentsCol = db.collection("students");
+const examsCol = db.collection("exams");
+const examResultsCol = db.collection("examResults");
 
 let students = [];
 let editingId = null;
 let expandedId = null;
+let exams = [];
+let examResults = [];
+let currentBuilderQuestions = [];
+let viewingExamId = null;
 
 function startSync() {
   studentsCol.onSnapshot(
@@ -342,6 +439,15 @@ function startSync() {
       showError("تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
     }
   );
+  examsCol.onSnapshot((snapshot) => {
+    exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderExamsList();
+  });
+  examResultsCol.orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
+    examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateExamsBadge();
+    if (viewingExamId) renderExamResultsList();
+  });
 }
 function fmtDate(d) {
   if (!d) return "—";
@@ -358,7 +464,8 @@ function getPayments(s) {
   }
   return [];
 }
-function paymentBadge(payments) {
+function paymentBadge(payments, exempt) {
+  if (exempt) return { label: "معفى من الدفع", tone: "exempt" };
   if (!payments.length) return { label: "No record", tone: "neutral" };
   const latest = payments[0];
   const paid = new Date(latest.date + "T00:00:00");
@@ -373,6 +480,7 @@ const toneStyles = {
   warn: { bg: "#FBF0DE", fg: "#946A26", dot: "#D4A93B" },
   bad: { bg: "#F6E7E2", fg: "#9C4B32", dot: "#C15B3C" },
   neutral: { bg: "#EAEAE4", fg: "#6B6B60", dot: "#A3A398" },
+  exempt: { bg: "#E4EDF6", fg: "#2E5C8A", dot: "#5B8FC4" },
 };
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -553,6 +661,7 @@ function exportExcel() {
       "هاتف الطالب": s.studentPhone || "",
       "هاتف ولي الأمر": s.parentPhone || "",
       "تاريخ الدخول": s.entryDate || "",
+      "معفى من الدفع": s.exempt ? "نعم" : "لا",
       "آخر دفعة - التاريخ": latest.date || "",
       "آخر دفعة - المبلغ": latest.amount || "",
       "إجمالي المدفوع": payments.reduce((sum,p) => sum + (parseFloat(p.amount)||0), 0),
@@ -591,7 +700,7 @@ function exportPdf() {
       <td>${escapeHtml(s.studentPhone)||""}</td>
       <td>${escapeHtml(s.parentPhone)||""}</td>
       <td>${fmtDate(s.entryDate)}</td>
-      <td>${latest.amount ? latest.amount + " جنيه — " : ""}${fmtDate(latest.date)}</td>
+      <td>${s.exempt ? "معفى" : (latest.amount ? latest.amount + " جنيه — " : "") + fmtDate(latest.date)}</td>
       <td>${s.term1Paid?'✓':'✗'} / ${(s.term1Received??s.term1)?'✓':'✗'}</td>
       <td>${s.term2Paid?'✓':'✗'} / ${(s.term2Received??s.term2)?'✓':'✗'}</td>
     </tr>`;
@@ -634,6 +743,7 @@ function openNewForm() {
   ["fName","fStudentPhone","fParentPhone","fEntryDate","fNotes"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("fStage").value = "";
   ["fTerm1Paid","fTerm1Received","fTerm2Paid","fTerm2Received"].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById("fExempt").checked = false;
   document.getElementById("formCard").style.display = "block";
   document.getElementById("fName").focus();
 }
@@ -647,6 +757,7 @@ function openEditForm(s) {
   document.getElementById("fParentPhone").value = s.parentPhone || "";
   document.getElementById("fEntryDate").value = s.entryDate || "";
   document.getElementById("fNotes").value = s.notes || "";
+  document.getElementById("fExempt").checked = !!s.exempt;
   document.getElementById("fTerm1Paid").checked = !!s.term1Paid;
   document.getElementById("fTerm1Received").checked = !!(s.term1Received ?? s.term1);
   document.getElementById("fTerm2Paid").checked = !!s.term2Paid;
@@ -675,6 +786,7 @@ async function handleSubmit(e) {
     term2Paid: document.getElementById("fTerm2Paid").checked,
     term2Received: document.getElementById("fTerm2Received").checked,
     notes: document.getElementById("fNotes").value.trim(),
+    exempt: document.getElementById("fExempt").checked,
   };
   const saveBtn = document.getElementById("saveBtn");
   saveBtn.disabled = true;
@@ -717,12 +829,275 @@ function toggleOverdueFilter() {
   overdueOnly = !overdueOnly;
   render();
 }
+function toggleExemptFilter() {
+  exemptOnly = !exemptOnly;
+  render();
+}
 function toggleStudentCount() {
   showStudentCount = !showStudentCount;
   render();
 }
 
+function switchTab(tab) {
+  const isStudents = tab === "students";
+  document.getElementById("viewStudents").style.display = isStudents ? "block" : "none";
+  document.getElementById("viewExams").style.display = isStudents ? "none" : "block";
+  document.getElementById("tabStudentsBtn").classList.toggle("active", isStudents);
+  document.getElementById("tabExamsBtn").classList.toggle("active", !isStudents);
+  if (!isStudents) {
+    try { localStorage.setItem("examsLastSeen", Date.now().toString()); } catch (e) {}
+    updateExamsBadge();
+  }
+}
+
+function updateExamsBadge() {
+  let lastSeen = 0;
+  try { lastSeen = parseInt(localStorage.getItem("examsLastSeen") || "0", 10); } catch (e) {}
+  const unseen = examResults.filter(r => r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > lastSeen).length;
+  const badge = document.getElementById("examsBadge");
+  if (unseen > 0) {
+    badge.textContent = unseen;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+function renderExamsList() {
+  const container = document.getElementById("examsByStage");
+  if (exams.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:2rem 0; font-size:0.9rem;">لسه مفيش امتحانات. دوس "+ امتحان جديد" عشان تبدأ.</p>`;
+    return;
+  }
+  const grouped = {};
+  exams.forEach(ex => {
+    const key = ex.stage || "بدون مرحلة";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(ex);
+  });
+  const stageKeys = Object.keys(grouped).sort((a,b) => {
+    const ai = STAGE_ORDER.indexOf(a); const bi = STAGE_ORDER.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  container.innerHTML = stageKeys.map(stage => `
+    <div class="stage-group-title">${escapeHtml(stage)}</div>
+    ${grouped[stage].map(ex => {
+      const resultCount = examResults.filter(r => r.examId === ex.id).length;
+      const link = window.location.origin + window.location.pathname.replace(/index\\.html$/, "") + "exam.html?examId=" + ex.id;
+      return `
+      <div class="exam-card">
+        <div class="exam-card-title">${escapeHtml(ex.title)}</div>
+        <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${resultCount} إجابة مسجلة</div>
+        <div class="exam-card-actions">
+          <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
+          <button style="background:#EAEAE4; color:#1B2420;" onclick="viewExamResults('${ex.id}')">النتائج</button>
+          <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
+        </div>
+      </div>`;
+    }).join("")}
+  `).join("");
+}
+
+function copyExamLink(examId) {
+  const link = window.location.origin + window.location.pathname.replace(/index\.html$/, "") + "exam.html?examId=" + examId;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      showSuccess("تم نسخ رابط الامتحان. الصقه في جروب الواتساب.");
+    }).catch(() => {
+      prompt("انسخ الرابط ده يدويًا:", link);
+    });
+  } else {
+    prompt("انسخ الرابط ده يدويًا:", link);
+  }
+}
+
+async function deleteExam(examId) {
+  if (!confirm("متأكد إنك عايز تمسح الامتحان ده؟ النتائج المسجلة هتفضل موجودة.")) return;
+  try {
+    await examsCol.doc(examId).delete();
+    showSuccess("تم حذف الامتحان.");
+  } catch (err) {
+    showError("تعذر حذف الامتحان. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function openExamBuilder() {
+  currentBuilderQuestions = [];
+  document.getElementById("examTitleInput").value = "";
+  document.getElementById("examStageInput").value = "";
+  document.getElementById("questionsBuilder").innerHTML = "";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "block";
+  document.getElementById("examResultsView").style.display = "none";
+  addQuestionCard();
+}
+
+function closeExamBuilder() {
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examBuilderView").style.display = "none";
+}
+
+function addQuestionCard() {
+  const qId = "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+  currentBuilderQuestions.push({ id: qId, type: "mcq", passage: "", prompt: "", options: ["","","",""], correctIndex: 0, correctAnswers: [""] });
+  renderQuestionsBuilder();
+}
+
+function removeQuestionCard(qId) {
+  currentBuilderQuestions = currentBuilderQuestions.filter(q => q.id !== qId);
+  renderQuestionsBuilder();
+}
+
+function renderQuestionsBuilder() {
+  const container = document.getElementById("questionsBuilder");
+  container.innerHTML = currentBuilderQuestions.map((q, i) => `
+    <div class="question-card">
+      <div class="question-card-head">
+        <strong>سؤال ${i+1}</strong>
+        <button class="remove-q-btn" onclick="removeQuestionCard('${q.id}')">حذف السؤال</button>
+      </div>
+      <div class="field-group">
+        <label>نوع السؤال</label>
+        <select class="reg-input" onchange="updateQuestionType('${q.id}', this.value)">
+          <option value="mcq" ${q.type==='mcq'?'selected':''}>اختيار من متعدد</option>
+          <option value="complete" ${q.type==='complete'?'selected':''}>إكمال الفراغ</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>نص/حوار (اختياري)</label>
+        <textarea class="reg-textarea" rows="2" placeholder="قطعة أو حوار يقرأه الطالب قبل السؤال (اختياري)" oninput="updateQuestionField('${q.id}','passage',this.value)">${escapeHtml(q.passage)}</textarea>
+      </div>
+      <div class="field-group">
+        <label>نص السؤال</label>
+        <input class="reg-input" placeholder="اكتب السؤال هنا" value="${escapeHtml(q.prompt)}" oninput="updateQuestionField('${q.id}','prompt',this.value)">
+      </div>
+      ${q.type === 'mcq' ? renderMcqOptions(q) : renderCompleteAnswers(q)}
+    </div>
+  `).join("");
+}
+
+function renderMcqOptions(q) {
+  return `
+    <label>الاختيارات (حدد الصح)</label>
+    ${q.options.map((opt, oi) => `
+      <div class="option-input-row">
+        <input type="radio" name="correct_${q.id}" ${q.correctIndex===oi?'checked':''} onchange="updateQuestionField('${q.id}','correctIndex',${oi})">
+        <input class="reg-input" placeholder="اختيار ${oi+1}" value="${escapeHtml(opt)}" oninput="updateOptionText('${q.id}',${oi},this.value)">
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderCompleteAnswers(q) {
+  return `
+    <div class="field-group">
+      <label>الإجابات المقبولة (افصل بينهم بفاصلة لو أكتر من صيغة صح)</label>
+      <input class="reg-input" placeholder="مثال: went, has gone" value="${escapeHtml((q.correctAnswers||[]).join(', '))}" oninput="updateCompleteAnswers('${q.id}',this.value)">
+    </div>
+  `;
+}
+
+function updateQuestionType(qId, type) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.type = type;
+  renderQuestionsBuilder();
+}
+function updateQuestionField(qId, field, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q[field] = value;
+}
+function updateOptionText(qId, idx, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.options[idx] = value;
+}
+function updateCompleteAnswers(qId, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.correctAnswers = value.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+async function saveExam() {
+  const title = document.getElementById("examTitleInput").value.trim();
+  const stage = document.getElementById("examStageInput").value;
+  if (!title) { showError("لازم تكتب عنوان للامتحان."); return; }
+  if (!stage) { showError("لازم تختار المرحلة."); return; }
+  if (currentBuilderQuestions.length === 0) { showError("لازم تضيف سؤال واحد على الأقل."); return; }
+  for (const q of currentBuilderQuestions) {
+    if (!q.prompt.trim()) { showError("فيه سؤال من غير نص، اكتب كل الأسئلة."); return; }
+    if (q.type === "mcq" && q.options.filter(o => o.trim()).length < 2) {
+      showError("كل سؤال اختيار من متعدد لازم يكون فيه اختيارين على الأقل."); return;
+    }
+    if (q.type === "complete" && (!q.correctAnswers || q.correctAnswers.length === 0)) {
+      showError("فيه سؤال إكمال من غير إجابة مقبولة."); return;
+    }
+  }
+  try {
+    await examsCol.add({
+      title, stage,
+      questions: currentBuilderQuestions.map(q => ({
+        type: q.type, passage: q.passage || "", prompt: q.prompt,
+        options: q.type === "mcq" ? q.options : [],
+        correctIndex: q.type === "mcq" ? q.correctIndex : null,
+        correctAnswers: q.type === "complete" ? q.correctAnswers : [],
+        points: 1,
+      })),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showSuccess("تم حفظ الامتحان بنجاح.");
+    closeExamBuilder();
+  } catch (err) {
+    showError("تعذر حفظ الامتحان. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function viewExamResults(examId) {
+  viewingExamId = examId;
+  const ex = exams.find(e => e.id === examId);
+  document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "none";
+  document.getElementById("examResultsView").style.display = "block";
+  renderExamResultsList();
+}
+function closeExamResults() {
+  viewingExamId = null;
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examResultsView").style.display = "none";
+}
+function renderExamResultsList() {
+  const list = examResults.filter(r => r.examId === viewingExamId);
+  const container = document.getElementById("examResultsList");
+  if (list.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">لسه محدش سلّم الامتحان ده.</p>`;
+    return;
+  }
+  container.innerHTML = list.map(r => {
+    const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+    const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString('ar-EG') : "";
+    return `
+      <div class="result-row">
+        <div>
+          <div class="result-row-name">${escapeHtml(r.studentName)}</div>
+          <div class="result-row-date">${dateStr}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+          ${r.parentPhone ? `<button class="wa-send-btn" onclick='sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function sendExamResultWhatsapp(r) {
+  const waNumber = formatPhoneForWhatsapp(r.parentPhone);
+  if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
+
 let overdueOnly = false;
+let exemptOnly = false;
 let showStudentCount = false;
 
 function render() {
@@ -734,7 +1109,10 @@ function render() {
     (s.stage||"").toLowerCase().includes(query)
   );
   if (overdueOnly) {
-    filtered = filtered.filter(s => paymentBadge(getPayments(s)).tone === "bad");
+    filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
+  }
+  if (exemptOnly) {
+    filtered = filtered.filter(s => s.exempt);
   }
 
   document.getElementById("studentCount").textContent = showStudentCount
@@ -753,7 +1131,7 @@ function render() {
 
   const now = new Date();
   const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
-  let monthTotal = 0, grandTotal = 0, overdueCount = 0;
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0;
   students.forEach(s => {
     const payments = getPayments(s);
     payments.forEach(p => {
@@ -761,13 +1139,17 @@ function render() {
       grandTotal += amt;
       if ((p.date||"").startsWith(curYM)) monthTotal += amt;
     });
-    if (paymentBadge(payments).tone === "bad") overdueCount++;
+    if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
+    if (s.exempt) exemptCount++;
   });
   document.getElementById("statMonth").textContent = monthTotal.toLocaleString() + " جنيه";
   document.getElementById("statTotal").textContent = grandTotal.toLocaleString() + " جنيه";
   document.getElementById("statOverdue").textContent = overdueCount + " طالب";
   const overdueCard = document.getElementById("overduePill");
   overdueCard.classList.toggle("active", overdueOnly);
+  document.getElementById("statExempt").textContent = exemptCount + " طالب";
+  const exemptCard = document.getElementById("exemptPill");
+  exemptCard.classList.toggle("active", exemptOnly);
 
   const listEl = document.getElementById("studentList");
   const emptyEl = document.getElementById("emptyState");
@@ -776,7 +1158,7 @@ function render() {
     listEl.innerHTML = "";
     document.getElementById("emptyMsg").textContent = students.length === 0
       ? "No students yet. Add your first one above."
-      : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا." : "No matches for that search.");
+      : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا." : (exemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا." : "No matches for that search."));
     emptyEl.style.display = "block";
     return;
   }
@@ -784,7 +1166,7 @@ function render() {
 
   listEl.innerHTML = filtered.map(s => {
     const payments = getPayments(s);
-    const badge = paymentBadge(payments);
+    const badge = paymentBadge(payments, s.exempt);
     const tone = toneStyles[badge.tone];
     const isOpen = expandedId === s.id;
     const paymentsHtml = payments.length
@@ -847,7 +1229,9 @@ function render() {
 }
 
 document.getElementById("addBtn").addEventListener("click", openNewForm);
+document.getElementById("newExamBtn").addEventListener("click", openExamBuilder);
 document.getElementById("overduePill").addEventListener("click", toggleOverdueFilter);
+document.getElementById("exemptPill").addEventListener("click", toggleExemptFilter);
 document.getElementById("exportExcelBtn").addEventListener("click", exportExcel);
 document.getElementById("exportPdfBtn").addEventListener("click", exportPdf);
 document.getElementById("fixPhonesBtn").addEventListener("click", fixAllPhoneNumbers);
