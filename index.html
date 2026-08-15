@@ -45,6 +45,7 @@
   }
   .stage-group-title { color: #9FB8AD; font-size: 0.8rem; font-weight: 700; margin: 1rem 0 0.5rem; letter-spacing: 0.05em; }
   .form-card-exam { background: #F5F1E6; border-radius: 14px; padding: 1.25rem; }
+  .ai-import-box { background: #FBF3DF; border: 1px dashed #D4A93B; border-radius: 10px; padding: 0.9rem; margin-bottom: 1rem; }
   .question-card { background: #FFFDF8; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 0.9rem; margin-bottom: 0.8rem; }
   .question-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
   .question-card-head strong { font-size: 0.85rem; color: #1B2420; }
@@ -388,6 +389,16 @@
           <option value="Sec 2">Sec 2</option>
           <option value="Sec 3">Sec 3</option>
         </select>
+      </div>
+      <div class="ai-import-box" id="aiImportBox">
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/></svg>
+          <strong style="font-size:0.9rem;">استيراد أسئلة من صورة (AI)</strong>
+        </div>
+        <p style="font-size:0.78rem; color:#6B6B60; margin:0 0 0.6rem;">صوّر ورقة الأسئلة وارفعها، وهيحاول الذكاء الاصطناعي يحولها لأسئلة جاهزة تراجعها قبل الحفظ.</p>
+        <input type="file" id="aiImageInput" accept="image/*" style="display:none;">
+        <button id="aiImportBtn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:700; cursor:pointer;">ارفع صورة الأسئلة</button>
+        <div id="aiImportStatus" style="font-size:0.82rem; margin-top:0.5rem; display:none;"></div>
       </div>
       <div id="questionsBuilder"></div>
       <button onclick="addQuestionCard()" style="width:100%; background:#EAEAE4; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer; margin:0.5rem 0 1rem;">+ ضيف سؤال</button>
@@ -926,6 +937,7 @@ function openExamBuilder() {
   document.getElementById("examTitleInput").value = "";
   document.getElementById("examStageInput").value = "";
   document.getElementById("questionsBuilder").innerHTML = "";
+  document.getElementById("aiImportStatus").style.display = "none";
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "block";
   document.getElementById("examResultsView").style.display = "none";
@@ -935,6 +947,67 @@ function openExamBuilder() {
 function closeExamBuilder() {
   document.getElementById("examsListView").style.display = "block";
   document.getElementById("examBuilderView").style.display = "none";
+}
+
+const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.split(",")[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleAiImage(file) {
+  const statusEl = document.getElementById("aiImportStatus");
+  const btn = document.getElementById("aiImportBtn");
+  statusEl.style.display = "block";
+  statusEl.style.color = "#6B6B60";
+  statusEl.textContent = "جاري تحليل الصورة، ممكن ياخد نص دقيقة...";
+  btn.disabled = true;
+
+  try {
+    const base64 = await fileToBase64(file);
+    const res = await fetch(AI_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageBase64: base64, mimeType: file.type || "image/jpeg" }),
+    });
+    if (!res.ok) throw new Error("worker error " + res.status);
+    const data = await res.json();
+    const aiQuestions = data.questions || [];
+    if (aiQuestions.length === 0) {
+      statusEl.style.color = "#9C4B32";
+      statusEl.textContent = "معرفش أطلع أي أسئلة من الصورة دي. جرب صورة أوضح.";
+      return;
+    }
+    aiQuestions.forEach(q => {
+      const qId = "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+      currentBuilderQuestions.push({
+        id: qId,
+        type: q.type === "complete" ? "complete" : "mcq",
+        passage: q.passage || "",
+        prompt: q.prompt || "",
+        options: (q.options && q.options.length >= 2) ? q.options : ["","","",""],
+        correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : 0,
+        correctAnswers: (q.correctAnswers && q.correctAnswers.length) ? q.correctAnswers : [""],
+      });
+    });
+    renderQuestionsBuilder();
+    statusEl.style.color = "#3F6B4A";
+    statusEl.textContent = `تمت إضافة ${aiQuestions.length} سؤال. راجعهم كويس قبل الحفظ (الذكاء الاصطناعي ممكن يغلط).`;
+  } catch (err) {
+    statusEl.style.color = "#9C4B32";
+    statusEl.textContent = "تعذر تحليل الصورة. تأكد من اتصالك بالإنترنت وحاول تاني.";
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 function addQuestionCard() {
@@ -1230,6 +1303,13 @@ function render() {
 
 document.getElementById("addBtn").addEventListener("click", openNewForm);
 document.getElementById("newExamBtn").addEventListener("click", openExamBuilder);
+document.getElementById("aiImportBtn").addEventListener("click", () => document.getElementById("aiImageInput").click());
+document.getElementById("aiImageInput").addEventListener("change", (e) => {
+  if (e.target.files && e.target.files[0]) {
+    handleAiImage(e.target.files[0]);
+    e.target.value = "";
+  }
+});
 document.getElementById("overduePill").addEventListener("click", toggleOverdueFilter);
 document.getElementById("exemptPill").addEventListener("click", toggleExemptFilter);
 document.getElementById("exportExcelBtn").addEventListener("click", exportExcel);
