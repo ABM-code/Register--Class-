@@ -27,7 +27,7 @@
   @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
 
   header { padding: 2.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(245,241,230,0.12); }
-  .tab-nav { display: flex; flex-direction: row-reverse; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
+  .tab-nav { display: flex; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
   .tab-btn {
     flex: 1; background: rgba(245,241,230,0.06); color: #9FB8AD; border: 1px solid rgba(245,241,230,0.16);
     border-radius: 10px; padding: 0.6rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: inherit;
@@ -951,32 +951,15 @@ function closeExamBuilder() {
 
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 
-function resizeImageToBase64(file, maxDim) {
+function fileToBase64(file) {
   return new Promise((resolve, reject) => {
-    const img = new Image();
     const reader = new FileReader();
-    reader.onload = () => { img.src = reader.result; };
-    reader.onerror = reject;
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) {
-          height = Math.round(height * (maxDim / width));
-          width = maxDim;
-        } else {
-          width = Math.round(width * (maxDim / height));
-          height = maxDim;
-        }
-      }
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      resolve(dataUrl.split(",")[1]);
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.split(",")[1];
+      resolve(base64);
     };
-    img.onerror = reject;
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
@@ -990,27 +973,13 @@ async function handleAiImage(file) {
   btn.disabled = true;
 
   try {
-    const base64 = await resizeImageToBase64(file, 1600);
-    let res;
-    try {
-      res = await fetch(AI_WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, mimeType: "image/jpeg" }),
-      });
-    } catch (networkErr) {
-      throw new Error("تعذر الوصول للخادم (الرابط أو الاتصال بالنت). التفاصيل: " + networkErr.message);
-    }
-    if (!res.ok) {
-      let details = "";
-      try {
-        const errBody = await res.json();
-        details = errBody.error ? (errBody.error + (errBody.details ? " — " + errBody.details : "")) : JSON.stringify(errBody);
-      } catch (e) {
-        details = await res.text().catch(() => "");
-      }
-      throw new Error(`الخادم رجّع خطأ (${res.status}). ${details}`);
-    }
+    const base64 = await fileToBase64(file);
+    const res = await fetch(AI_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageBase64: base64, mimeType: file.type || "image/jpeg" }),
+    });
+    if (!res.ok) throw new Error("worker error " + res.status);
     const data = await res.json();
     const aiQuestions = data.questions || [];
     if (aiQuestions.length === 0) {
@@ -1035,7 +1004,7 @@ async function handleAiImage(file) {
     statusEl.textContent = `تمت إضافة ${aiQuestions.length} سؤال. راجعهم كويس قبل الحفظ (الذكاء الاصطناعي ممكن يغلط).`;
   } catch (err) {
     statusEl.style.color = "#9C4B32";
-    statusEl.textContent = "تعذر تحليل الصورة: " + (err.message || err);
+    statusEl.textContent = "تعذر تحليل الصورة. تأكد من اتصالك بالإنترنت وحاول تاني.";
   } finally {
     btn.disabled = false;
   }
@@ -1372,9 +1341,7 @@ document.getElementById("searchInput").addEventListener("input", render);
 
 function showApp() {
   document.getElementById("lockScreen").style.display = "none";
-  document.querySelectorAll(".app-content").forEach(el => {
-    el.style.display = el.classList.contains("tab-nav") ? "flex" : "block";
-  });
+  document.querySelectorAll(".app-content").forEach(el => el.style.display = "block");
   startSync();
 }
 function tryUnlock() {
