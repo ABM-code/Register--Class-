@@ -904,6 +904,9 @@ function renderExamsList() {
     <div class="stage-group-title">${escapeHtml(stage)}</div>
     ${grouped[stage].map(ex => {
       const resultCount = examResults.filter(r => r.examId === ex.id).length;
+      const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
+      const submittedIdsForCard = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId));
+      const missingCount = students.filter(s => s.stage === ex.stage && !submittedIdsForCard.has(s.id)).length;
       const link = window.location.origin + window.location.pathname.replace(/index\\.html$/, "") + "exam.html?examId=" + ex.id;
       return `
       <div class="exam-card">
@@ -913,7 +916,7 @@ function renderExamsList() {
           <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="viewExamResults('${ex.id}')">النتائج</button>
-          <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش</button>
+          <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش (${missingCount}/${stageStudentCount})</button>
           <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamPdf('${ex.id}')">طباعة PDF</button>
           <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
