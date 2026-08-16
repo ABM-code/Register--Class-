@@ -951,15 +951,32 @@ function closeExamBuilder() {
 
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 
-function fileToBase64(file) {
+function resizeImageToBase64(file, maxDim) {
   return new Promise((resolve, reject) => {
+    const img = new Image();
     const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result;
-      const base64 = result.split(",")[1];
-      resolve(base64);
-    };
+    reader.onload = () => { img.src = reader.result; };
     reader.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        } else {
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      resolve(dataUrl.split(",")[1]);
+    };
+    img.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
@@ -973,13 +990,27 @@ async function handleAiImage(file) {
   btn.disabled = true;
 
   try {
-    const base64 = await fileToBase64(file);
-    const res = await fetch(AI_WORKER_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ imageBase64: base64, mimeType: file.type || "image/jpeg" }),
-    });
-    if (!res.ok) throw new Error("worker error " + res.status);
+    const base64 = await resizeImageToBase64(file, 1600);
+    let res;
+    try {
+      res = await fetch(AI_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: "image/jpeg" }),
+      });
+    } catch (networkErr) {
+      throw new Error("تعذر الوصول للخادم (الرابط أو الاتصال بالنت). التفاصيل: " + networkErr.message);
+    }
+    if (!res.ok) {
+      let details = "";
+      try {
+        const errBody = await res.json();
+        details = errBody.error ? (errBody.error + (errBody.details ? " — " + errBody.details : "")) : JSON.stringify(errBody);
+      } catch (e) {
+        details = await res.text().catch(() => "");
+      }
+      throw new Error(`الخادم رجّع خطأ (${res.status}). ${details}`);
+    }
     const data = await res.json();
     const aiQuestions = data.questions || [];
     if (aiQuestions.length === 0) {
@@ -1004,7 +1035,7 @@ async function handleAiImage(file) {
     statusEl.textContent = `تمت إضافة ${aiQuestions.length} سؤال. راجعهم كويس قبل الحفظ (الذكاء الاصطناعي ممكن يغلط).`;
   } catch (err) {
     statusEl.style.color = "#9C4B32";
-    statusEl.textContent = "تعذر تحليل الصورة. تأكد من اتصالك بالإنترنت وحاول تاني.";
+    statusEl.textContent = "تعذر تحليل الصورة: " + (err.message || err);
   } finally {
     btn.disabled = false;
   }
