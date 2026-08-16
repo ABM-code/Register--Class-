@@ -121,14 +121,48 @@ function renderStudentPicker() {
         ${studentsInStage.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
       </select>
     </div>
+    <div id="alreadySubmittedMsg"></div>
     <button id="startBtn" disabled>ابدأ الامتحان</button>
   `;
   const select = document.getElementById("studentSelect");
   const startBtn = document.getElementById("startBtn");
-  select.addEventListener("change", () => {
+  const msgBox = document.getElementById("alreadySubmittedMsg");
+
+  select.addEventListener("change", async () => {
     selectedStudent = studentsInStage.find(s => s.id === select.value) || null;
-    startBtn.disabled = !selectedStudent;
+    msgBox.innerHTML = "";
+    startBtn.disabled = true;
+    startBtn.textContent = "ابدأ الامتحان";
+    if (!selectedStudent) return;
+
+    startBtn.disabled = true;
+    startBtn.textContent = "جاري التحقق...";
+    try {
+      const snap = await db.collection("examResults")
+        .where("examId", "==", exam.id)
+        .where("studentId", "==", selectedStudent.id)
+        .limit(1)
+        .get();
+      if (!snap.empty) {
+        const prev = snap.docs[0].data();
+        const pct = prev.total > 0 ? Math.round((prev.score / prev.total) * 100) : 0;
+        msgBox.innerHTML = `<div class="card" style="border-right:4px solid #C15B3C;">
+          <strong>لقد قدّمت هذا الامتحان من قبل</strong>
+          <p style="margin:0.4rem 0 0; color:#6B6B60; font-size:0.88rem;">نتيجتك السابقة: ${prev.score} / ${prev.total} (${pct}%)</p>
+        </div>`;
+        startBtn.disabled = true;
+        startBtn.textContent = "لا يمكنك إعادة الامتحان";
+      } else {
+        startBtn.disabled = false;
+        startBtn.textContent = "ابدأ الامتحان";
+      }
+    } catch (err) {
+      showError("تعذر التحقق من محاولاتك السابقة. تأكد من اتصالك بالإنترنت.");
+      startBtn.disabled = true;
+      startBtn.textContent = "ابدأ الامتحان";
+    }
   });
+
   startBtn.addEventListener("click", renderExam);
 }
 
