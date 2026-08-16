@@ -467,7 +467,9 @@ function startSync() {
   examResultsCol.orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
     examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     updateExamsBadge();
+    renderExamsList();
     if (viewingExamId) renderExamResultsList();
+    if (viewingMissingExamId) renderMissingStudentsList();
   });
 }
 function fmtDate(d) {
