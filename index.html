@@ -373,6 +373,7 @@
 
   <div id="examBuilderView" style="display:none;">
     <button onclick="closeExamBuilder()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examBuilderTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;">امتحان جديد</h2>
     <div class="form-card-exam">
       <div class="field-group">
         <label>عنوان الامتحان</label>
@@ -402,7 +403,7 @@
       </div>
       <div id="questionsBuilder"></div>
       <button onclick="addQuestionCard()" style="width:100%; background:#EAEAE4; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer; margin:0.5rem 0 1rem;">+ ضيف سؤال</button>
-      <button onclick="saveExam()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;">حفظ الامتحان</button>
+      <button onclick="saveExam()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveExamBtnLabel">حفظ الامتحان</span></button>
     </div>
   </div>
 
@@ -411,11 +412,19 @@
     <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;"></h2>
     <div id="examResultsList"></div>
   </div>
+
+  <div id="examMissingView" style="display:none;">
+    <button onclick="closeExamMissing()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examMissingTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.3rem;"></h2>
+    <p style="color:#9FB8AD; font-size:0.85rem; margin:0 0 0.9rem;">الطلاب اللي لسه ما دخلوش الامتحان ده</p>
+    <div id="examMissingList"></div>
+  </div>
 </main>
 
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const APP_PASSWORD = "moneer2026"; // غيّر كلمة السر دي لأي حاجة تحبها
+const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
@@ -438,6 +447,7 @@ let exams = [];
 let examResults = [];
 let currentBuilderQuestions = [];
 let viewingExamId = null;
+let editingExamId = null;
 
 function startSync() {
   studentsCol.onSnapshot(
@@ -901,7 +911,10 @@ function renderExamsList() {
         <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${resultCount} إجابة مسجلة</div>
         <div class="exam-card-actions">
           <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
+          <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="viewExamResults('${ex.id}')">النتائج</button>
+          <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش</button>
+          <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamPdf('${ex.id}')">طباعة PDF</button>
           <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
       </div>`;
@@ -932,8 +945,71 @@ async function deleteExam(examId) {
   }
 }
 
+function printExamPdf(examId) {
+  const ex = exams.find(e => e.id === examId);
+  if (!ex) return;
+  const questions = ex.questions || [];
+  const questionsHtml = questions.map((q, i) => {
+    const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+    let bodyHtml = "";
+    if (q.type === "mcq") {
+      bodyHtml = `<ol type="a" class="options-list">${(q.options||[]).map(opt => `<li>${escapeHtml(opt)}</li>`).join("")}</ol>`;
+    } else {
+      bodyHtml = `<div class="answer-line">.......................................................</div>`;
+    }
+    return `<div class="q-block"><div class="q-prompt">${i+1}. ${escapeHtml(q.prompt)}</div>${passageHtml}${bodyHtml}</div>`;
+  }).join("");
+
+  const answerKeyHtml = questions.map((q, i) => {
+    let ans = "";
+    if (q.type === "mcq") {
+      const opts = q.options || [];
+      const letter = String.fromCharCode(97 + (q.correctIndex || 0));
+      ans = `${letter}) ${escapeHtml(opts[q.correctIndex] || "")}`;
+    } else {
+      ans = escapeHtml((q.correctAnswers && q.correctAnswers[0]) || "");
+    }
+    return `<div class="answer-key-row"><strong>${i+1}.</strong> ${ans}</div>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>${escapeHtml(ex.title)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; direction: rtl; color: #1B2420; }
+      h1 { font-size: 19px; margin-bottom: 2px; }
+      p.sub { color: #555; margin-top: 0; margin-bottom: 20px; font-size: 13px; }
+      .q-block { margin-bottom: 16px; page-break-inside: avoid; }
+      .q-prompt { font-weight: bold; font-size: 14px; margin-bottom: 6px; }
+      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; white-space: pre-wrap; }
+      .options-list { margin: 0; padding-right: 20px; font-size: 13px; }
+      .options-list li { margin-bottom: 4px; }
+      .answer-line { font-size: 13px; margin-top: 4px; }
+      .answer-key { margin-top: 30px; border-top: 2px dashed #999; padding-top: 16px; }
+      .answer-key h2 { font-size: 15px; }
+      .answer-key-row { font-size: 13px; margin-bottom: 4px; }
+      @media print { .answer-key { page-break-before: always; } }
+    </style></head>
+    <body>
+      <h1>${escapeHtml(ex.title)}</h1>
+      <p class="sub">${escapeHtml(ex.stage || "")} — ${TEACHER_NAME} — الاسم: .................................</p>
+      ${questionsHtml}
+      <div class="answer-key">
+        <h2>نموذج الإجابة (للمدرّس)</h2>
+        ${answerKeyHtml}
+      </div>
+    </body></html>`;
+  const win = window.open("", "_blank");
+  if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => win.print();
+}
+
 function openExamBuilder() {
+  editingExamId = null;
   currentBuilderQuestions = [];
+  document.getElementById("examBuilderTitle").textContent = "امتحان جديد";
+  document.getElementById("saveExamBtnLabel").textContent = "حفظ الامتحان";
   document.getElementById("examTitleInput").value = "";
   document.getElementById("examStageInput").value = "";
   document.getElementById("questionsBuilder").innerHTML = "";
@@ -941,15 +1017,40 @@ function openExamBuilder() {
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "block";
   document.getElementById("examResultsView").style.display = "none";
+  document.getElementById("examMissingView").style.display = "none";
   addQuestionCard();
 }
 
+function editExam(examId) {
+  const ex = exams.find(e => e.id === examId);
+  if (!ex) return;
+  editingExamId = examId;
+  currentBuilderQuestions = (ex.questions || []).map(q => ({
+    id: "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6),
+    type: q.type,
+    passage: q.passage || "",
+    prompt: q.prompt || "",
+    options: q.type === "mcq" ? (q.options && q.options.length ? [...q.options] : ["","","",""]) : ["","","",""],
+    correctIndex: q.correctIndex || 0,
+    correctAnswers: q.type === "complete" ? (q.correctAnswers && q.correctAnswers.length ? [...q.correctAnswers] : [""]) : [""],
+  }));
+  document.getElementById("examBuilderTitle").textContent = "تعديل الامتحان";
+  document.getElementById("saveExamBtnLabel").textContent = "حفظ التعديلات";
+  document.getElementById("examTitleInput").value = ex.title || "";
+  document.getElementById("examStageInput").value = ex.stage || "";
+  document.getElementById("aiImportStatus").style.display = "none";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "block";
+  document.getElementById("examResultsView").style.display = "none";
+  document.getElementById("examMissingView").style.display = "none";
+  renderQuestionsBuilder();
+}
+
 function closeExamBuilder() {
+  editingExamId = null;
   document.getElementById("examsListView").style.display = "block";
   document.getElementById("examBuilderView").style.display = "none";
 }
-
-const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 
 function resizeImageToBase64(file, maxDim) {
   return new Promise((resolve, reject) => {
@@ -1135,7 +1236,7 @@ async function saveExam() {
     }
   }
   try {
-    await examsCol.add({
+    const examData = {
       title, stage,
       questions: currentBuilderQuestions.map(q => ({
         type: q.type, passage: q.passage || "", prompt: q.prompt,
@@ -1144,9 +1245,15 @@ async function saveExam() {
         correctAnswers: q.type === "complete" ? q.correctAnswers : [],
         points: 1,
       })),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    showSuccess("تم حفظ الامتحان بنجاح.");
+    };
+    if (editingExamId) {
+      await examsCol.doc(editingExamId).update(examData);
+      showSuccess("تم حفظ التعديلات بنجاح.");
+    } else {
+      examData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await examsCol.add(examData);
+      showSuccess("تم حفظ الامتحان بنجاح.");
+    }
     closeExamBuilder();
   } catch (err) {
     showError("تعذر حفظ الامتحان. تأكد من اتصالك بالإنترنت.");
@@ -1160,6 +1267,7 @@ function viewExamResults(examId) {
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "none";
   document.getElementById("examResultsView").style.display = "block";
+  document.getElementById("examMissingView").style.display = "none";
   renderExamResultsList();
 }
 function closeExamResults() {
@@ -1196,6 +1304,53 @@ function sendExamResultWhatsapp(r) {
   if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
   const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
+
+let viewingMissingExamId = null;
+function viewMissingStudents(examId) {
+  viewingMissingExamId = examId;
+  const ex = exams.find(e => e.id === examId);
+  document.getElementById("examMissingTitle").textContent = ex ? ex.title : "";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "none";
+  document.getElementById("examResultsView").style.display = "none";
+  document.getElementById("examMissingView").style.display = "block";
+  renderMissingStudentsList();
+}
+function closeExamMissing() {
+  viewingMissingExamId = null;
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examMissingView").style.display = "none";
+}
+function renderMissingStudentsList() {
+  const ex = exams.find(e => e.id === viewingMissingExamId);
+  const container = document.getElementById("examMissingList");
+  if (!ex) { container.innerHTML = ""; return; }
+  const submittedIds = new Set(examResults.filter(r => r.examId === viewingMissingExamId).map(r => r.studentId));
+  const stageStudents = students.filter(s => s.stage === ex.stage);
+  const missing = stageStudents.filter(s => !submittedIds.has(s.id)).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+
+  if (stageStudents.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p>`;
+    return;
+  }
+  if (missing.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">كل الطلاب دخلوا الامتحان ✓</p>`;
+    return;
+  }
+  container.innerHTML = missing.map(s => `
+    <div class="result-row">
+      <div class="result-row-name">${escapeHtml(s.name)}</div>
+      ${s.studentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)})'>تذكير واتساب</button>` : ""}
+    </div>
+  `).join("");
+}
+function sendExamReminderWhatsapp(s, examTitle) {
+  const waNumber = formatPhoneForWhatsapp(s.studentPhone);
+  if (!waNumber) { showError("مفيش رقم هاتف مسجل لهذا الطالب."); return; }
+  const message = `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }

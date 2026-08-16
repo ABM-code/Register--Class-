@@ -34,6 +34,16 @@
   #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
   .result-score { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700; color: #3F6B4A; text-align: center; margin: 0.4rem 0; }
   .result-label { text-align: center; color: #6B6B60; font-size: 0.9rem; }
+  .review-card { border-right: 4px solid transparent; }
+  .review-correct { border-right-color: #5E9468; }
+  .review-wrong { border-right-color: #C15B3C; }
+  .review-row { display: flex; align-items: baseline; gap: 0.4rem; font-size: 0.88rem; margin-top: 0.4rem; flex-wrap: wrap; }
+  .review-icon { font-weight: 700; }
+  .review-correct .review-row .review-icon { color: #3F6B4A; }
+  .review-wrong .review-row .review-icon { color: #C15B3C; }
+  .review-label { color: #6B6B60; }
+  .review-value { color: #1B2420; font-weight: 600; }
+  .review-correct-text { color: #3F6B4A; }
   .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
 </style>
 </head>
@@ -218,7 +228,7 @@ async function submitExam() {
       answers: answerDetails,
       submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
-    renderResult(score, total);
+    renderResult(score, total, answerDetails);
   } catch (err) {
     submitBtn.disabled = false;
     submitBtn.textContent = "تسليم الإجابات";
@@ -226,16 +236,52 @@ async function submitExam() {
   }
 }
 
-function renderResult(score, total) {
+function renderResult(score, total, answerDetails) {
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
   const content = document.getElementById("content");
+  const questions = exam.questions || [];
+
+  const reviewHtml = answerDetails.map(ad => {
+    const q = questions[ad.questionIndex];
+    if (!q) return "";
+    const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+    let givenText = "";
+    let correctText = "";
+    if (q.type === "mcq") {
+      const opts = q.options || [];
+      givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
+      correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
+    } else {
+      givenText = ad.given ? ad.given : "(لم يُجب)";
+      correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
+    }
+    return `
+      <div class="card review-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
+        <div class="q-num">سؤال ${ad.questionIndex + 1}</div>
+        ${passageHtml}
+        <div class="q-title">${escapeHtml(q.prompt)}</div>
+        <div class="review-row">
+          <span class="review-icon">${ad.correct ? '✓' : '✗'}</span>
+          <span class="review-label">إجابتك:</span>
+          <span class="review-value">${escapeHtml(givenText)}</span>
+        </div>
+        ${!ad.correct ? `
+        <div class="review-row">
+          <span class="review-icon" style="visibility:hidden;">✓</span>
+          <span class="review-label">الإجابة الصحيحة:</span>
+          <span class="review-value review-correct-text">${escapeHtml(correctText)}</span>
+        </div>` : ""}
+      </div>`;
+  }).join("");
+
   content.innerHTML = `
     <div class="card">
       <div class="result-label">نتيجتك</div>
       <div class="result-score">${score} / ${total}</div>
       <div class="result-label">(${pct}%)</div>
     </div>
-    <p style="color:#9FB8AD; text-align:center; font-size:0.85rem;">تم إرسال نتيجتك للمدرّس بنجاح.</p>
+    <p style="color:#9FB8AD; text-align:center; font-size:0.85rem; margin-bottom:1rem;">تم إرسال نتيجتك للمدرّس بنجاح.</p>
+    ${reviewHtml}
   `;
 }
 
