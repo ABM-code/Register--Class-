@@ -1343,14 +1343,23 @@ function renderMissingStudentsList() {
   container.innerHTML = missing.map(s => `
     <div class="result-row">
       <div class="result-row-name">${escapeHtml(s.name)}</div>
-      ${s.studentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)})'>تذكير واتساب</button>` : ""}
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+        ${s.studentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "student")'>تذكير للطالب</button>` : ""}
+        ${s.parentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "parent")'>تذكير لولي الأمر</button>` : ""}
+      </div>
     </div>
   `).join("");
 }
-function sendExamReminderWhatsapp(s, examTitle) {
-  const waNumber = formatPhoneForWhatsapp(s.studentPhone);
-  if (!waNumber) { showError("مفيش رقم هاتف مسجل لهذا الطالب."); return; }
-  const message = `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
+function sendExamReminderWhatsapp(s, examTitle, target) {
+  const phone = target === "parent" ? s.parentPhone : s.studentPhone;
+  const waNumber = formatPhoneForWhatsapp(phone);
+  if (!waNumber) {
+    showError(target === "parent" ? "مفيش رقم ولي أمر مسجل لهذا الطالب." : "مفيش رقم هاتف مسجل لهذا الطالب.");
+    return;
+  }
+  const message = target === "parent"
+    ? `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${examTitle}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`
+    : `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
