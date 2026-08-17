@@ -86,6 +86,22 @@
   .stage-pill.active { background: #D4A93B; color: #1B2420; border-color: #D4A93B; font-weight: 600; }
   .stage-pill .count { font-weight: 700; }
   .stats-row { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .notif-card { background: rgba(212,169,59,0.1); border: 1px solid rgba(212,169,59,0.35); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1.2rem; }
+  .stat-section-title { color: #F5F1E6; font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin: 1.4rem 0 0.7rem; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .stat-card-box { background: #F5F1E6; border-radius: 12px; padding: 0.9rem; text-align: center; }
+  .stat-box-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.6rem; color: #1B2420; }
+  .stat-box-label { font-size: 0.76rem; color: #6B6B60; margin-top: 0.2rem; }
+  .chart-box { background: #F5F1E6; border-radius: 12px; padding: 1rem; }
+  .chart-empty { color: #6B6B60; font-size: 0.85rem; text-align: center; padding: 1rem 0; }
+  .bar-row { margin-bottom: 0.8rem; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-row-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem; color: #1B2420; }
+  .bar-row-label .val { font-weight: 700; color: #3F6B4A; }
+  .bar-track { background: #EAEAE4; border-radius: 6px; height: 10px; overflow: hidden; }
+  .bar-fill { background: #D4A93B; height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+  .bar-fill.green { background: #5E9468; }
+  .bar-fill.blue { background: #5B8FC4; }
   .stat-card { flex: 1; background: rgba(245,241,230,0.06); border: 1px solid rgba(245,241,230,0.14); border-radius: 10px; padding: 0.6rem 0.7rem; cursor: default; }
   .stat-label { font-size: 0.7rem; color: #9FB8AD; margin-bottom: 0.2rem; }
   .stat-value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: #F5F1E6; }
@@ -213,6 +229,7 @@
   <button class="tab-btn" id="tabExamsBtn" onclick="switchTab('exams')">
     الامتحانات <span id="examsBadge" class="badge-dot" style="display:none;"></span>
   </button>
+  <button class="tab-btn" id="tabStatsBtn" onclick="switchTab('stats')">الإحصائيات</button>
 </div>
 
 <main class="app-content" id="viewStudents">
@@ -262,6 +279,14 @@
     </button>
     <input type="file" id="importFile" accept="application/json" style="display:none;">
   </div>
+
+  <div class="backup-row">
+    <button id="autoBackupsBtn" class="backup-btn" onclick="toggleAutoBackupsList()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+      النسخ الاحتياطية التلقائية
+    </button>
+  </div>
+  <div id="autoBackupsList" style="display:none; margin-bottom:1rem;"></div>
 
   <div class="backup-row">
     <button id="exportExcelBtn" class="backup-btn">
@@ -431,6 +456,49 @@
   </div>
 </main>
 
+<main class="app-content" id="viewStats" style="display:none;">
+  <div class="notif-card" id="notifPermCard" style="display:none;">
+    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <strong style="font-size:0.9rem;">تفعيل إشعارات النتائج</strong>
+    </div>
+    <p style="font-size:0.8rem; color:#6B6B60; margin:0 0 0.6rem;">هتوصلك إشعارات فورية لما طالب يسلّم امتحان، طول ما التطبيق شغال (حتى مصغّر).</p>
+    <button id="enableNotifBtn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:9px; padding:0.6rem; font-weight:700; cursor:pointer;">تفعيل الإشعارات</button>
+  </div>
+
+  <div class="stat-section-title">نظرة عامة</div>
+  <div class="stats-grid">
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashTotalStudents">0</div>
+      <div class="stat-box-label">إجمالي الطلاب</div>
+    </div>
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashTotalExams">0</div>
+      <div class="stat-box-label">إجمالي الامتحانات</div>
+    </div>
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashAvgScore">—</div>
+      <div class="stat-box-label">متوسط الدرجات العام</div>
+    </div>
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashTotalSubmissions">0</div>
+      <div class="stat-box-label">إجمالي محاولات الامتحانات</div>
+    </div>
+  </div>
+
+  <div class="stat-section-title">متوسط الدرجات حسب المرحلة</div>
+  <div class="chart-box" id="chartScoreByStage"></div>
+
+  <div class="stat-section-title">عدد الطلاب حسب المرحلة</div>
+  <div class="chart-box" id="chartStudentsByStage"></div>
+
+  <div class="stat-section-title">المدفوعات آخر 6 شهور</div>
+  <div class="chart-box" id="chartPaymentsByMonth"></div>
+
+  <div class="stat-section-title">نسبة المشاركة في كل امتحان</div>
+  <div class="chart-box" id="chartExamParticipation"></div>
+</main>
+
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const APP_PASSWORD = "moneer2026"; // غيّر كلمة السر دي لأي حاجة تحبها
@@ -459,12 +527,36 @@ let currentBuilderQuestions = [];
 let viewingExamId = null;
 let editingExamId = null;
 
+let firstResultsSnapshot = true;
+let autoBackupChecked = false;
+
+function isStatsTabVisible() {
+  const el = document.getElementById("viewStats");
+  return el && el.style.display !== "none";
+}
+
+function maybeNotifyNewResult(r) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  try {
+    new Notification("نتيجة جديدة: " + (r.studentName || ""), {
+      body: `${r.examTitle || ""} — ${r.score}/${r.total} (${pct}%)`,
+      icon: "icon-192.png",
+    });
+  } catch (e) {}
+}
+
 function startSync() {
   studentsCol.onSnapshot(
     (snapshot) => {
       students = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       students.sort((a,b) => (a.name||"").localeCompare(b.name||""));
       render();
+      if (isStatsTabVisible()) renderStatsDashboard();
+      if (!autoBackupChecked) {
+        autoBackupChecked = true;
+        setTimeout(maybeRunAutoBackup, 4000);
+      }
     },
     (err) => {
       showError("تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
@@ -473,13 +565,23 @@ function startSync() {
   examsCol.onSnapshot((snapshot) => {
     exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderExamsList();
+    if (isStatsTabVisible()) renderStatsDashboard();
   });
   examResultsCol.orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
     examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!firstResultsSnapshot) {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added" && !change.doc.metadata.hasPendingWrites) {
+          maybeNotifyNewResult(change.doc.data());
+        }
+      });
+    }
+    firstResultsSnapshot = false;
     updateExamsBadge();
     renderExamsList();
     if (viewingExamId) renderExamResultsList();
     if (viewingMissingExamId) renderMissingStudentsList();
+    if (isStatsTabVisible()) renderStatsDashboard();
   });
 }
 function fmtDate(d) {
@@ -872,14 +974,18 @@ function toggleStudentCount() {
 }
 
 function switchTab(tab) {
-  const isStudents = tab === "students";
-  document.getElementById("viewStudents").style.display = isStudents ? "block" : "none";
-  document.getElementById("viewExams").style.display = isStudents ? "none" : "block";
-  document.getElementById("tabStudentsBtn").classList.toggle("active", isStudents);
-  document.getElementById("tabExamsBtn").classList.toggle("active", !isStudents);
-  if (!isStudents) {
+  document.getElementById("viewStudents").style.display = tab === "students" ? "block" : "none";
+  document.getElementById("viewExams").style.display = tab === "exams" ? "block" : "none";
+  document.getElementById("viewStats").style.display = tab === "stats" ? "block" : "none";
+  document.getElementById("tabStudentsBtn").classList.toggle("active", tab === "students");
+  document.getElementById("tabExamsBtn").classList.toggle("active", tab === "exams");
+  document.getElementById("tabStatsBtn").classList.toggle("active", tab === "stats");
+  if (tab === "exams") {
     try { localStorage.setItem("examsLastSeen", Date.now().toString()); } catch (e) {}
     updateExamsBadge();
+  }
+  if (tab === "stats") {
+    renderStatsDashboard();
   }
 }
 
@@ -893,6 +999,166 @@ function updateExamsBadge() {
     badge.style.display = "inline-block";
   } else {
     badge.style.display = "none";
+  }
+}
+
+function renderBarChart(containerId, rows, colorClass) {
+  const container = document.getElementById(containerId);
+  if (!rows.length) {
+    container.innerHTML = `<div class="chart-empty">مفيش بيانات كفاية لعرضها لسه</div>`;
+    return;
+  }
+  const maxVal = Math.max(...rows.map(r => r.value), 1);
+  container.innerHTML = rows.map(r => `
+    <div class="bar-row">
+      <div class="bar-row-label"><span>${escapeHtml(r.label)}</span><span class="val">${escapeHtml(r.display)}</span></div>
+      <div class="bar-track"><div class="bar-fill ${colorClass || ''}" style="width:${Math.max(4, Math.round((r.value / maxVal) * 100))}%;"></div></div>
+    </div>
+  `).join("");
+}
+
+function renderStatsDashboard() {
+  initNotifUi();
+  document.getElementById("dashTotalStudents").textContent = students.length;
+  document.getElementById("dashTotalExams").textContent = exams.length;
+  document.getElementById("dashTotalSubmissions").textContent = examResults.length;
+
+  const overallTotal = examResults.reduce((sum, r) => sum + (r.total || 0), 0);
+  const overallScore = examResults.reduce((sum, r) => sum + (r.score || 0), 0);
+  document.getElementById("dashAvgScore").textContent = overallTotal > 0
+    ? Math.round((overallScore / overallTotal) * 100) + "%"
+    : "—";
+
+  // متوسط الدرجات حسب المرحلة
+  const stageScoreRows = STAGE_ORDER.map(stage => {
+    const results = examResults.filter(r => r.stage === stage);
+    const total = results.reduce((sum, r) => sum + (r.total || 0), 0);
+    const score = results.reduce((sum, r) => sum + (r.score || 0), 0);
+    const pct = total > 0 ? Math.round((score / total) * 100) : null;
+    return pct === null ? null : { label: stage, value: pct, display: pct + "%" };
+  }).filter(Boolean);
+  renderBarChart("chartScoreByStage", stageScoreRows, "green");
+
+  // عدد الطلاب حسب المرحلة
+  const stageCountRows = STAGE_ORDER.map(stage => {
+    const count = students.filter(s => s.stage === stage).length;
+    return count > 0 ? { label: stage, value: count, display: count + " طالب" } : null;
+  }).filter(Boolean);
+  renderBarChart("chartStudentsByStage", stageCountRows, "blue");
+
+  // المدفوعات آخر 6 شهور
+  const now = new Date();
+  const monthKeys = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    monthKeys.push({ key: d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"), label: d.toLocaleDateString('ar-EG', { month: 'short', year: 'numeric' }) });
+  }
+  const monthTotals = {};
+  monthKeys.forEach(m => monthTotals[m.key] = 0);
+  students.forEach(s => {
+    getPayments(s).forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      if (monthTotals.hasOwnProperty((p.date||"").slice(0,7))) {
+        monthTotals[(p.date||"").slice(0,7)] += amt;
+      }
+    });
+  });
+  const paymentRows = monthKeys.map(m => ({ label: m.label, value: monthTotals[m.key], display: monthTotals[m.key].toLocaleString() + " جنيه" }));
+  renderBarChart("chartPaymentsByMonth", paymentRows, "");
+
+  // نسبة المشاركة في كل امتحان
+  const participationRows = exams.map(ex => {
+    const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
+    if (stageStudentCount === 0) return null;
+    const submittedCount = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId || r.studentName)).size;
+    const pct = Math.round((submittedCount / stageStudentCount) * 100);
+    return { label: ex.title, value: pct, display: submittedCount + "/" + stageStudentCount };
+  }).filter(Boolean);
+  renderBarChart("chartExamParticipation", participationRows, "blue");
+}
+
+function initNotifUi() {
+  const card = document.getElementById("notifPermCard");
+  if (typeof Notification === "undefined") { card.style.display = "none"; return; }
+  card.style.display = Notification.permission === "default" ? "block" : "none";
+}
+
+async function maybeRunAutoBackup() {
+  let last = 0;
+  try { last = parseInt(localStorage.getItem("lastAutoBackup") || "0", 10); } catch (e) {}
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  if (Date.now() - last < weekMs) return;
+  if (students.length === 0) return;
+  try {
+    await db.collection("autoBackups").add({
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      studentsCount: students.length,
+      students: students,
+      exams: exams,
+    });
+    try { localStorage.setItem("lastAutoBackup", Date.now().toString()); } catch (e) {}
+    const old = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
+    if (old.docs.length > 8) {
+      const batch = db.batch();
+      old.docs.slice(8).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+  } catch (err) {
+    // فشل صامت — مش حرج، هيحاول تاني الأسبوع الجاي
+  }
+}
+
+async function toggleAutoBackupsList() {
+  const box = document.getElementById("autoBackupsList");
+  if (box.style.display === "block") {
+    box.style.display = "none";
+    return;
+  }
+  box.style.display = "block";
+  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  try {
+    const snap = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
+    if (snap.empty) {
+      box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p>`;
+      return;
+    }
+    box.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      const dateStr = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString('ar-EG') : "";
+      return `
+        <div class="result-row">
+          <div>
+            <div class="result-row-name">${dateStr}</div>
+            <div class="result-row-date">${data.studentsCount || 0} طالب</div>
+          </div>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem;" onclick="restoreAutoBackup('${d.id}')">استرجاع</button>
+        </div>`;
+    }).join("");
+  } catch (err) {
+    box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل النسخ الاحتياطية.</p>`;
+  }
+}
+
+async function restoreAutoBackup(backupId) {
+  if (!confirm("هيتم استبدال بيانات الطلاب والامتحانات الحالية بالنسخة دي. متأكد؟")) return;
+  try {
+    const doc = await db.collection("autoBackups").doc(backupId).get();
+    if (!doc.exists) { showError("النسخة دي مش موجودة."); return; }
+    const data = doc.data();
+    const batch = db.batch();
+    (data.students || []).forEach(s => {
+      const { id, ...rest } = s;
+      batch.set(studentsCol.doc(id), rest, { merge: false });
+    });
+    (data.exams || []).forEach(ex => {
+      const { id, ...rest } = ex;
+      batch.set(examsCol.doc(id), rest, { merge: false });
+    });
+    await batch.commit();
+    showSuccess("تم استرجاع النسخة الاحتياطية بنجاح.");
+    document.getElementById("autoBackupsList").style.display = "none";
+  } catch (err) {
+    showError("تعذر استرجاع النسخة. تأكد من اتصالك بالإنترنت.");
   }
 }
 
@@ -1555,6 +1821,14 @@ document.getElementById("exemptPill").addEventListener("click", toggleExemptFilt
 document.getElementById("exportExcelBtn").addEventListener("click", exportExcel);
 document.getElementById("exportPdfBtn").addEventListener("click", exportPdf);
 document.getElementById("fixPhonesBtn").addEventListener("click", fixAllPhoneNumbers);
+document.getElementById("enableNotifBtn").addEventListener("click", async () => {
+  if (typeof Notification === "undefined") { showError("المتصفح ده مش بيدعم الإشعارات."); return; }
+  try {
+    const perm = await Notification.requestPermission();
+    initNotifUi();
+    if (perm === "granted") showSuccess("تم تفعيل الإشعارات بنجاح.");
+  } catch (e) {}
+});
 document.getElementById("exportBtn").addEventListener("click", exportBackup);
 document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
 document.getElementById("importFile").addEventListener("change", (e) => {
