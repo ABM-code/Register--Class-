@@ -73,6 +73,15 @@ const db = firebase.firestore();
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+function normalizeArabic(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
 function showError(msg) {
   const box = document.getElementById("errorBox");
   box.textContent = msg;
@@ -154,14 +163,24 @@ function renderStudentPicker() {
     startBtn.disabled = true;
     startBtn.textContent = "جاري التحقق...";
     try {
-      let query = db.collection("examResults").where("examId", "==", exam.id);
-      query = selectedStudent.id
-        ? query.where("studentId", "==", selectedStudent.id)
-        : query.where("studentName", "==", selectedStudent.name);
-      const snap = await query.limit(1).get();
-      if (!snap.empty) {
-        const prevId = snap.docs[0].id;
-        const prev = snap.docs[0].data();
+      let snapDoc = null;
+      if (selectedStudent.id) {
+        const snap = await db.collection("examResults")
+          .where("examId", "==", exam.id)
+          .where("studentId", "==", selectedStudent.id)
+          .limit(1)
+          .get();
+        if (!snap.empty) snapDoc = snap.docs[0];
+      } else {
+        const snap = await db.collection("examResults")
+          .where("examId", "==", exam.id)
+          .get();
+        const targetNorm = normalizeArabic(selectedStudent.name);
+        const match = snap.docs.find(d => normalizeArabic(d.data().studentName) === targetNorm);
+        if (match) snapDoc = match;
+      }
+      if (snapDoc) {
+        const prev = snapDoc.data();
         const pct = prev.total > 0 ? Math.round((prev.score / prev.total) * 100) : 0;
         msgBox.innerHTML = `<div class="card" style="border-right:4px solid #C15B3C;">
           <strong>لقد قدّمت هذا الامتحان من قبل</strong>

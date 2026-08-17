@@ -620,6 +620,15 @@ const toneStyles = {
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+function normalizeArabic(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
 function toEnglishDigits(str) {
   if (!str) return str;
   const arabicIndic = "٠١٢٣٤٥٦٧٨٩";
@@ -1694,12 +1703,13 @@ let exemptOnly = false;
 let showStudentCount = false;
 
 function render() {
-  const query = document.getElementById("searchInput").value.trim().toLowerCase();
-  let filtered = !query ? students : students.filter(s =>
-    s.name.toLowerCase().includes(query) ||
-    (s.studentPhone||"").includes(query) ||
-    (s.parentPhone||"").includes(query) ||
-    (s.stage||"").toLowerCase().includes(query)
+  const rawQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+  const normQuery = normalizeArabic(rawQuery);
+  let filtered = !rawQuery ? students : students.filter(s =>
+    normalizeArabic(s.name).includes(normQuery) ||
+    (s.studentPhone||"").includes(rawQuery) ||
+    (s.parentPhone||"").includes(rawQuery) ||
+    (s.stage||"").toLowerCase().includes(rawQuery)
   );
   if (overdueOnly) {
     filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
@@ -1718,7 +1728,7 @@ function render() {
   students.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
   const stageCountsEl = document.getElementById("stageCounts");
   stageCountsEl.innerHTML = stages.map(st => {
-    const isActive = query === st.toLowerCase();
+    const isActive = rawQuery === st.toLowerCase();
     return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="filterByStage('${st}')">${st} <span class="count">${counts[st]}</span></span>`;
   }).join("");
 
