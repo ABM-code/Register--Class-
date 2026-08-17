@@ -633,11 +633,19 @@ function normalizeArabic(str) {
 function checkDuplicateName() {
   const warningBox = document.getElementById("dupNameWarning");
   const name = document.getElementById("fName").value.trim();
-  if (!name) { warningBox.style.display = "none"; return; }
+  if (name.length < 2) { warningBox.style.display = "none"; return; }
   const targetNorm = normalizeArabic(name);
-  const match = students.find(s => s.id !== editingId && normalizeArabic(s.name) === targetNorm);
-  if (match) {
-    warningBox.textContent = `⚠️ يوجد طالب بنفس الاسم بالفعل: "${match.name}"${match.stage ? " (" + match.stage + ")" : ""} — تقدر تكمل عادي لو ده طالب مختلف فعلاً.`;
+  const matches = students.filter(s => {
+    if (s.id === editingId) return false;
+    const sNorm = normalizeArabic(s.name);
+    return sNorm === targetNorm || sNorm.includes(targetNorm) || targetNorm.includes(sNorm);
+  });
+  if (matches.length) {
+    const isExact = matches.some(m => normalizeArabic(m.name) === targetNorm);
+    const namesList = matches.slice(0, 3).map(m => `"${m.name}"${m.stage ? " (" + m.stage + ")" : ""}`).join("، ") + (matches.length > 3 ? " وغيرهم" : "");
+    warningBox.textContent = isExact
+      ? `⚠️ يوجد طالب بنفس الاسم بالفعل: ${namesList} — تقدر تكمل عادي لو ده طالب مختلف فعلاً.`
+      : `⚠️ فيه أسامي قريبة من اللي كتبته: ${namesList} — تأكد إنك مش بتضيف نفس الطالب مرتين.`;
     warningBox.style.display = "block";
   } else {
     warningBox.style.display = "none";
