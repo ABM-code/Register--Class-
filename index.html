@@ -427,6 +427,10 @@
           <option value="Sec 3">Sec 3</option>
         </select>
       </div>
+      <div class="field-group">
+        <label>مدة الامتحان بالدقائق (اختياري)</label>
+        <input class="reg-input" type="number" min="1" step="1" id="examTimeLimitInput" placeholder="مثلاً: 30 — سيبها فاضية لو مفيش وقت محدد">
+      </div>
       <div class="ai-import-box" id="aiImportBox">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/></svg>
@@ -1222,7 +1226,7 @@ function renderExamsList() {
       return `
       <div class="exam-card">
         <div class="exam-card-title">${escapeHtml(ex.title)}</div>
-        <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${resultCount} إجابة مسجلة</div>
+        <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${resultCount} إجابة مسجلة${ex.timeLimitMinutes ? ' — ⏱ ' + ex.timeLimitMinutes + ' دقيقة' : ''}</div>
         <div class="exam-card-actions">
           <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
@@ -1305,7 +1309,7 @@ function printExamPdf(examId) {
     </style></head>
     <body>
       <h1>${escapeHtml(ex.title)}</h1>
-      <p class="sub">${escapeHtml(ex.stage || "")} — ${TEACHER_NAME} — الاسم: .................................</p>
+      <p class="sub">${escapeHtml(ex.stage || "")}${ex.timeLimitMinutes ? " — الزمن: " + ex.timeLimitMinutes + " دقيقة" : ""} — ${TEACHER_NAME} — الاسم: .................................</p>
       ${questionsHtml}
       <div class="answer-key">
         <h2>نموذج الإجابة (للمدرّس)</h2>
@@ -1326,6 +1330,7 @@ function openExamBuilder() {
   document.getElementById("saveExamBtnLabel").textContent = "حفظ الامتحان";
   document.getElementById("examTitleInput").value = "";
   document.getElementById("examStageInput").value = "";
+  document.getElementById("examTimeLimitInput").value = "";
   document.getElementById("questionsBuilder").innerHTML = "";
   document.getElementById("aiImportStatus").style.display = "none";
   document.getElementById("examsListView").style.display = "none";
@@ -1352,6 +1357,7 @@ function editExam(examId) {
   document.getElementById("saveExamBtnLabel").textContent = "حفظ التعديلات";
   document.getElementById("examTitleInput").value = ex.title || "";
   document.getElementById("examStageInput").value = ex.stage || "";
+  document.getElementById("examTimeLimitInput").value = ex.timeLimitMinutes || "";
   document.getElementById("aiImportStatus").style.display = "none";
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "block";
@@ -1551,8 +1557,11 @@ function updateCompleteAnswers(qId, value) {
 async function saveExam() {
   const title = document.getElementById("examTitleInput").value.trim();
   const stage = document.getElementById("examStageInput").value;
+  const timeLimitRaw = document.getElementById("examTimeLimitInput").value.trim();
+  const timeLimitMinutes = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
   if (!title) { showError("لازم تكتب عنوان للامتحان."); return; }
   if (!stage) { showError("لازم تختار المرحلة."); return; }
+  if (timeLimitRaw && (isNaN(timeLimitMinutes) || timeLimitMinutes < 1)) { showError("مدة الامتحان لازم تكون رقم صحيح أكبر من صفر."); return; }
   if (currentBuilderQuestions.length === 0) { showError("لازم تضيف سؤال واحد على الأقل."); return; }
   for (const q of currentBuilderQuestions) {
     if (!q.prompt.trim()) { showError("فيه سؤال من غير نص، اكتب كل الأسئلة."); return; }
@@ -1565,7 +1574,7 @@ async function saveExam() {
   }
   try {
     const examData = {
-      title, stage,
+      title, stage, timeLimitMinutes,
       questions: currentBuilderQuestions.map(q => ({
         type: q.type, passage: q.passage || "", prompt: q.prompt,
         options: q.type === "mcq" ? q.options : [],

@@ -10,6 +10,12 @@
   * { box-sizing: border-box; }
   body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
   .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+  .timer-bar {
+    position: sticky; top: 0; z-index: 50; background: #16302B; border-bottom: 1px solid rgba(245,241,230,0.15);
+    padding: 0.6rem 1.25rem; margin: -1.75rem -1.25rem 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .timer-bar .timer-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.1rem; color: #D4A93B; }
+  .timer-bar.timer-warning .timer-value { color: #C15B3C; }
   h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
   p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
   .card { background: #F5F1E6; border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
@@ -241,12 +247,27 @@ function renderStudentPicker() {
 }
 
 let answers = {};
+let examTimerInterval = null;
+
+function getTimerStorageKey() {
+  const studentKey = selectedStudent.id || normalizeArabic(selectedStudent.name);
+  return "examTimerStart_" + exam.id + "_" + studentKey;
+}
 
 function renderExam() {
   answers = {};
   const content = document.getElementById("content");
   const questions = exam.questions || [];
+
+  const timerHtml = exam.timeLimitMinutes
+    ? `<div class="timer-bar" id="timerBar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>الوقت المتبقي:</span> <span class="timer-value" id="timerValue">--:--</span>
+      </div>`
+    : "";
+
   content.innerHTML = `
+    ${timerHtml}
     <div class="card" style="margin-bottom:0.5rem;">
       <strong>${escapeHtml(selectedStudent.name)}</strong>
     </div>
@@ -270,7 +291,43 @@ function renderExam() {
     }
   });
 
-  document.getElementById("submitBtn").addEventListener("click", submitExam);
+  document.getElementById("submitBtn").addEventListener("click", () => submitExam(false));
+
+  if (exam.timeLimitMinutes) {
+    startExamTimer();
+  }
+}
+
+function startExamTimer() {
+  const key = getTimerStorageKey();
+  let startTime;
+  try {
+    startTime = parseInt(localStorage.getItem(key) || "0", 10);
+  } catch (e) { startTime = 0; }
+  if (!startTime) {
+    startTime = Date.now();
+    try { localStorage.setItem(key, String(startTime)); } catch (e) {}
+  }
+  const totalMs = exam.timeLimitMinutes * 60 * 1000;
+
+  function tick() {
+    const remaining = startTime + totalMs - Date.now();
+    const timerValue = document.getElementById("timerValue");
+    const timerBar = document.getElementById("timerBar");
+    if (!timerValue) { clearInterval(examTimerInterval); return; }
+    if (remaining <= 0) {
+      timerValue.textContent = "00:00";
+      clearInterval(examTimerInterval);
+      submitExam(true);
+      return;
+    }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    timerValue.textContent = String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+    if (remaining <= 60000 && timerBar) timerBar.classList.add("timer-warning");
+  }
+  tick();
+  examTimerInterval = setInterval(tick, 1000);
 }
 
 function renderQuestion(q, i) {
@@ -322,10 +379,13 @@ function gradeExam() {
   return { score, total, answerDetails };
 }
 
-async function submitExam() {
+async function submitExam(isTimeout) {
+  if (examTimerInterval) { clearInterval(examTimerInterval); examTimerInterval = null; }
   const submitBtn = document.getElementById("submitBtn");
-  submitBtn.disabled = true;
-  submitBtn.textContent = "جاري التسليم...";
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = isTimeout ? "انتهى الوقت، جاري التسليم..." : "جاري التسليم...";
+  }
   const { score, total, answerDetails } = gradeExam();
   try {
     await db.collection("examResults").add({
@@ -340,17 +400,21 @@ async function submitExam() {
       score,
       total,
       answers: answerDetails,
+      timedOut: !!isTimeout,
       submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
-    renderResult(score, total, answerDetails);
+    try { localStorage.removeItem(getTimerStorageKey()); } catch (e) {}
+    renderResult(score, total, answerDetails, true, isTimeout);
   } catch (err) {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "تسليم الإجابات";
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "تسليم الإجابات";
+    }
     showError("تعذر تسليم الإجابات. تأكد من اتصالك بالإنترنت وحاول تاني.");
   }
 }
 
-function renderResult(score, total, answerDetails, isFreshSubmission = true) {
+function renderResult(score, total, answerDetails, isFreshSubmission = true, wasTimedOut = false) {
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
   const content = document.getElementById("content");
   const questions = exam.questions || [];
@@ -388,9 +452,9 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true) {
       </div>`;
   }).join("");
 
-  const subMessage = isFreshSubmission
-    ? "تم إرسال نتيجتك للمدرّس بنجاح."
-    : "مراجعة إجابتك السابقة.";
+  const subMessage = !isFreshSubmission
+    ? "مراجعة إجابتك السابقة."
+    : (wasTimedOut ? "انتهى وقت الامتحان، وتم تسليم إجاباتك تلقائيًا." : "تم إرسال نتيجتك للمدرّس بنجاح.");
 
   content.innerHTML = `
     <div class="card">
