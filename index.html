@@ -1376,7 +1376,7 @@ function editExam(examId) {
     prompt: q.prompt || "",
     options: q.type === "mcq" ? (q.options && q.options.length ? [...q.options] : ["","","",""]) : ["","","",""],
     correctIndex: q.correctIndex || 0,
-    correctAnswers: q.type === "complete" ? (q.correctAnswers && q.correctAnswers.length ? [...q.correctAnswers] : [""]) : [""],
+    correctAnswers: q.type !== "mcq" ? (q.correctAnswers && q.correctAnswers.length ? [...q.correctAnswers] : [""]) : [""],
   }));
   document.getElementById("examBuilderTitle").textContent = "تعديل الامتحان";
   document.getElementById("saveExamBtnLabel").textContent = "حفظ التعديلات";
@@ -1467,7 +1467,7 @@ async function handleAiImage(file) {
       const qId = "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
       currentBuilderQuestions.push({
         id: qId,
-        type: q.type === "complete" ? "complete" : "mcq",
+        type: ["mcq","complete","rewrite","correct"].includes(q.type) ? q.type : "mcq",
         passage: q.passage || "",
         prompt: q.prompt || "",
         options: (q.options && q.options.length >= 2) ? q.options : ["","","",""],
@@ -1510,6 +1510,8 @@ function renderQuestionsBuilder() {
         <select class="reg-input" onchange="updateQuestionType('${q.id}', this.value)">
           <option value="mcq" ${q.type==='mcq'?'selected':''}>اختيار من متعدد</option>
           <option value="complete" ${q.type==='complete'?'selected':''}>إكمال الفراغ</option>
+          <option value="rewrite" ${q.type==='rewrite'?'selected':''}>إعادة الصياغة (Rewrite)</option>
+          <option value="correct" ${q.type==='correct'?'selected':''}>تصحيح الخطأ (Correct)</option>
         </select>
       </div>
       <div class="field-group">
@@ -1520,7 +1522,7 @@ function renderQuestionsBuilder() {
         <label>نص السؤال</label>
         <input class="reg-input" placeholder="اكتب السؤال هنا" value="${escapeHtml(q.prompt)}" oninput="updateQuestionField('${q.id}','prompt',this.value)">
       </div>
-      ${q.type === 'mcq' ? renderMcqOptions(q) : renderCompleteAnswers(q)}
+      ${q.type === 'mcq' ? renderMcqOptions(q) : renderTextAnswer(q)}
     </div>
   `).join("");
 }
@@ -1537,11 +1539,23 @@ function renderMcqOptions(q) {
   `;
 }
 
-function renderCompleteAnswers(q) {
+function renderTextAnswer(q) {
+  const labels = {
+    complete: "الإجابات المقبولة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    rewrite: "الصياغة المقترحة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    correct: "الإجابة الصحيحة بعد التصحيح (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+  };
+  const placeholders = {
+    complete: "مثال: went, has gone",
+    rewrite: "مثال: She is taller than her sister.",
+    correct: "مثال: He goes to school every day.",
+  };
+  const label = labels[q.type] || labels.complete;
+  const placeholder = placeholders[q.type] || placeholders.complete;
   return `
     <div class="field-group">
-      <label>الإجابات المقبولة (افصل بينهم بفاصلة لو أكتر من صيغة صح)</label>
-      <input class="reg-input" placeholder="مثال: went, has gone" value="${escapeHtml((q.correctAnswers||[]).join(', '))}" oninput="updateCompleteAnswers('${q.id}',this.value)">
+      <label>${label}</label>
+      <input class="reg-input" placeholder="${placeholder}" value="${escapeHtml((q.correctAnswers||[]).join(', '))}" oninput="updateCompleteAnswers('${q.id}',this.value)">
     </div>
   `;
 }
@@ -1575,8 +1589,8 @@ async function saveExam() {
     if (q.type === "mcq" && q.options.filter(o => o.trim()).length < 2) {
       showError("كل سؤال اختيار من متعدد لازم يكون فيه اختيارين على الأقل."); return;
     }
-    if (q.type === "complete" && (!q.correctAnswers || q.correctAnswers.length === 0)) {
-      showError("فيه سؤال إكمال من غير إجابة مقبولة."); return;
+    if (q.type !== "mcq" && (!q.correctAnswers || q.correctAnswers.filter(a => a.trim()).length === 0)) {
+      showError("فيه سؤال من غير إجابة مقبولة، اكتب إجابة لكل سؤال."); return;
     }
   }
   try {
@@ -1586,7 +1600,7 @@ async function saveExam() {
         type: q.type, passage: q.passage || "", prompt: q.prompt,
         options: q.type === "mcq" ? q.options : [],
         correctIndex: q.type === "mcq" ? q.correctIndex : null,
-        correctAnswers: q.type === "complete" ? q.correctAnswers : [],
+        correctAnswers: q.type !== "mcq" ? q.correctAnswers : [],
         points: 1,
       })),
     };

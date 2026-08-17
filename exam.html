@@ -245,9 +245,9 @@ function renderExam() {
           answers[i] = parseInt(row.dataset.optIdx, 10);
         });
       });
-    } else if (q.type === "complete") {
+    } else {
       const input = document.getElementById(`answer_${i}`);
-      input.addEventListener("input", () => { answers[i] = input.value; });
+      if (input) input.addEventListener("input", () => { answers[i] = input.value; });
     }
   });
 
@@ -263,8 +263,13 @@ function renderQuestion(q, i) {
         <input type="radio" name="q${i}">
         <span>${escapeHtml(opt)}</span>
       </div>`).join("");
-  } else if (q.type === "complete") {
-    bodyHtml = `<input type="text" id="answer_${i}" placeholder="اكتب إجابتك هنا">`;
+  } else {
+    const placeholders = {
+      complete: "اكتب إجابتك هنا",
+      rewrite: "أعد كتابة الجملة هنا",
+      correct: "اكتب الجملة بعد التصحيح هنا",
+    };
+    bodyHtml = `<input type="text" id="answer_${i}" placeholder="${placeholders[q.type] || placeholders.complete}">`;
   }
   return `
     <div class="card">
@@ -287,7 +292,7 @@ function gradeExam() {
     const given = answers[i];
     if (q.type === "mcq") {
       correct = given === q.correctIndex;
-    } else if (q.type === "complete") {
+    } else {
       const accepted = (q.correctAnswers || []).map(a => a.trim().toLowerCase());
       const givenNorm = (given || "").trim().toLowerCase();
       correct = accepted.includes(givenNorm);
