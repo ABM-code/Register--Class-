@@ -160,12 +160,17 @@ function renderStudentPicker() {
         : query.where("studentName", "==", selectedStudent.name);
       const snap = await query.limit(1).get();
       if (!snap.empty) {
+        const prevId = snap.docs[0].id;
         const prev = snap.docs[0].data();
         const pct = prev.total > 0 ? Math.round((prev.score / prev.total) * 100) : 0;
         msgBox.innerHTML = `<div class="card" style="border-right:4px solid #C15B3C;">
           <strong>لقد قدّمت هذا الامتحان من قبل</strong>
-          <p style="margin:0.4rem 0 0; color:#6B6B60; font-size:0.88rem;">نتيجتك السابقة: ${prev.score} / ${prev.total} (${pct}%)</p>
+          <p style="margin:0.4rem 0 0.7rem; color:#6B6B60; font-size:0.88rem;">نتيجتك السابقة: ${prev.score} / ${prev.total} (${pct}%)</p>
+          <button id="reviewPrevBtn" style="background:#3F6B4A; color:#F5F1E6;">مراجعة إجاباتك</button>
         </div>`;
+        document.getElementById("reviewPrevBtn").addEventListener("click", () => {
+          renderResult(prev.score, prev.total, prev.answers || [], false);
+        });
         startBtn.disabled = true;
         startBtn.textContent = "لا يمكنك إعادة الامتحان";
       } else {
@@ -321,7 +326,7 @@ async function submitExam() {
   }
 }
 
-function renderResult(score, total, answerDetails) {
+function renderResult(score, total, answerDetails, isFreshSubmission = true) {
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
   const content = document.getElementById("content");
   const questions = exam.questions || [];
@@ -359,13 +364,17 @@ function renderResult(score, total, answerDetails) {
       </div>`;
   }).join("");
 
+  const subMessage = isFreshSubmission
+    ? "تم إرسال نتيجتك للمدرّس بنجاح."
+    : "مراجعة إجابتك السابقة.";
+
   content.innerHTML = `
     <div class="card">
       <div class="result-label">نتيجتك</div>
       <div class="result-score">${score} / ${total}</div>
       <div class="result-label">(${pct}%)</div>
     </div>
-    <p style="color:#9FB8AD; text-align:center; font-size:0.85rem; margin-bottom:1rem;">تم إرسال نتيجتك للمدرّس بنجاح.</p>
+    <p style="color:#9FB8AD; text-align:center; font-size:0.85rem; margin-bottom:1rem;">${subMessage}</p>
     ${reviewHtml}
   `;
 }
