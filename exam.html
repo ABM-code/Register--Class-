@@ -121,28 +121,44 @@ function renderStudentPicker() {
         ${studentsInStage.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
       </select>
     </div>
+    <p id="manualToggleLink" style="text-align:center; color:#9FB8AD; font-size:0.85rem; cursor:pointer; text-decoration:underline; margin:-0.4rem 0 1rem;">مش لاقي اسمك في القائمة؟ اضغط هنا</p>
+    <div class="card" id="manualEntryCard" style="display:none;">
+      <label>الاسم بالكامل</label>
+      <input type="text" id="manualNameInput" placeholder="اكتب اسمك بالكامل">
+      <label style="margin-top:0.6rem;">رقم هاتفك (اختياري)</label>
+      <input type="text" id="manualPhoneInput" placeholder="رقم هاتفك">
+      <label style="margin-top:0.6rem;">رقم هاتف ولي الأمر (اختياري)</label>
+      <input type="text" id="manualParentPhoneInput" placeholder="رقم هاتف ولي الأمر">
+    </div>
     <div id="alreadySubmittedMsg"></div>
     <button id="startBtn" disabled>ابدأ الامتحان</button>
   `;
   const select = document.getElementById("studentSelect");
   const startBtn = document.getElementById("startBtn");
   const msgBox = document.getElementById("alreadySubmittedMsg");
+  const manualLink = document.getElementById("manualToggleLink");
+  const manualCard = document.getElementById("manualEntryCard");
+  const manualNameInput = document.getElementById("manualNameInput");
+  const manualPhoneInput = document.getElementById("manualPhoneInput");
+  const manualParentPhoneInput = document.getElementById("manualParentPhoneInput");
 
-  select.addEventListener("change", async () => {
-    selectedStudent = studentsInStage.find(s => s.id === select.value) || null;
+  let manualMode = false;
+
+  function resetStart() {
     msgBox.innerHTML = "";
     startBtn.disabled = true;
     startBtn.textContent = "ابدأ الامتحان";
-    if (!selectedStudent) return;
+  }
 
+  async function checkAlreadySubmitted() {
     startBtn.disabled = true;
     startBtn.textContent = "جاري التحقق...";
     try {
-      const snap = await db.collection("examResults")
-        .where("examId", "==", exam.id)
-        .where("studentId", "==", selectedStudent.id)
-        .limit(1)
-        .get();
+      let query = db.collection("examResults").where("examId", "==", exam.id);
+      query = selectedStudent.id
+        ? query.where("studentId", "==", selectedStudent.id)
+        : query.where("studentName", "==", selectedStudent.name);
+      const snap = await query.limit(1).get();
       if (!snap.empty) {
         const prev = snap.docs[0].data();
         const pct = prev.total > 0 ? Math.round((prev.score / prev.total) * 100) : 0;
@@ -161,6 +177,40 @@ function renderStudentPicker() {
       startBtn.disabled = true;
       startBtn.textContent = "ابدأ الامتحان";
     }
+  }
+
+  manualLink.addEventListener("click", () => {
+    manualMode = !manualMode;
+    manualCard.style.display = manualMode ? "block" : "none";
+    manualLink.textContent = manualMode ? "الرجوع لاختيار الاسم من القائمة" : "مش لاقي اسمك في القائمة؟ اضغط هنا";
+    select.value = "";
+    selectedStudent = null;
+    resetStart();
+  });
+
+  select.addEventListener("change", async () => {
+    selectedStudent = studentsInStage.find(s => s.id === select.value) || null;
+    resetStart();
+    if (!selectedStudent) return;
+    await checkAlreadySubmitted();
+  });
+
+  let manualDebounceTimer = null;
+  [manualNameInput, manualPhoneInput, manualParentPhoneInput].forEach(inp => {
+    inp.addEventListener("input", () => {
+      clearTimeout(manualDebounceTimer);
+      const name = manualNameInput.value.trim();
+      if (!name) { selectedStudent = null; resetStart(); return; }
+      selectedStudent = {
+        id: null,
+        name,
+        studentPhone: manualPhoneInput.value.trim(),
+        parentPhone: manualParentPhoneInput.value.trim(),
+      };
+      startBtn.disabled = true;
+      startBtn.textContent = "ابدأ الامتحان";
+      manualDebounceTimer = setTimeout(checkAlreadySubmitted, 500);
+    });
   });
 
   startBtn.addEventListener("click", renderExam);
@@ -257,6 +307,7 @@ async function submitExam() {
       studentName: selectedStudent.name || "",
       studentPhone: selectedStudent.studentPhone || "",
       parentPhone: selectedStudent.parentPhone || "",
+      manual: !selectedStudent.id,
       score,
       total,
       answers: answerDetails,

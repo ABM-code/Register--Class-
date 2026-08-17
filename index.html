@@ -1293,7 +1293,7 @@ function renderExamResultsList() {
     return `
       <div class="result-row">
         <div>
-          <div class="result-row-name">${escapeHtml(r.studentName)}</div>
+          <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
           <div class="result-row-date">${dateStr}</div>
         </div>
         <div style="display:flex; align-items:center; gap:0.6rem;">
