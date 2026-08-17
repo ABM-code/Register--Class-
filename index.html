@@ -319,6 +319,7 @@
     <div class="field-group">
       <label>Name *</label>
       <input class="reg-input" id="fName" placeholder="Full name">
+      <div id="dupNameWarning" style="display:none; font-size:0.8rem; color:#946A26; background:#FBF0DE; padding:0.4rem 0.6rem; border-radius:6px; margin-top:0.4rem;"></div>
     </div>
     <div class="field-group">
       <label>المرحلة</label>
@@ -629,6 +630,19 @@ function normalizeArabic(str) {
     .replace(/\s+/g, "")
     .toLowerCase();
 }
+function checkDuplicateName() {
+  const warningBox = document.getElementById("dupNameWarning");
+  const name = document.getElementById("fName").value.trim();
+  if (!name) { warningBox.style.display = "none"; return; }
+  const targetNorm = normalizeArabic(name);
+  const match = students.find(s => s.id !== editingId && normalizeArabic(s.name) === targetNorm);
+  if (match) {
+    warningBox.textContent = `⚠️ يوجد طالب بنفس الاسم بالفعل: "${match.name}"${match.stage ? " (" + match.stage + ")" : ""} — تقدر تكمل عادي لو ده طالب مختلف فعلاً.`;
+    warningBox.style.display = "block";
+  } else {
+    warningBox.style.display = "none";
+  }
+}
 function toEnglishDigits(str) {
   if (!str) return str;
   const arabicIndic = "٠١٢٣٤٥٦٧٨٩";
@@ -886,6 +900,7 @@ function openNewForm() {
   document.getElementById("saveBtnLabel").textContent = "Add student";
   ["fName","fStudentPhone","fParentPhone","fEntryDate","fNotes"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("fStage").value = "";
+  document.getElementById("dupNameWarning").style.display = "none";
   ["fTerm1Paid","fTerm1Received","fTerm2Paid","fTerm2Received"].forEach(id => document.getElementById(id).checked = false);
   document.getElementById("fExempt").checked = false;
   document.getElementById("formCard").style.display = "block";
@@ -896,6 +911,7 @@ function openEditForm(s) {
   document.getElementById("formTitle").textContent = "Edit student";
   document.getElementById("saveBtnLabel").textContent = "Save changes";
   document.getElementById("fName").value = s.name || "";
+  document.getElementById("dupNameWarning").style.display = "none";
   document.getElementById("fStage").value = s.stage || "";
   document.getElementById("fStudentPhone").value = s.studentPhone || "";
   document.getElementById("fParentPhone").value = s.parentPhone || "";
@@ -1832,6 +1848,7 @@ function render() {
 }
 
 document.getElementById("addBtn").addEventListener("click", openNewForm);
+document.getElementById("fName").addEventListener("input", checkDuplicateName);
 document.getElementById("newExamBtn").addEventListener("click", openExamBuilder);
 document.getElementById("aiImportBtn").addEventListener("click", () => document.getElementById("aiImageInput").click());
 document.getElementById("aiImageInput").addEventListener("change", (e) => {
