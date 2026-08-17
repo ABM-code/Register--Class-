@@ -53,6 +53,16 @@
   .option-input-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
   .option-input-row input[type=radio] { accent-color: #3F6B4A; flex-shrink: 0; }
   .result-row { background: #F5F1E6; border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .result-row-wrap { margin-bottom: 0.5rem; }
+  .result-row-wrap .result-row { margin-bottom: 0; border-radius: 10px 10px 0 0; }
+  .answer-detail-box { background: #FFFDF8; border: 1px solid rgba(0,0,0,0.08); border-top: none; border-radius: 0 0 10px 10px; padding: 0.7rem 0.9rem; }
+  .answer-detail-row { padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.85rem; }
+  .answer-detail-row:last-child { border-bottom: none; }
+  .answer-detail-q { font-weight: 600; margin-bottom: 0.2rem; color: #1B2420; }
+  .answer-detail-given { color: #6B6B60; }
+  .answer-detail-row.ok .answer-detail-given { color: #3F6B4A; }
+  .answer-detail-row.bad .answer-detail-given { color: #C15B3C; }
+  .answer-detail-correct { color: #3F6B4A; font-weight: 600; margin-top: 0.15rem; }
   .result-row-name { font-weight: 600; }
   .result-row-score { font-family: 'Fraunces', serif; font-weight: 700; color: #3F6B4A; }
   .result-row-date { font-size: 0.75rem; color: #6B6B60; width: 100%; }
@@ -1280,6 +1290,11 @@ function closeExamResults() {
   document.getElementById("examsListView").style.display = "block";
   document.getElementById("examResultsView").style.display = "none";
 }
+let expandedResultId = null;
+function toggleResultExpand(resultId) {
+  expandedResultId = expandedResultId === resultId ? null : resultId;
+  renderExamResultsList();
+}
 function renderExamResultsList() {
   const list = examResults.filter(r => r.examId === viewingExamId);
   const container = document.getElementById("examResultsList");
@@ -1287,19 +1302,44 @@ function renderExamResultsList() {
     container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">لسه محدش سلّم الامتحان ده.</p>`;
     return;
   }
+  const ex = exams.find(e => e.id === viewingExamId);
+  const questions = ex ? (ex.questions || []) : [];
   container.innerHTML = list.map(r => {
     const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
     const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString('ar-EG') : "";
+    const isOpen = expandedResultId === r.id;
+    const answersHtml = (r.answers || []).map(ad => {
+      const q = questions[ad.questionIndex];
+      if (!q) return "";
+      let givenText = "", correctText = "";
+      if (q.type === "mcq") {
+        const opts = q.options || [];
+        givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
+        correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
+      } else {
+        givenText = ad.given ? ad.given : "(لم يُجب)";
+        correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
+      }
+      return `
+        <div class="answer-detail-row ${ad.correct ? 'ok' : 'bad'}">
+          <div class="answer-detail-q">${ad.questionIndex + 1}. ${escapeHtml(q.prompt)}</div>
+          <div class="answer-detail-given">${ad.correct ? '✓' : '✗'} إجابته: ${escapeHtml(givenText)}</div>
+          ${!ad.correct ? `<div class="answer-detail-correct">الصح: ${escapeHtml(correctText)}</div>` : ""}
+        </div>`;
+    }).join("");
     return `
-      <div class="result-row">
-        <div>
-          <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
-          <div class="result-row-date">${dateStr}</div>
+      <div class="result-row-wrap">
+        <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
+          <div>
+            <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
+            <div class="result-row-date">${dateStr}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+            ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
+          </div>
         </div>
-        <div style="display:flex; align-items:center; gap:0.6rem;">
-          <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
-          ${r.parentPhone ? `<button class="wa-send-btn" onclick='sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
-        </div>
+        ${isOpen ? `<div class="answer-detail-box">${answersHtml}</div>` : ""}
       </div>`;
   }).join("");
 }
