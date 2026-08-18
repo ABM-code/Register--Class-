@@ -273,13 +273,24 @@
   </div>
 
   <div class="stats-row">
-    <div class="stat-card good-card" id="bookletReceivedPill">
-      <div class="stat-label">استلموا المذكرات كاملة</div>
-      <div class="stat-value" id="statBookletReceived">0 طالب</div>
+    <div class="stat-card good-card" id="term1ReceivedPill">
+      <div class="stat-label">استلموا مذكرة ترم أول</div>
+      <div class="stat-value" id="statTerm1Received">0 طالب</div>
     </div>
-    <div class="stat-card overdue-card" id="bookletMissingPill">
-      <div class="stat-label">لسه مستلموش المذكرات</div>
-      <div class="stat-value" id="statBookletMissing">0 طالب</div>
+    <div class="stat-card overdue-card" id="term1MissingPill">
+      <div class="stat-label">لسه مستلموش ترم أول</div>
+      <div class="stat-value" id="statTerm1Missing">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card good-card" id="term2ReceivedPill">
+      <div class="stat-label">استلموا مذكرة ترم تاني</div>
+      <div class="stat-value" id="statTerm2Received">0 طالب</div>
+    </div>
+    <div class="stat-card overdue-card" id="term2MissingPill">
+      <div class="stat-label">لسه مستلموش ترم تاني</div>
+      <div class="stat-value" id="statTerm2Missing">0 طالب</div>
     </div>
   </div>
 
@@ -1809,10 +1820,14 @@ function render() {
   if (exemptOnly) {
     filtered = filtered.filter(s => s.exempt);
   }
-  if (bookletFilter === "received") {
-    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1) && !!(s.term2Received ?? s.term2));
-  } else if (bookletFilter === "missing") {
-    filtered = filtered.filter(s => !((s.term1Received ?? s.term1) && (s.term2Received ?? s.term2)));
+  if (bookletFilter === "term1_received") {
+    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1));
+  } else if (bookletFilter === "term1_missing") {
+    filtered = filtered.filter(s => !(s.term1Received ?? s.term1));
+  } else if (bookletFilter === "term2_received") {
+    filtered = filtered.filter(s => !!(s.term2Received ?? s.term2));
+  } else if (bookletFilter === "term2_missing") {
+    filtered = filtered.filter(s => !(s.term2Received ?? s.term2));
   }
   if (noParentOnly) {
     filtered = filtered.filter(s => !s.parentPhone);
@@ -1834,7 +1849,7 @@ function render() {
 
   const now = new Date();
   const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
-  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, bookletReceivedCount = 0, bookletMissingCount = 0, noParentCount = 0;
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, term1ReceivedCount = 0, term1MissingCount = 0, term2ReceivedCount = 0, term2MissingCount = 0, noParentCount = 0;
   students.forEach(s => {
     const payments = getPayments(s);
     payments.forEach(p => {
@@ -1844,8 +1859,8 @@ function render() {
     });
     if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
     if (s.exempt) exemptCount++;
-    const bothReceived = !!(s.term1Received ?? s.term1) && !!(s.term2Received ?? s.term2);
-    if (bothReceived) bookletReceivedCount++; else bookletMissingCount++;
+    if (s.term1Received ?? s.term1) term1ReceivedCount++; else term1MissingCount++;
+    if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
     if (!s.parentPhone) noParentCount++;
   });
   document.getElementById("statMonth").textContent = monthTotal.toLocaleString() + " جنيه";
@@ -1856,10 +1871,14 @@ function render() {
   document.getElementById("statExempt").textContent = exemptCount + " طالب";
   const exemptCard = document.getElementById("exemptPill");
   exemptCard.classList.toggle("active", exemptOnly);
-  document.getElementById("statBookletReceived").textContent = bookletReceivedCount + " طالب";
-  document.getElementById("bookletReceivedPill").classList.toggle("active", bookletFilter === "received");
-  document.getElementById("statBookletMissing").textContent = bookletMissingCount + " طالب";
-  document.getElementById("bookletMissingPill").classList.toggle("active", bookletFilter === "missing");
+  document.getElementById("statTerm1Received").textContent = term1ReceivedCount + " طالب";
+  document.getElementById("term1ReceivedPill").classList.toggle("active", bookletFilter === "term1_received");
+  document.getElementById("statTerm1Missing").textContent = term1MissingCount + " طالب";
+  document.getElementById("term1MissingPill").classList.toggle("active", bookletFilter === "term1_missing");
+  document.getElementById("statTerm2Received").textContent = term2ReceivedCount + " طالب";
+  document.getElementById("term2ReceivedPill").classList.toggle("active", bookletFilter === "term2_received");
+  document.getElementById("statTerm2Missing").textContent = term2MissingCount + " طالب";
+  document.getElementById("term2MissingPill").classList.toggle("active", bookletFilter === "term2_missing");
   document.getElementById("statNoParent").textContent = noParentCount + " طالب";
   document.getElementById("noParentPill").classList.toggle("active", noParentOnly);
 
@@ -1872,10 +1891,12 @@ function render() {
       ? "No students yet. Add your first one above."
       : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
         : (exemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
-        : (bookletFilter === "received" ? "لسه محدش استلم المذكرات كاملة."
-        : (bookletFilter === "missing" ? "كل الطلاب استلموا المذكرات كاملة ✓"
+        : (bookletFilter === "term1_received" ? "لسه محدش استلم مذكرة ترم أول."
+        : (bookletFilter === "term1_missing" ? "كل الطلاب استلموا مذكرة ترم أول ✓"
+        : (bookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
+        : (bookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
         : (noParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
-        : "No matches for that search.")))));
+        : "No matches for that search.")))))));
     emptyEl.style.display = "block";
     return;
   }
@@ -1972,8 +1993,10 @@ document.getElementById("aiImageInput").addEventListener("change", (e) => {
 });
 document.getElementById("overduePill").addEventListener("click", toggleOverdueFilter);
 document.getElementById("exemptPill").addEventListener("click", toggleExemptFilter);
-document.getElementById("bookletReceivedPill").addEventListener("click", () => toggleBookletFilter("received"));
-document.getElementById("bookletMissingPill").addEventListener("click", () => toggleBookletFilter("missing"));
+document.getElementById("term1ReceivedPill").addEventListener("click", () => toggleBookletFilter("term1_received"));
+document.getElementById("term1MissingPill").addEventListener("click", () => toggleBookletFilter("term1_missing"));
+document.getElementById("term2ReceivedPill").addEventListener("click", () => toggleBookletFilter("term2_received"));
+document.getElementById("term2MissingPill").addEventListener("click", () => toggleBookletFilter("term2_missing"));
 document.getElementById("noParentPill").addEventListener("click", toggleNoParentFilter);
 document.getElementById("exportExcelBtn").addEventListener("click", exportExcel);
 document.getElementById("exportPdfBtn").addEventListener("click", exportPdf);
