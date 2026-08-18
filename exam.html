@@ -136,6 +136,11 @@ function renderStudentPicker() {
         ${studentsInStage.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
       </select>
     </div>
+    <div class="card" id="pinCard" style="display:none;">
+      <label id="pinLabel"></label>
+      <input type="text" id="pinInput" placeholder="4 أرقام" maxlength="4" inputmode="numeric">
+      <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
+    </div>
     <p id="manualToggleLink" style="text-align:center; color:#9FB8AD; font-size:0.85rem; cursor:pointer; text-decoration:underline; margin:-0.4rem 0 1rem;">مش لاقي اسمك في القائمة؟ اضغط هنا</p>
     <div class="card" id="manualEntryCard" style="display:none;">
       <label>الاسم بالكامل</label>
@@ -156,13 +161,25 @@ function renderStudentPicker() {
   const manualNameInput = document.getElementById("manualNameInput");
   const manualPhoneInput = document.getElementById("manualPhoneInput");
   const manualParentPhoneInput = document.getElementById("manualParentPhoneInput");
+  const pinCard = document.getElementById("pinCard");
+  const pinLabel = document.getElementById("pinLabel");
+  const pinInput = document.getElementById("pinInput");
+  const pinMsg = document.getElementById("pinMsg");
 
   let manualMode = false;
+  let pinVerified = false;
 
   function resetStart() {
     msgBox.innerHTML = "";
     startBtn.disabled = true;
     startBtn.textContent = "ابدأ الامتحان";
+  }
+
+  function resetPin() {
+    pinVerified = false;
+    pinCard.style.display = "none";
+    pinInput.value = "";
+    pinMsg.style.display = "none";
   }
 
   async function checkAlreadySubmitted() {
@@ -216,13 +233,66 @@ function renderStudentPicker() {
     select.value = "";
     selectedStudent = null;
     resetStart();
+    resetPin();
   });
 
   select.addEventListener("change", async () => {
     selectedStudent = studentsInStage.find(s => s.id === select.value) || null;
     resetStart();
+    resetPin();
     if (!selectedStudent) return;
-    await checkAlreadySubmitted();
+
+    if (selectedStudent.pin) {
+      pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
+      pinCard.style.display = "block";
+      pinInput.focus();
+    } else {
+      pinLabel.textContent = "اختار رمز سري من 4 أرقام هتستخدمه في كل الامتحانات الجاية، عشان محدش تاني يمتحن مكانك";
+      pinCard.style.display = "block";
+      pinInput.focus();
+    }
+  });
+
+  pinInput.addEventListener("input", async () => {
+    const typed = pinInput.value.replace(/\D/g, "");
+    pinInput.value = typed;
+    if (typed.length < 4) {
+      pinMsg.style.display = "none";
+      startBtn.disabled = true;
+      return;
+    }
+    if (selectedStudent.pin) {
+      // تحقق من رمز موجود بالفعل
+      if (typed === selectedStudent.pin) {
+        pinVerified = true;
+        pinMsg.textContent = "✓ تم التأكيد";
+        pinMsg.style.color = "#3F6B4A";
+        pinMsg.style.display = "block";
+        await checkAlreadySubmitted();
+      } else {
+        pinVerified = false;
+        pinMsg.textContent = "الرمز غير صحيح.";
+        pinMsg.style.color = "#C15B3C";
+        pinMsg.style.display = "block";
+        startBtn.disabled = true;
+        startBtn.textContent = "ابدأ الامتحان";
+      }
+    } else {
+      // أول استخدام — نسجّل الرمز الجديد
+      try {
+        await db.collection("students").doc(selectedStudent.id).update({ pin: typed });
+        selectedStudent.pin = typed;
+        pinVerified = true;
+        pinMsg.textContent = "✓ تم حفظ الرمز، افتكره كويس هتحتاجه المرات الجاية";
+        pinMsg.style.color = "#3F6B4A";
+        pinMsg.style.display = "block";
+        await checkAlreadySubmitted();
+      } catch (err) {
+        pinMsg.textContent = "تعذر حفظ الرمز. تأكد من اتصالك بالإنترنت.";
+        pinMsg.style.color = "#C15B3C";
+        pinMsg.style.display = "block";
+      }
+    }
   });
 
   let manualDebounceTimer = null;
