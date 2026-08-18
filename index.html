@@ -450,6 +450,10 @@
   <div id="examResultsView" style="display:none;">
     <button onclick="closeExamResults()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
     <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;"></h2>
+    <div class="search-wrap" style="margin-bottom:0.9rem;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="examResultsSearchInput" placeholder="ابحث باسم الطالب" oninput="renderExamResultsList()">
+    </div>
     <div id="examResultsList"></div>
   </div>
 
@@ -1597,10 +1601,25 @@ async function saveExam() {
   }
 }
 
+function goToStudentProfile(studentId) {
+  switchTab("students");
+  expandedId = studentId;
+  document.getElementById("searchInput").value = "";
+  overdueOnly = false;
+  exemptOnly = false;
+  render();
+  setTimeout(() => {
+    const card = document.querySelector(`.card-row[data-student-id="${studentId}"]`);
+    if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 50);
+}
+
 function viewExamResults(examId) {
   viewingExamId = examId;
   const ex = exams.find(e => e.id === examId);
   document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
+  const searchInput = document.getElementById("examResultsSearchInput");
+  if (searchInput) searchInput.value = "";
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "none";
   document.getElementById("examResultsView").style.display = "block";
@@ -1618,10 +1637,17 @@ function toggleResultExpand(resultId) {
   renderExamResultsList();
 }
 function renderExamResultsList() {
-  const list = examResults.filter(r => r.examId === viewingExamId);
+  const searchInput = document.getElementById("examResultsSearchInput");
+  const rawQuery = searchInput ? searchInput.value.trim() : "";
+  const normQuery = normalizeArabic(rawQuery);
+  let list = examResults.filter(r => r.examId === viewingExamId);
+  if (rawQuery) {
+    list = list.filter(r => normalizeArabic(r.studentName).includes(normQuery));
+  }
   const container = document.getElementById("examResultsList");
   if (list.length === 0) {
-    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">لسه محدش سلّم الامتحان ده.</p>`;
+    const msg = rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.";
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
     return;
   }
   const ex = exams.find(e => e.id === viewingExamId);
@@ -1656,8 +1682,9 @@ function renderExamResultsList() {
             <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
             <div class="result-row-date">${dateStr}</div>
           </div>
-          <div style="display:flex; align-items:center; gap:0.6rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
             <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+            ${r.studentId ? `<button class="wa-send-btn" style="background:#5B8FC4;" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
             ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
           </div>
         </div>
@@ -1820,7 +1847,7 @@ function render() {
           </div>`).join("")
       : `<p class="no-payments">لسه مفيش مدفوعات مسجلة</p>`;
     return `
-      <div class="card-row">
+      <div class="card-row" data-student-id="${s.id}">
         <div class="card-head" onclick="toggleExpand('${s.id}')">
           <div style="min-width:0;flex:1;">
             <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
