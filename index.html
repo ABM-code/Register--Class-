@@ -890,6 +890,7 @@ function exportPdf() {
   const sorted = sortByStageThenName(students);
   const monthLabels = ["٨","٩","١٠","١١","١٢","١","٢","٣","٤","٥","٦"];
   let currentStage = null;
+  let isFirstStage = true;
   let serial = 0;
   const monthCellsHtml = `<td class="month-cell"></td>`.repeat(monthLabels.length);
   const rowsHtml = sorted.map(s => {
@@ -898,7 +899,9 @@ function exportPdf() {
     if (stageLabel !== currentStage) {
       currentStage = stageLabel;
       serial = 0;
-      sectionHeader = `<tr class="stage-header"><td colspan="18">${escapeHtml(stageLabel)}</td></tr>`;
+      const breakClass = isFirstStage ? "" : " page-break";
+      isFirstStage = false;
+      sectionHeader = `<tr class="stage-header${breakClass}"><td colspan="18">${escapeHtml(stageLabel)}</td></tr>`;
     }
     serial++;
     return sectionHeader + `<tr>
@@ -928,6 +931,8 @@ function exportPdf() {
       .month-cell { width: 24px; }
       tr:nth-child(even) { background: #f7f5ef; }
       tr.stage-header td { background: #D4A93B; color: #1B2420; font-weight: bold; font-size: 13px; padding: 7px; text-align: right; }
+      tr.page-break { page-break-before: always; break-before: page; }
+      tr.page-break td { padding-top: 12px; }
     </style></head>
     <body>
       <h1>كشف الطلاب — ${TEACHER_NAME}</h1>
