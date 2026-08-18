@@ -318,6 +318,10 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
       النسخ الاحتياطية التلقائية
     </button>
+    <button id="manualBackupNowBtn" class="backup-btn" onclick="takeManualBackupNow()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      خد نسخة دلوقتي
+    </button>
   </div>
   <div id="autoBackupsList" style="display:none; margin-bottom:1rem;"></div>
 
@@ -1176,28 +1180,55 @@ function initNotifUi() {
   card.style.display = Notification.permission === "default" ? "block" : "none";
 }
 
+async function createAutoBackupNow() {
+  if (students.length === 0) return false;
+  await db.collection("autoBackups").add({
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    studentsCount: students.length,
+    students: students,
+    exams: exams,
+  });
+  try { localStorage.setItem("lastAutoBackup", Date.now().toString()); } catch (e) {}
+  const old = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
+  if (old.docs.length > 8) {
+    const batch = db.batch();
+    old.docs.slice(8).forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+  return true;
+}
+
 async function maybeRunAutoBackup() {
   let last = 0;
   try { last = parseInt(localStorage.getItem("lastAutoBackup") || "0", 10); } catch (e) {}
   const weekMs = 7 * 24 * 60 * 60 * 1000;
   if (Date.now() - last < weekMs) return;
-  if (students.length === 0) return;
   try {
-    await db.collection("autoBackups").add({
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      studentsCount: students.length,
-      students: students,
-      exams: exams,
-    });
-    try { localStorage.setItem("lastAutoBackup", Date.now().toString()); } catch (e) {}
-    const old = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
-    if (old.docs.length > 8) {
-      const batch = db.batch();
-      old.docs.slice(8).forEach(d => batch.delete(d.ref));
-      await batch.commit();
-    }
+    await createAutoBackupNow();
   } catch (err) {
     // فشل صامت — مش حرج، هيحاول تاني الأسبوع الجاي
+  }
+}
+
+async function takeManualBackupNow() {
+  const btn = document.getElementById("manualBackupNowBtn");
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = "جاري أخذ النسخة...";
+  try {
+    const created = await createAutoBackupNow();
+    if (!created) {
+      showError("مفيش طلاب مسجلين لسه، مفيش حاجة تتحفظ.");
+    } else {
+      showSuccess("تم أخذ نسخة احتياطية الآن بنجاح.");
+      const box = document.getElementById("autoBackupsList");
+      if (box.style.display === "block") await loadAutoBackupsList();
+    }
+  } catch (err) {
+    showError("تعذر أخذ نسخة احتياطية. تأكد من اتصالك بالإنترنت.");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
   }
 }
 
@@ -1208,6 +1239,11 @@ async function toggleAutoBackupsList() {
     return;
   }
   box.style.display = "block";
+  await loadAutoBackupsList();
+}
+
+async function loadAutoBackupsList() {
+  const box = document.getElementById("autoBackupsList");
   box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
   try {
     const snap = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
