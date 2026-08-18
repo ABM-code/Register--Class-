@@ -113,6 +113,10 @@
   .exempt-card:hover { background: rgba(91,143,196,0.15); }
   .exempt-card.active { background: #5B8FC4; border-color: #5B8FC4; }
   .exempt-card.active .stat-label, .exempt-card.active .stat-value { color: #ffffff; }
+  .good-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+  .good-card:hover { background: rgba(94,148,104,0.15); }
+  .good-card.active { background: #5E9468; border-color: #5E9468; }
+  .good-card.active .stat-label, .good-card.active .stat-value { color: #ffffff; }
   .backup-btn {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
     background: rgba(245,241,230,0.08); color: #9FB8AD; border: 1px solid rgba(245,241,230,0.18);
@@ -265,6 +269,24 @@
     <div class="stat-card exempt-card" id="exemptPill">
       <div class="stat-label">معفيين من الدفع</div>
       <div class="stat-value" id="statExempt">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card good-card" id="bookletReceivedPill">
+      <div class="stat-label">استلموا المذكرات كاملة</div>
+      <div class="stat-value" id="statBookletReceived">0 طالب</div>
+    </div>
+    <div class="stat-card overdue-card" id="bookletMissingPill">
+      <div class="stat-label">لسه مستلموش المذكرات</div>
+      <div class="stat-value" id="statBookletMissing">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card overdue-card" id="noParentPill">
+      <div class="stat-label">بدون رقم ولي الأمر</div>
+      <div class="stat-value" id="statNoParent">0 طالب</div>
     </div>
   </div>
 
@@ -1007,6 +1029,14 @@ function toggleOverdueFilter() {
 }
 function toggleExemptFilter() {
   exemptOnly = !exemptOnly;
+  render();
+}
+function toggleBookletFilter(mode) {
+  bookletFilter = bookletFilter === mode ? null : mode;
+  render();
+}
+function toggleNoParentFilter() {
+  noParentOnly = !noParentOnly;
   render();
 }
 function toggleStudentCount() {
@@ -1760,6 +1790,8 @@ function sendExamReminderWhatsapp(s, examTitle, target) {
 
 let overdueOnly = false;
 let exemptOnly = false;
+let bookletFilter = null;
+let noParentOnly = false;
 let showStudentCount = false;
 
 function render() {
@@ -1776,6 +1808,14 @@ function render() {
   }
   if (exemptOnly) {
     filtered = filtered.filter(s => s.exempt);
+  }
+  if (bookletFilter === "received") {
+    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1) && !!(s.term2Received ?? s.term2));
+  } else if (bookletFilter === "missing") {
+    filtered = filtered.filter(s => !((s.term1Received ?? s.term1) && (s.term2Received ?? s.term2)));
+  }
+  if (noParentOnly) {
+    filtered = filtered.filter(s => !s.parentPhone);
   }
 
   document.getElementById("studentCount").textContent = showStudentCount
@@ -1794,7 +1834,7 @@ function render() {
 
   const now = new Date();
   const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
-  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0;
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, bookletReceivedCount = 0, bookletMissingCount = 0, noParentCount = 0;
   students.forEach(s => {
     const payments = getPayments(s);
     payments.forEach(p => {
@@ -1804,6 +1844,9 @@ function render() {
     });
     if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
     if (s.exempt) exemptCount++;
+    const bothReceived = !!(s.term1Received ?? s.term1) && !!(s.term2Received ?? s.term2);
+    if (bothReceived) bookletReceivedCount++; else bookletMissingCount++;
+    if (!s.parentPhone) noParentCount++;
   });
   document.getElementById("statMonth").textContent = monthTotal.toLocaleString() + " جنيه";
   document.getElementById("statTotal").textContent = grandTotal.toLocaleString() + " جنيه";
@@ -1813,6 +1856,12 @@ function render() {
   document.getElementById("statExempt").textContent = exemptCount + " طالب";
   const exemptCard = document.getElementById("exemptPill");
   exemptCard.classList.toggle("active", exemptOnly);
+  document.getElementById("statBookletReceived").textContent = bookletReceivedCount + " طالب";
+  document.getElementById("bookletReceivedPill").classList.toggle("active", bookletFilter === "received");
+  document.getElementById("statBookletMissing").textContent = bookletMissingCount + " طالب";
+  document.getElementById("bookletMissingPill").classList.toggle("active", bookletFilter === "missing");
+  document.getElementById("statNoParent").textContent = noParentCount + " طالب";
+  document.getElementById("noParentPill").classList.toggle("active", noParentOnly);
 
   const listEl = document.getElementById("studentList");
   const emptyEl = document.getElementById("emptyState");
@@ -1821,7 +1870,12 @@ function render() {
     listEl.innerHTML = "";
     document.getElementById("emptyMsg").textContent = students.length === 0
       ? "No students yet. Add your first one above."
-      : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا." : (exemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا." : "No matches for that search."));
+      : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
+        : (exemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
+        : (bookletFilter === "received" ? "لسه محدش استلم المذكرات كاملة."
+        : (bookletFilter === "missing" ? "كل الطلاب استلموا المذكرات كاملة ✓"
+        : (noParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
+        : "No matches for that search.")))));
     emptyEl.style.display = "block";
     return;
   }
@@ -1918,6 +1972,9 @@ document.getElementById("aiImageInput").addEventListener("change", (e) => {
 });
 document.getElementById("overduePill").addEventListener("click", toggleOverdueFilter);
 document.getElementById("exemptPill").addEventListener("click", toggleExemptFilter);
+document.getElementById("bookletReceivedPill").addEventListener("click", () => toggleBookletFilter("received"));
+document.getElementById("bookletMissingPill").addEventListener("click", () => toggleBookletFilter("missing"));
+document.getElementById("noParentPill").addEventListener("click", toggleNoParentFilter);
 document.getElementById("exportExcelBtn").addEventListener("click", exportExcel);
 document.getElementById("exportPdfBtn").addEventListener("click", exportPdf);
 document.getElementById("fixPhonesBtn").addEventListener("click", fixAllPhoneNumbers);
