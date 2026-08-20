@@ -513,10 +513,13 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="examResultsSearchInput" placeholder="ابحث باسم الطالب" oninput="renderExamResultsList()">
     </div>
-    <div class="stats-row" style="margin-bottom:0.9rem;">
-      <div class="stat-card exempt-card" id="resultsTorailPill" style="flex:none; padding:0.5rem 0.9rem;" onclick="toggleResultsTorailFilter()">
-        <div class="stat-label">إظهار نتائج طلاب توريل بس</div>
-      </div>
+    <div class="stats-row" style="margin-bottom:0.9rem; gap:0.5rem;">
+      <button id="resultsAllPill" type="button" class="stat-card good-card" style="flex:1; padding:0.6rem 0.9rem; border:2px solid transparent; cursor:pointer;" onclick="setResultsTorailFilter(false)">
+        <div class="stat-label">كل النتائج</div>
+      </button>
+      <button id="resultsTorailPill" type="button" class="stat-card exempt-card" style="flex:1; padding:0.6rem 0.9rem; border:2px solid transparent; cursor:pointer;" onclick="setResultsTorailFilter(true)">
+        <div class="stat-label">نتائج طلاب توريل</div>
+      </button>
     </div>
     <div id="examResultsList"></div>
   </div>
@@ -1891,9 +1894,12 @@ function toggleResultExpand(resultId) {
   renderExamResultsList();
 }
 let resultsTorailOnly = false;
-function toggleResultsTorailFilter() {
-  resultsTorailOnly = !resultsTorailOnly;
+function setResultsTorailFilter(isTorail) {
+  resultsTorailOnly = !!isTorail;
   renderExamResultsList();
+}
+function toggleResultsTorailFilter() {
+  setResultsTorailFilter(!resultsTorailOnly);
 }
 function renderExamResultsList() {
   const searchInput = document.getElementById("examResultsSearchInput");
@@ -1903,9 +1909,20 @@ function renderExamResultsList() {
   if (rawQuery) {
     list = list.filter(r => normalizeArabic(r.studentName).includes(normQuery));
   }
-  document.getElementById("resultsTorailPill").classList.toggle("active", resultsTorailOnly);
+  const allPill = document.getElementById("resultsAllPill");
+  const torailPill = document.getElementById("resultsTorailPill");
+  if (allPill) {
+    allPill.classList.toggle("active", !resultsTorailOnly);
+    allPill.style.borderColor = !resultsTorailOnly ? "#7FA98D" : "transparent";
+  }
+  if (torailPill) {
+    torailPill.classList.toggle("active", resultsTorailOnly);
+    torailPill.style.borderColor = resultsTorailOnly ? "#D4A93B" : "transparent";
+  }
   if (resultsTorailOnly) {
     list = list.filter(r => {
+      if (r.group === "torail") return true;
+      // Backward compatibility for old results created before group was stored.
       const st = students.find(s => s.id === r.studentId);
       return st && st.group === "torail";
     });

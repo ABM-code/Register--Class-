@@ -426,7 +426,15 @@ function renderQuestion(q, i) {
     </div>`;
 }
 
-function normalizeForMatch(str) {
+function normalizeExactText(str) {
+  // Rewrite / Correct: exact match after ignoring ONLY case and the requested punctuation.
+  // Ignored: . ? , _ apostrophe (straight/curly). Whitespace and all other characters remain significant.
+  return (str ?? "")
+    .toLocaleLowerCase("en-US")
+    .replace(/[.?,_\'’؟،]/g, "");
+}
+
+function normalizeLooseText(str) {
   return (str || "")
     .toLowerCase()
     .replace(/[.,!?;:'"()،؛؟]/g, "")
@@ -446,9 +454,16 @@ function gradeExam() {
     const given = answers[i];
     if (q.type === "mcq") {
       correct = given === q.correctIndex;
+    } else if (q.type === "rewrite" || q.type === "correct") {
+      // For Rewrite/Correct, the teacher requested a true 100% match,
+      // with only case and the specified punctuation ignored.
+      const givenNorm = normalizeExactText(given);
+      const accepted = (q.correctAnswers || []).map(a => normalizeExactText(a));
+      correct = accepted.includes(givenNorm);
     } else {
-      const givenNorm = normalizeForMatch(given);
-      const accepted = (q.correctAnswers || []).map(a => normalizeForMatch(a));
+      // Preserve the previous behavior for other non-MCQ question types.
+      const givenNorm = normalizeLooseText(given);
+      const accepted = (q.correctAnswers || []).map(a => normalizeLooseText(a));
       correct = accepted.includes(givenNorm);
     }
     if (correct) score += points;
@@ -474,6 +489,7 @@ async function submitExam(isTimeout) {
       studentName: selectedStudent.name || "",
       studentPhone: selectedStudent.studentPhone || "",
       parentPhone: selectedStudent.parentPhone || "",
+      group: selectedStudent.group || "normal",
       manual: !selectedStudent.id,
       score,
       total,
