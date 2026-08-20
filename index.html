@@ -27,9 +27,9 @@
   @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
 
   header { padding: 2.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(245,241,230,0.12); }
-  .tab-nav { display: flex; flex-direction: row-reverse; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
+  .tab-nav { display: flex; flex-direction: row-reverse; flex-wrap: wrap; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
   .tab-btn {
-    flex: 1; background: rgba(245,241,230,0.06); color: #9FB8AD; border: 1px solid rgba(245,241,230,0.16);
+    flex: 1 1 calc(50% - 0.25rem); min-width: 130px; background: rgba(245,241,230,0.06); color: #9FB8AD; border: 1px solid rgba(245,241,230,0.16);
     border-radius: 10px; padding: 0.6rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   }
@@ -234,6 +234,7 @@
     الامتحانات <span id="examsBadge" class="badge-dot" style="display:none;"></span>
   </button>
   <button class="tab-btn" id="tabStatsBtn" onclick="switchTab('stats')">الإحصائيات</button>
+  <button class="tab-btn" id="tabTorailBtn" onclick="switchTab('torail')">طلاب توريل</button>
 </div>
 
 <main class="app-content" id="viewStudents">
@@ -345,7 +346,15 @@
 
   <div id="errorBox"></div>
 
-  <form id="formCard">
+  <div id="emptyState">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9FB8AD" stroke-width="1.75" style="margin-bottom:0.6rem;opacity:0.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <p id="emptyMsg" style="margin:0;font-size:0.95rem;">No students yet. Add your first one above.</p>
+  </div>
+
+  <div id="studentList"></div>
+</main>
+
+  <form id="formCard" style="display:none;">
     <div class="form-head">
       <h2 id="formTitle">New student</h2>
       <button type="button" class="close-x" id="closeFormBtn">
@@ -430,13 +439,6 @@
     </div>
   </form>
 
-  <div id="emptyState">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9FB8AD" stroke-width="1.75" style="margin-bottom:0.6rem;opacity:0.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    <p id="emptyMsg" style="margin:0;font-size:0.95rem;">No students yet. Add your first one above.</p>
-  </div>
-
-  <div id="studentList"></div>
-</main>
 
 <main class="app-content" id="viewExams" style="display:none;">
   <div id="examsListView">
@@ -490,6 +492,11 @@
     <div class="search-wrap" style="margin-bottom:0.9rem;">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="examResultsSearchInput" placeholder="ابحث باسم الطالب" oninput="renderExamResultsList()">
+    </div>
+    <div class="stats-row" style="margin-bottom:0.9rem;">
+      <div class="stat-card exempt-card" id="resultsTorailPill" style="flex:none; padding:0.5rem 0.9rem;" onclick="toggleResultsTorailFilter()">
+        <div class="stat-label">إظهار نتائج طلاب توريل بس</div>
+      </div>
     </div>
     <div id="examResultsList"></div>
   </div>
@@ -545,6 +552,92 @@
   <div class="chart-box" id="chartExamParticipation"></div>
 </main>
 
+<main class="app-content" id="viewTorail" style="display:none;">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="torailSearchInput" placeholder="Search by name, phone, or stage">
+    </div>
+    <button id="torailAddBtn">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B2420" stroke-width="2.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+      Add
+    </button>
+  </div>
+
+  <div id="torailStageCounts" class="stage-counts"></div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">إجمالي هذا الشهر</div>
+      <div class="stat-value" id="torailStatMonth">0 جنيه</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">الإجمالي الكلي</div>
+      <div class="stat-value" id="torailStatTotal">0 جنيه</div>
+    </div>
+    <div class="stat-card overdue-card" id="torailOverduePill">
+      <div class="stat-label">متأخرين في الدفع</div>
+      <div class="stat-value" id="torailStatOverdue">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card exempt-card" id="torailExemptPill">
+      <div class="stat-label">معفيين من الدفع</div>
+      <div class="stat-value" id="torailStatExempt">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card good-card" id="torailTerm1ReceivedPill">
+      <div class="stat-label">استلموا مذكرة ترم أول</div>
+      <div class="stat-value" id="torailStatTerm1Received">0 طالب</div>
+    </div>
+    <div class="stat-card overdue-card" id="torailTerm1MissingPill">
+      <div class="stat-label">لسه مستلموش ترم أول</div>
+      <div class="stat-value" id="torailStatTerm1Missing">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card good-card" id="torailTerm2ReceivedPill">
+      <div class="stat-label">استلموا مذكرة ترم تاني</div>
+      <div class="stat-value" id="torailStatTerm2Received">0 طالب</div>
+    </div>
+    <div class="stat-card overdue-card" id="torailTerm2MissingPill">
+      <div class="stat-label">لسه مستلموش ترم تاني</div>
+      <div class="stat-value" id="torailStatTerm2Missing">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card overdue-card" id="torailNoParentPill">
+      <div class="stat-label">بدون رقم ولي الأمر</div>
+      <div class="stat-value" id="torailStatNoParent">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="backup-row">
+    <button id="torailExportExcelBtn" class="backup-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18M3 9h18M3 15h18"/></svg>
+      تصدير Excel
+    </button>
+    <button id="torailExportPdfBtn" class="backup-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h9l5 5v15H6v-4"/><path d="M6 14H2v6h4z"/></svg>
+      طباعة / PDF
+    </button>
+  </div>
+
+  <div id="torailErrorBox"></div>
+
+  <div id="torailEmptyState">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9FB8AD" stroke-width="1.75" style="margin-bottom:0.6rem;opacity:0.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <p id="torailEmptyMsg" style="margin:0;font-size:0.95rem;">لسه مفيش طلاب توريل. دوس Add عشان تضيف أول واحد.</p>
+  </div>
+
+  <div id="torailStudentList"></div>
+</main>
+
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const APP_PASSWORD = "moneer2026"; // غيّر كلمة السر دي لأي حاجة تحبها
@@ -598,6 +691,7 @@ function startSync() {
       students = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       students.sort((a,b) => (a.name||"").localeCompare(b.name||""));
       render();
+      renderTorail();
       if (isStatsTabVisible()) renderStatsDashboard();
       if (!autoBackupChecked) {
         autoBackupChecked = true;
@@ -755,23 +849,29 @@ async function deletePayment(studentId, paymentId) {
   }
 }
 function showError(msg) {
-  const box = document.getElementById("errorBox");
-  box.style.background = "#F6E7E2";
-  box.style.color = "#9C4B32";
-  box.textContent = msg;
-  box.style.display = "block";
+  [document.getElementById("errorBox"), document.getElementById("torailErrorBox")].forEach(box => {
+    if (!box) return;
+    box.style.background = "#F6E7E2";
+    box.style.color = "#9C4B32";
+    box.textContent = msg;
+    box.style.display = "block";
+  });
 }
 function showSuccess(msg) {
-  const box = document.getElementById("errorBox");
-  box.style.background = "#EAF2E7";
-  box.style.color = "#3F6B4A";
-  box.textContent = msg;
-  box.style.display = "block";
+  [document.getElementById("errorBox"), document.getElementById("torailErrorBox")].forEach(box => {
+    if (!box) return;
+    box.style.background = "#EAF2E7";
+    box.style.color = "#3F6B4A";
+    box.textContent = msg;
+    box.style.display = "block";
+  });
 }
 function clearError() {
-  const box = document.getElementById("errorBox");
-  box.style.display = "none";
-  box.textContent = "";
+  [document.getElementById("errorBox"), document.getElementById("torailErrorBox")].forEach(box => {
+    if (!box) return;
+    box.style.display = "none";
+    box.textContent = "";
+  });
 }
 
 function exportBackup() {
@@ -861,8 +961,9 @@ function sortByStageThenName(list) {
   });
 }
 
-function exportExcel() {
-  const sorted = sortByStageThenName(students);
+function exportExcel(customList, sheetLabel, fileTag) {
+  const sourceList = customList || students.filter(s => s.group !== "torail");
+  const sorted = sortByStageThenName(sourceList);
   const rows = sorted.map(s => {
     const payments = getPayments(s);
     const latest = payments[0] || {};
@@ -885,13 +986,14 @@ function exportExcel() {
   });
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "الطلاب");
+  XLSX.utils.book_append_sheet(wb, ws, sheetLabel || "الطلاب");
   const today = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, "class-register-" + today + ".xlsx");
+  XLSX.writeFile(wb, (fileTag || "class-register") + "-" + today + ".xlsx");
 }
 
-function exportPdf() {
-  const sorted = sortByStageThenName(students);
+function exportPdf(customList, titleLabel) {
+  const sourceList = customList || students.filter(s => s.group !== "torail");
+  const sorted = sortByStageThenName(sourceList);
   const monthLabels = ["٨","٩","١٠","١١","١٢","١","٢","٣","٤","٥","٦"];
   let currentStage = null;
   let isFirstStage = true;
@@ -920,8 +1022,9 @@ function exportPdf() {
     </tr>`;
   }).join("");
   const monthHeadersHtml = monthLabels.map(m => `<th class="month-cell">${m}</th>`).join("");
+  const pageTitle = titleLabel || "كشف الطلاب";
   const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
-    <title>كشف الطلاب - ${TEACHER_NAME}</title>
+    <title>${pageTitle} - ${TEACHER_NAME}</title>
     <style>
       @page { size: A4 landscape; margin: 10mm; }
       body { font-family: Arial, sans-serif; padding: 10px; direction: rtl; }
@@ -939,8 +1042,8 @@ function exportPdf() {
       tr.page-break td { padding-top: 12px; }
     </style></head>
     <body>
-      <h1>كشف الطلاب — ${TEACHER_NAME}</h1>
-      <p class="sub">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${students.length}</p>
+      <h1>${pageTitle} — ${TEACHER_NAME}</h1>
+      <p class="sub">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${sourceList.length}</p>
       <table>
         <thead><tr>
           <th>م</th><th class="name-cell">الاسم</th>
@@ -958,8 +1061,10 @@ function exportPdf() {
   win.onload = () => win.print();
 }
 
+let formGroupContext = "main";
 function openNewForm() {
   editingId = null;
+  formGroupContext = "main";
   document.getElementById("formTitle").textContent = "New student";
   document.getElementById("saveBtnLabel").textContent = "Add student";
   ["fName","fStudentPhone","fParentPhone","fEntryDate","fNotes"].forEach(id => document.getElementById(id).value = "");
@@ -970,9 +1075,15 @@ function openNewForm() {
   document.getElementById("formCard").style.display = "block";
   document.getElementById("fName").focus();
 }
+function openNewTorailForm() {
+  openNewForm();
+  formGroupContext = "torail";
+  document.getElementById("formTitle").textContent = "طالب توريل جديد";
+}
 function openEditForm(s) {
   editingId = s.id;
-  document.getElementById("formTitle").textContent = "Edit student";
+  formGroupContext = s.group === "torail" ? "torail" : "main";
+  document.getElementById("formTitle").textContent = s.group === "torail" ? "تعديل طالب توريل" : "Edit student";
   document.getElementById("saveBtnLabel").textContent = "Save changes";
   document.getElementById("fName").value = s.name || "";
   document.getElementById("dupNameWarning").style.display = "none";
@@ -1001,6 +1112,7 @@ async function handleSubmit(e) {
   clearError();
   const data = {
     name,
+    group: formGroupContext,
     stage: document.getElementById("fStage").value,
     studentPhone: toEnglishDigits(document.getElementById("fStudentPhone").value.trim()),
     parentPhone: toEnglishDigits(document.getElementById("fParentPhone").value.trim()),
@@ -1032,6 +1144,7 @@ async function handleDelete(id) {
   try {
     await studentsCol.doc(id).delete();
     if (expandedId === id) expandedId = null;
+    if (torailExpandedId === id) torailExpandedId = null;
   } catch (err) {
     showError("تعذر الحذف. تأكد من اتصالك بالإنترنت.");
   }
@@ -1039,6 +1152,10 @@ async function handleDelete(id) {
 function toggleExpand(id) {
   expandedId = expandedId === id ? null : id;
   render();
+}
+function toggleTorailExpand(id) {
+  torailExpandedId = torailExpandedId === id ? null : id;
+  renderTorail();
 }
 function filterByStage(stage) {
   const input = document.getElementById("searchInput");
@@ -1074,15 +1191,20 @@ function switchTab(tab) {
   document.getElementById("viewStudents").style.display = tab === "students" ? "block" : "none";
   document.getElementById("viewExams").style.display = tab === "exams" ? "block" : "none";
   document.getElementById("viewStats").style.display = tab === "stats" ? "block" : "none";
+  document.getElementById("viewTorail").style.display = tab === "torail" ? "block" : "none";
   document.getElementById("tabStudentsBtn").classList.toggle("active", tab === "students");
   document.getElementById("tabExamsBtn").classList.toggle("active", tab === "exams");
   document.getElementById("tabStatsBtn").classList.toggle("active", tab === "stats");
+  document.getElementById("tabTorailBtn").classList.toggle("active", tab === "torail");
   if (tab === "exams") {
     try { localStorage.setItem("examsLastSeen", Date.now().toString()); } catch (e) {}
     updateExamsBadge();
   }
   if (tab === "stats") {
     renderStatsDashboard();
+  }
+  if (tab === "torail") {
+    renderTorail();
   }
 }
 
@@ -1690,12 +1812,27 @@ async function saveExam() {
 }
 
 function goToStudentProfile(studentId) {
-  switchTab("students");
-  expandedId = studentId;
-  document.getElementById("searchInput").value = "";
-  overdueOnly = false;
-  exemptOnly = false;
-  render();
+  const student = students.find(s => s.id === studentId);
+  const isTorail = student && student.group === "torail";
+  if (isTorail) {
+    switchTab("torail");
+    torailExpandedId = studentId;
+    document.getElementById("torailSearchInput").value = "";
+    torailOverdueOnly = false;
+    torailExemptOnly = false;
+    torailBookletFilter = null;
+    torailNoParentOnly = false;
+    renderTorail();
+  } else {
+    switchTab("students");
+    expandedId = studentId;
+    document.getElementById("searchInput").value = "";
+    overdueOnly = false;
+    exemptOnly = false;
+    bookletFilter = null;
+    noParentOnly = false;
+    render();
+  }
   setTimeout(() => {
     const card = document.querySelector(`.card-row[data-student-id="${studentId}"]`);
     if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1708,6 +1845,7 @@ function viewExamResults(examId) {
   document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
   const searchInput = document.getElementById("examResultsSearchInput");
   if (searchInput) searchInput.value = "";
+  resultsTorailOnly = false;
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "none";
   document.getElementById("examResultsView").style.display = "block";
@@ -1724,6 +1862,11 @@ function toggleResultExpand(resultId) {
   expandedResultId = expandedResultId === resultId ? null : resultId;
   renderExamResultsList();
 }
+let resultsTorailOnly = false;
+function toggleResultsTorailFilter() {
+  resultsTorailOnly = !resultsTorailOnly;
+  renderExamResultsList();
+}
 function renderExamResultsList() {
   const searchInput = document.getElementById("examResultsSearchInput");
   const rawQuery = searchInput ? searchInput.value.trim() : "";
@@ -1732,9 +1875,16 @@ function renderExamResultsList() {
   if (rawQuery) {
     list = list.filter(r => normalizeArabic(r.studentName).includes(normQuery));
   }
+  document.getElementById("resultsTorailPill").classList.toggle("active", resultsTorailOnly);
+  if (resultsTorailOnly) {
+    list = list.filter(r => {
+      const st = students.find(s => s.id === r.studentId);
+      return st && st.group === "torail";
+    });
+  }
   const container = document.getElementById("examResultsList");
   if (list.length === 0) {
-    const msg = rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.";
+    const msg = resultsTorailOnly ? "لسه محدش من طلاب توريل سلّم الامتحان ده." : (rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.");
     container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
     return;
   }
@@ -1851,11 +2001,17 @@ let exemptOnly = false;
 let bookletFilter = null;
 let noParentOnly = false;
 let showStudentCount = false;
+let torailExpandedId = null;
+let torailOverdueOnly = false;
+let torailExemptOnly = false;
+let torailBookletFilter = null;
+let torailNoParentOnly = false;
 
 function render() {
+  const mainStudents = students.filter(s => s.group !== "torail");
   const rawQuery = document.getElementById("searchInput").value.trim().toLowerCase();
   const normQuery = normalizeArabic(rawQuery);
-  let filtered = !rawQuery ? students : students.filter(s =>
+  let filtered = !rawQuery ? mainStudents : mainStudents.filter(s =>
     normalizeArabic(s.name).includes(normQuery) ||
     (s.studentPhone||"").includes(rawQuery) ||
     (s.parentPhone||"").includes(rawQuery) ||
@@ -1881,13 +2037,13 @@ function render() {
   }
 
   document.getElementById("studentCount").textContent = showStudentCount
-    ? (students.length + (students.length === 1 ? " student" : " students"))
+    ? (mainStudents.length + (mainStudents.length === 1 ? " student" : " students"))
     : "إظهار العدد";
 
   const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
   const counts = {};
   stages.forEach(st => counts[st] = 0);
-  students.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
+  mainStudents.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
   const stageCountsEl = document.getElementById("stageCounts");
   stageCountsEl.innerHTML = stages.map(st => {
     const isActive = rawQuery === st.toLowerCase();
@@ -1897,7 +2053,7 @@ function render() {
   const now = new Date();
   const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
   let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, term1ReceivedCount = 0, term1MissingCount = 0, term2ReceivedCount = 0, term2MissingCount = 0, noParentCount = 0;
-  students.forEach(s => {
+  mainStudents.forEach(s => {
     const payments = getPayments(s);
     payments.forEach(p => {
       const amt = parseFloat(p.amount) || 0;
@@ -1934,7 +2090,7 @@ function render() {
 
   if (filtered.length === 0) {
     listEl.innerHTML = "";
-    document.getElementById("emptyMsg").textContent = students.length === 0
+    document.getElementById("emptyMsg").textContent = mainStudents.length === 0
       ? "No students yet. Add your first one above."
       : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
         : (exemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
@@ -2018,6 +2174,181 @@ function render() {
   }).join("");
 }
 
+function renderTorail() {
+  const torailStudents = students.filter(s => s.group === "torail");
+  const rawQuery = document.getElementById("torailSearchInput").value.trim().toLowerCase();
+  const normQuery = normalizeArabic(rawQuery);
+  let filtered = !rawQuery ? torailStudents : torailStudents.filter(s =>
+    normalizeArabic(s.name).includes(normQuery) ||
+    (s.studentPhone||"").includes(rawQuery) ||
+    (s.parentPhone||"").includes(rawQuery) ||
+    (s.stage||"").toLowerCase().includes(rawQuery)
+  );
+  if (torailOverdueOnly) {
+    filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
+  }
+  if (torailExemptOnly) {
+    filtered = filtered.filter(s => s.exempt);
+  }
+  if (torailBookletFilter === "term1_received") {
+    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1));
+  } else if (torailBookletFilter === "term1_missing") {
+    filtered = filtered.filter(s => !(s.term1Received ?? s.term1));
+  } else if (torailBookletFilter === "term2_received") {
+    filtered = filtered.filter(s => !!(s.term2Received ?? s.term2));
+  } else if (torailBookletFilter === "term2_missing") {
+    filtered = filtered.filter(s => !(s.term2Received ?? s.term2));
+  }
+  if (torailNoParentOnly) {
+    filtered = filtered.filter(s => !s.parentPhone);
+  }
+
+  const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
+  const counts = {};
+  stages.forEach(st => counts[st] = 0);
+  torailStudents.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
+  const stageCountsEl = document.getElementById("torailStageCounts");
+  stageCountsEl.innerHTML = stages.map(st => {
+    const isActive = rawQuery === st.toLowerCase();
+    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="torailFilterByStage('${st}')">${st} <span class="count">${counts[st]}</span></span>`;
+  }).join("");
+
+  const now = new Date();
+  const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, term1ReceivedCount = 0, term1MissingCount = 0, term2ReceivedCount = 0, term2MissingCount = 0, noParentCount = 0;
+  torailStudents.forEach(s => {
+    const payments = getPayments(s);
+    payments.forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      grandTotal += amt;
+      if ((p.date||"").startsWith(curYM)) monthTotal += amt;
+    });
+    if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
+    if (s.exempt) exemptCount++;
+    if (s.term1Received ?? s.term1) term1ReceivedCount++; else term1MissingCount++;
+    if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
+    if (!s.parentPhone) noParentCount++;
+  });
+  document.getElementById("torailStatMonth").textContent = monthTotal.toLocaleString() + " جنيه";
+  document.getElementById("torailStatTotal").textContent = grandTotal.toLocaleString() + " جنيه";
+  document.getElementById("torailStatOverdue").textContent = overdueCount + " طالب";
+  document.getElementById("torailOverduePill").classList.toggle("active", torailOverdueOnly);
+  document.getElementById("torailStatExempt").textContent = exemptCount + " طالب";
+  document.getElementById("torailExemptPill").classList.toggle("active", torailExemptOnly);
+  document.getElementById("torailStatTerm1Received").textContent = term1ReceivedCount + " طالب";
+  document.getElementById("torailTerm1ReceivedPill").classList.toggle("active", torailBookletFilter === "term1_received");
+  document.getElementById("torailStatTerm1Missing").textContent = term1MissingCount + " طالب";
+  document.getElementById("torailTerm1MissingPill").classList.toggle("active", torailBookletFilter === "term1_missing");
+  document.getElementById("torailStatTerm2Received").textContent = term2ReceivedCount + " طالب";
+  document.getElementById("torailTerm2ReceivedPill").classList.toggle("active", torailBookletFilter === "term2_received");
+  document.getElementById("torailStatTerm2Missing").textContent = term2MissingCount + " طالب";
+  document.getElementById("torailTerm2MissingPill").classList.toggle("active", torailBookletFilter === "term2_missing");
+  document.getElementById("torailStatNoParent").textContent = noParentCount + " طالب";
+  document.getElementById("torailNoParentPill").classList.toggle("active", torailNoParentOnly);
+
+  const listEl = document.getElementById("torailStudentList");
+  const emptyEl = document.getElementById("torailEmptyState");
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = "";
+    document.getElementById("torailEmptyMsg").textContent = torailStudents.length === 0
+      ? "لسه مفيش طلاب توريل. دوس Add عشان تضيف أول واحد."
+      : (torailOverdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
+        : (torailExemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
+        : (torailBookletFilter === "term1_received" ? "لسه محدش استلم مذكرة ترم أول."
+        : (torailBookletFilter === "term1_missing" ? "كل الطلاب استلموا مذكرة ترم أول ✓"
+        : (torailBookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
+        : (torailBookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
+        : (torailNoParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
+        : "No matches for that search.")))))));
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  listEl.innerHTML = filtered.map(s => {
+    const payments = getPayments(s);
+    const badge = paymentBadge(payments, s.exempt);
+    const tone = toneStyles[badge.tone];
+    const isOpen = torailExpandedId === s.id;
+    const paymentsHtml = payments.length
+      ? payments.map(p => `
+          <div class="payment-row">
+            <span class="payment-info">${p.amount ? p.amount + ' جنيه' : ''} — ${fmtDate(p.date)}</span>
+            <span class="payment-actions">
+              <button class="pay-icon-btn" title="إرسال إيصال واتساب" onclick='sendWhatsappReceipt(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(p).replace(/'/g,"&apos;")})'>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.16h-.01c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.155 8.155 0 0 1-1.25-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24z"/></svg>
+              </button>
+              <button class="pay-icon-btn" title="حذف الدفعة" onclick="deletePayment('${s.id}','${p.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C4B32" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+              </button>
+            </span>
+          </div>`).join("")
+      : `<p class="no-payments">لسه مفيش مدفوعات مسجلة</p>`;
+    return `
+      <div class="card-row" data-student-id="${s.id}">
+        <div class="card-head" onclick="toggleTorailExpand('${s.id}')">
+          <div style="min-width:0;flex:1;">
+            <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
+            <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
+          </div>
+          <span class="badge" style="background:${tone.bg};color:${tone.fg};">
+            <span class="dot" style="background:${tone.dot};"></span>${badge.label}
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6B60" stroke-width="2">${isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>'}</svg>
+        </div>
+        <div class="card-details" style="display:${isOpen ? 'block' : 'none'};">
+          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم تاني</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term2Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term2Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term2Received ?? s.term2) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          ${s.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${escapeHtml(s.notes)}</span></div>` : ""}
+          <div class="detail-row"><span class="detail-label">رمز الامتحان</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem;">
+            ${s.pin
+              ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
+              : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
+          </span></div>
+
+          <div class="payments-section">
+            <div class="payments-title">سجل المدفوعات</div>
+            ${paymentsHtml}
+            <div class="add-payment-row">
+              <input type="date" class="reg-input" id="newPayDate_${s.id}" style="flex:1;">
+              <input type="number" min="0" step="1" class="reg-input" id="newPayAmount_${s.id}" placeholder="المبلغ" style="flex:1;">
+              <button class="add-pay-btn" onclick="addPayment('${s.id}')">إضافة</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="edit-btn" onclick='openEditForm(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Edit</button>
+            <button class="del-btn" onclick="handleDelete('${s.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function torailFilterByStage(stage) {
+  const input = document.getElementById("torailSearchInput");
+  if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
+    input.value = "";
+  } else {
+    input.value = stage;
+  }
+  renderTorail();
+}
+function torailToggleOverdueFilter() { torailOverdueOnly = !torailOverdueOnly; renderTorail(); }
+function torailToggleExemptFilter() { torailExemptOnly = !torailExemptOnly; renderTorail(); }
+function torailToggleBookletFilter(mode) { torailBookletFilter = torailBookletFilter === mode ? null : mode; renderTorail(); }
+function torailToggleNoParentFilter() { torailNoParentOnly = !torailNoParentOnly; renderTorail(); }
+
 async function resetStudentPin(studentId) {
   if (!confirm("هيتم مسح الرمز السري الحالي، وأول طالب يختار الاسم ده هيقدر يحدد رمز جديد. متأكد؟")) return;
   try {
@@ -2029,6 +2360,17 @@ async function resetStudentPin(studentId) {
 }
 
 document.getElementById("addBtn").addEventListener("click", openNewForm);
+document.getElementById("torailAddBtn").addEventListener("click", openNewTorailForm);
+document.getElementById("torailSearchInput").addEventListener("input", renderTorail);
+document.getElementById("torailOverduePill").addEventListener("click", torailToggleOverdueFilter);
+document.getElementById("torailExemptPill").addEventListener("click", torailToggleExemptFilter);
+document.getElementById("torailTerm1ReceivedPill").addEventListener("click", () => torailToggleBookletFilter("term1_received"));
+document.getElementById("torailTerm1MissingPill").addEventListener("click", () => torailToggleBookletFilter("term1_missing"));
+document.getElementById("torailTerm2ReceivedPill").addEventListener("click", () => torailToggleBookletFilter("term2_received"));
+document.getElementById("torailTerm2MissingPill").addEventListener("click", () => torailToggleBookletFilter("term2_missing"));
+document.getElementById("torailNoParentPill").addEventListener("click", torailToggleNoParentFilter);
+document.getElementById("torailExportExcelBtn").addEventListener("click", () => exportExcel(students.filter(s => s.group === "torail"), "طلاب توريل", "torail-students"));
+document.getElementById("torailExportPdfBtn").addEventListener("click", () => exportPdf(students.filter(s => s.group === "torail"), "كشف طلاب توريل"));
 document.getElementById("fName").addEventListener("input", checkDuplicateName);
 document.getElementById("newExamBtn").addEventListener("click", openExamBuilder);
 document.getElementById("aiImportBtn").addEventListener("click", () => document.getElementById("aiImageInput").click());
@@ -2045,8 +2387,8 @@ document.getElementById("term1MissingPill").addEventListener("click", () => togg
 document.getElementById("term2ReceivedPill").addEventListener("click", () => toggleBookletFilter("term2_received"));
 document.getElementById("term2MissingPill").addEventListener("click", () => toggleBookletFilter("term2_missing"));
 document.getElementById("noParentPill").addEventListener("click", toggleNoParentFilter);
-document.getElementById("exportExcelBtn").addEventListener("click", exportExcel);
-document.getElementById("exportPdfBtn").addEventListener("click", exportPdf);
+document.getElementById("exportExcelBtn").addEventListener("click", () => exportExcel());
+document.getElementById("exportPdfBtn").addEventListener("click", () => exportPdf());
 document.getElementById("fixPhonesBtn").addEventListener("click", fixAllPhoneNumbers);
 document.getElementById("enableNotifBtn").addEventListener("click", async () => {
   if (typeof Notification === "undefined") { showError("المتصفح ده مش بيدعم الإشعارات."); return; }
@@ -2085,6 +2427,7 @@ function showApp() {
   document.querySelectorAll(".app-content").forEach(el => {
     el.style.display = el.classList.contains("tab-nav") ? "flex" : "block";
   });
+  switchTab("students");
   startSync();
 }
 function tryUnlock() {
