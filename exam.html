@@ -63,6 +63,7 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const firebaseConfig = {
@@ -75,6 +76,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -101,6 +103,12 @@ let studentsInStage = [];
 let selectedStudent = null;
 
 async function init() {
+  try {
+    if (!auth.currentUser) await auth.signInAnonymously();
+  } catch (authErr) {
+    showError("تعذر بدء جلسة الامتحان. حاول تحديث الصفحة والتأكد من اتصالك بالإنترنت.");
+    return;
+  }
   if (!examId) {
     document.getElementById("examTitle").textContent = "رابط غير صالح";
     showError("مفيش امتحان محدد في الرابط ده.");

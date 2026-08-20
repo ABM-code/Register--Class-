@@ -205,16 +205,18 @@
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
 <div id="lockScreen" style="position:fixed;inset:0;background:#16302B;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.9rem;padding:1.5rem;text-align:center;">
   <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-  <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">كلمة السر</h2>
-  <input id="lockPasswordInput" type="password" placeholder="ادخل كلمة السر" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(245,241,230,0.25);background:rgba(245,241,230,0.08);color:#F5F1E6;font-size:0.95rem;text-align:center;">
+  <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">دخول المدرس</h2>
+  <input id="lockEmailInput" type="email" placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(245,241,230,0.25);background:rgba(245,241,230,0.08);color:#F5F1E6;font-size:0.95rem;text-align:center;">
+  <input id="lockPasswordInput" type="password" placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(245,241,230,0.25);background:rgba(245,241,230,0.08);color:#F5F1E6;font-size:0.95rem;text-align:center;">
   <button id="lockUnlockBtn" style="background:#D4A93B;color:#1B2420;border:none;border-radius:10px;padding:0.65rem 1.6rem;font-weight:600;font-size:0.92rem;cursor:pointer;">دخول</button>
-  <p id="lockErrorMsg" style="color:#C15B3C;font-size:0.85rem;display:none;margin:0;">كلمة السر غير صحيحة</p>
+  <p id="lockErrorMsg" style="color:#C15B3C;font-size:0.85rem;display:none;margin:0;"></p>
 </div>
 
 <header class="app-content">
@@ -663,7 +665,6 @@
 
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
-const APP_PASSWORD = "moneer2026"; // غيّر كلمة السر دي لأي حاجة تحبها
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 
 const firebaseConfig = {
@@ -676,6 +677,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 const studentsCol = db.collection("students");
 const examsCol = db.collection("exams");
 const examResultsCol = db.collection("examResults");
@@ -2475,18 +2477,36 @@ function showApp() {
   switchTab("students");
   startSync();
 }
-function tryUnlock() {
-  const val = document.getElementById("lockPasswordInput").value;
-  if (val === APP_PASSWORD) {
-    try { localStorage.setItem("registerUnlocked", "true"); } catch (e) {}
+function setLockError(msg) {
+  const el = document.getElementById("lockErrorMsg");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+async function tryUnlock() {
+  const email = document.getElementById("lockEmailInput").value.trim();
+  const password = document.getElementById("lockPasswordInput").value;
+  if (!email || !password) { setLockError("اكتب البريد الإلكتروني وكلمة المرور."); return; }
+  const btn = document.getElementById("lockUnlockBtn");
+  btn.disabled = true;
+  btn.textContent = "جاري تسجيل الدخول...";
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
     showApp();
-  } else {
-    document.getElementById("lockErrorMsg").style.display = "block";
+  } catch (err) {
+    let msg = "تعذر تسجيل الدخول.";
+    if (err && (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found")) msg = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    else if (err && err.code === "auth/too-many-requests") msg = "محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.";
+    else if (err && err.code === "auth/operation-not-allowed") msg = "تسجيل الدخول بالبريد غير مفعّل في Firebase بعد.";
+    setLockError(msg);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "دخول";
   }
 }
 document.getElementById("lockUnlockBtn").addEventListener("click", tryUnlock);
-document.getElementById("lockPasswordInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") tryUnlock();
+["lockEmailInput","lockPasswordInput"].forEach(id => document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); }));
+auth.onAuthStateChanged(user => {
+  if (user && !user.isAnonymous) showApp();
 });
 
 let alreadyUnlocked = false;
