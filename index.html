@@ -2509,14 +2509,6 @@ auth.onAuthStateChanged(user => {
   if (user && !user.isAnonymous) showApp();
 });
 
-let alreadyUnlocked = false;
-try { alreadyUnlocked = localStorage.getItem("registerUnlocked") === "true"; } catch (e) {}
-if (alreadyUnlocked) {
-  showApp();
-} else {
-  document.getElementById("lockPasswordInput").focus();
-}
-
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("sw.js").catch(() => {});
