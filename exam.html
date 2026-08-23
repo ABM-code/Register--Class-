@@ -31,10 +31,11 @@
   }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
   button:active:not(:disabled) { transform: scale(0.98); }
-  .passage { background: #EAEAE4; border-radius: 9px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; font-size: 0.9rem; line-height: 1.6; color: #3a3a34; white-space: pre-wrap; }
-  .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.7rem; }
+  .passage { background: #EAEAE4; border-radius: 9px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; font-size: 0.9rem; line-height: 1.6; color: #3a3a34; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; }
+  .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.7rem; unicode-bidi: plaintext; text-align: start; }
   .q-num { color: #6B6B60; font-size: 0.8rem; margin-bottom: 0.2rem; }
   .option-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0.75rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 9px; margin-bottom: 0.5rem; cursor: pointer; background: #FFFDF8; }
+  .option-row span { unicode-bidi: plaintext; text-align: start; flex: 1; }
   .option-row input { accent-color: #3F6B4A; width: 17px; height: 17px; flex-shrink: 0; }
   .option-row.selected { border-color: #D4A93B; background: #FBF3DF; }
   #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
@@ -48,7 +49,7 @@
   .review-correct .review-row .review-icon { color: #3F6B4A; }
   .review-wrong .review-row .review-icon { color: #C15B3C; }
   .review-label { color: #6B6B60; }
-  .review-value { color: #1B2420; font-weight: 600; }
+  .review-value { color: #1B2420; font-weight: 600; unicode-bidi: plaintext; }
   .review-correct-text { color: #3F6B4A; }
   .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
 </style>
@@ -366,7 +367,7 @@ function renderQuestion(q, i) {
       rewrite: "أعد كتابة الجملة هنا",
       correct: "اكتب الجملة بعد التصحيح هنا",
     };
-    bodyHtml = `<input type="text" id="answer_${i}" placeholder="${placeholders[q.type] || placeholders.complete}">`;
+    bodyHtml = `<input type="text" id="answer_${i}" dir="auto" placeholder="${placeholders[q.type] || placeholders.complete}">`;
   }
   return `
     <div class="card">
