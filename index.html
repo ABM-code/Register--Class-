@@ -86,7 +86,8 @@
     font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: inherit; margin-bottom: 0.9rem;
   }
   .tools-toggle-btn:hover { background: rgba(245,241,230,0.1); }
-  .tools-toggle-btn.open #toolsToggleIcon { transform: rotate(180deg); }
+  .tools-toggle-btn.open #toolsToggleIcon,
+  .tools-toggle-btn.open #filterPillsToggleIcon { transform: rotate(180deg); }
   .tools-group-title { color: #9FB8AD; font-size: 0.78rem; font-weight: 700; margin: 0 0 0.5rem; letter-spacing: 0.03em; }
   .stage-counts { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; }
   .stage-pill {
@@ -1397,6 +1398,14 @@ async function takeManualBackupNow() {
 function toggleToolsSection() {
   const section = document.getElementById("toolsSection");
   const btn = document.getElementById("toolsToggleBtn");
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+}
+
+function toggleFilterPillsSection() {
+  const section = document.getElementById("filterPillsSection");
+  const btn = document.getElementById("filterPillsToggleBtn");
   const isOpen = section.style.display === "block";
   section.style.display = isOpen ? "none" : "block";
   btn.classList.toggle("open", !isOpen);
