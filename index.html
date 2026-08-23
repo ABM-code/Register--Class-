@@ -1544,10 +1544,10 @@ function printExamPdf(examId) {
       h1 { font-size: 19px; margin-bottom: 2px; }
       p.sub { color: #555; margin-top: 0; margin-bottom: 20px; font-size: 13px; }
       .q-block { margin-bottom: 16px; page-break-inside: avoid; }
-      .q-prompt { font-weight: bold; font-size: 14px; margin-bottom: 6px; }
-      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; white-space: pre-wrap; }
+      .q-prompt { font-weight: bold; font-size: 14px; margin-bottom: 6px; unicode-bidi: plaintext; text-align: start; }
+      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; }
       .options-list { margin: 0; padding-right: 20px; font-size: 13px; }
-      .options-list li { margin-bottom: 4px; }
+      .options-list li { margin-bottom: 4px; unicode-bidi: plaintext; text-align: start; }
       .answer-line { font-size: 13px; margin-top: 4px; }
       .answer-key { margin-top: 30px; border-top: 2px dashed #999; padding-top: 16px; }
       .answer-key h2 { font-size: 15px; }
@@ -1739,11 +1739,11 @@ function renderQuestionsBuilder() {
       </div>
       <div class="field-group">
         <label>نص/حوار (اختياري)</label>
-        <textarea class="reg-textarea" rows="2" placeholder="قطعة أو حوار يقرأه الطالب قبل السؤال (اختياري)" oninput="updateQuestionField('${q.id}','passage',this.value)">${escapeHtml(q.passage)}</textarea>
+        <textarea class="reg-textarea" dir="auto" rows="2" placeholder="قطعة أو حوار يقرأه الطالب قبل السؤال (اختياري)" oninput="updateQuestionField('${q.id}','passage',this.value)">${escapeHtml(q.passage)}</textarea>
       </div>
       <div class="field-group">
         <label>نص السؤال</label>
-        <input class="reg-input" placeholder="اكتب السؤال هنا" value="${escapeHtml(q.prompt)}" oninput="updateQuestionField('${q.id}','prompt',this.value)">
+        <input class="reg-input" dir="auto" placeholder="اكتب السؤال هنا" value="${escapeHtml(q.prompt)}" oninput="updateQuestionField('${q.id}','prompt',this.value)">
       </div>
       ${q.type === 'mcq' ? renderMcqOptions(q) : renderTextAnswer(q)}
     </div>
@@ -1756,7 +1756,7 @@ function renderMcqOptions(q) {
     ${q.options.map((opt, oi) => `
       <div class="option-input-row">
         <input type="radio" name="correct_${q.id}" ${q.correctIndex===oi?'checked':''} onchange="updateQuestionField('${q.id}','correctIndex',${oi})">
-        <input class="reg-input" placeholder="اختيار ${oi+1}" value="${escapeHtml(opt)}" oninput="updateOptionText('${q.id}',${oi},this.value)">
+        <input class="reg-input" dir="auto" placeholder="اختيار ${oi+1}" value="${escapeHtml(opt)}" oninput="updateOptionText('${q.id}',${oi},this.value)">
       </div>
     `).join("")}
   `;
@@ -1778,7 +1778,7 @@ function renderTextAnswer(q) {
   return `
     <div class="field-group">
       <label>${label}</label>
-      <input class="reg-input" placeholder="${placeholder}" value="${escapeHtml((q.correctAnswers||[]).join(', '))}" oninput="updateCompleteAnswers('${q.id}',this.value)">
+      <input class="reg-input" dir="auto" placeholder="${placeholder}" value="${escapeHtml((q.correctAnswers||[]).join(', '))}" oninput="updateCompleteAnswers('${q.id}',this.value)">
     </div>
   `;
 }
