@@ -539,6 +539,18 @@
         <div class="stat-label">نتائج طلاب توريل</div>
       </button>
     </div>
+    <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.7rem; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:0.4rem; color:#9FB8AD; font-size:0.85rem; cursor:pointer;">
+        <input type="checkbox" id="resultsSelectAllBox" onchange="toggleSelectAllResults(this.checked)">
+        تحديد الكل
+      </label>
+      <button id="deleteSelectedResultsBtn" onclick="deleteSelectedResults()" disabled style="background:#C15B3C; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+        حذف المحدد (<span id="selectedResultsCount">0</span>)
+      </button>
+      <button onclick="deleteAllResultsForExam()" style="background:none; color:#C15B3C; border:1px solid #C15B3C; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; margin-right:auto;">
+        حذف كل النتائج
+      </button>
+    </div>
     <div id="examResultsList"></div>
   </div>
 
@@ -1910,6 +1922,7 @@ function viewExamResults(examId) {
   const searchInput = document.getElementById("examResultsSearchInput");
   if (searchInput) searchInput.value = "";
   resultsTorailOnly = false;
+  selectedResultIds = new Set();
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "none";
   document.getElementById("examResultsView").style.display = "block";
@@ -1934,14 +1947,67 @@ function setResultsTorailFilter(isTorail) {
 function toggleResultsTorailFilter() {
   setResultsTorailFilter(!resultsTorailOnly);
 }
-function renderExamResultsList() {
+let selectedResultIds = new Set();
+function toggleResultSelect(resultId, checked) {
+  if (checked) selectedResultIds.add(resultId); else selectedResultIds.delete(resultId);
+  updateResultsSelectionUI();
+}
+function toggleSelectAllResults(checked) {
+  const list = getVisibleExamResultsList();
+  selectedResultIds = checked ? new Set(list.map(r => r.id)) : new Set();
+  renderExamResultsList();
+}
+function updateResultsSelectionUI() {
+  const countEl = document.getElementById("selectedResultsCount");
+  const btn = document.getElementById("deleteSelectedResultsBtn");
+  if (!countEl || !btn) return;
+  countEl.textContent = selectedResultIds.size;
+  btn.disabled = selectedResultIds.size === 0;
+  btn.style.opacity = selectedResultIds.size === 0 ? "0.5" : "1";
+  const selectAllBox = document.getElementById("resultsSelectAllBox");
+  const visible = getVisibleExamResultsList();
+  if (selectAllBox) selectAllBox.checked = visible.length > 0 && visible.every(r => selectedResultIds.has(r.id));
+}
+async function deleteSelectedResults() {
+  if (selectedResultIds.size === 0) return;
+  if (!confirm(`متأكد إنك عايز تمسح ${selectedResultIds.size} نتيجة؟ الخطوة دي مش هترجع تاني.`)) return;
+  const ids = Array.from(selectedResultIds);
+  try {
+    await Promise.all(ids.map(id => examResultsCol.doc(id).delete()));
+    selectedResultIds.clear();
+  } catch (err) {
+    showError("حصل خطأ أثناء الحذف: " + (err.message || err));
+  }
+}
+async function deleteAllResultsForExam() {
+  const list = examResults.filter(r => r.examId === viewingExamId);
+  if (list.length === 0) { showError("مفيش نتائج لحذفها."); return; }
+  if (!confirm(`متأكد إنك عايز تمسح كل نتائج هذا الامتحان (${list.length} نتيجة)؟ الخطوة دي مش هترجع تاني.`)) return;
+  try {
+    await Promise.all(list.map(r => examResultsCol.doc(r.id).delete()));
+    selectedResultIds.clear();
+  } catch (err) {
+    showError("حصل خطأ أثناء الحذف: " + (err.message || err));
+  }
+}
+function getVisibleExamResultsList() {
   const searchInput = document.getElementById("examResultsSearchInput");
   const rawQuery = searchInput ? searchInput.value.trim() : "";
   const normQuery = normalizeArabic(rawQuery);
   let list = examResults.filter(r => r.examId === viewingExamId);
-  if (rawQuery) {
-    list = list.filter(r => normalizeArabic(r.studentName).includes(normQuery));
+  if (rawQuery) list = list.filter(r => normalizeArabic(r.studentName).includes(normQuery));
+  if (resultsTorailOnly) {
+    list = list.filter(r => {
+      if (r.group === "torail") return true;
+      const st = students.find(s => s.id === r.studentId);
+      return st && st.group === "torail";
+    });
   }
+  return list;
+}
+function renderExamResultsList() {
+  const rawQuery = document.getElementById("examResultsSearchInput") ? document.getElementById("examResultsSearchInput").value.trim() : "";
+  const list = getVisibleExamResultsList();
   const allPill = document.getElementById("resultsAllPill");
   const torailPill = document.getElementById("resultsTorailPill");
   if (allPill) {
@@ -1952,18 +2018,11 @@ function renderExamResultsList() {
     torailPill.classList.toggle("active", resultsTorailOnly);
     torailPill.style.borderColor = resultsTorailOnly ? "#D4A93B" : "transparent";
   }
-  if (resultsTorailOnly) {
-    list = list.filter(r => {
-      if (r.group === "torail") return true;
-      // Backward compatibility for old results created before group was stored.
-      const st = students.find(s => s.id === r.studentId);
-      return st && st.group === "torail";
-    });
-  }
   const container = document.getElementById("examResultsList");
   if (list.length === 0) {
     const msg = resultsTorailOnly ? "لسه محدش من طلاب توريل سلّم الامتحان ده." : (rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.");
     container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
+    updateResultsSelectionUI();
     return;
   }
   const ex = exams.find(e => e.id === viewingExamId);
@@ -1994,9 +2053,12 @@ function renderExamResultsList() {
     return `
       <div class="result-row-wrap">
         <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
-          <div>
-            <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
-            <div class="result-row-date">${dateStr}</div>
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
+            <div>
+              <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
+              <div class="result-row-date">${dateStr}</div>
+            </div>
           </div>
           <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
             <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
@@ -2007,6 +2069,7 @@ function renderExamResultsList() {
         ${isOpen ? `<div class="answer-detail-box">${answersHtml}</div>` : ""}
       </div>`;
   }).join("");
+  updateResultsSelectionUI();
 }
 
 function sendExamResultWhatsapp(r) {
