@@ -259,8 +259,21 @@ function renderStudentPicker() {
           <p style="margin:0.4rem 0 0.7rem; color:#6B6B60; font-size:0.88rem;">نتيجتك السابقة: ${prev.score} / ${prev.total} (${pct}%)</p>
           <button id="reviewPrevBtn" style="background:#3F6B4A; color:#F5F1E6;">مراجعة إجاباتك</button>
         </div>`;
-        document.getElementById("reviewPrevBtn").addEventListener("click", () => {
-          renderResult(prev.score, prev.total, prev.answers || [], false);
+        document.getElementById("reviewPrevBtn").addEventListener("click", async () => {
+          const btn = document.getElementById("reviewPrevBtn");
+          btn.disabled = true;
+          btn.textContent = "جاري التحميل...";
+          try {
+            if (!exam.questions) {
+              const examDoc = await db.collection("exams").doc(exam.id).get();
+              if (examDoc.exists) exam = { id: examDoc.id, ...examDoc.data() };
+            }
+            renderResult(prev.score, prev.total, prev.answers || [], false);
+          } catch (e) {
+            btn.disabled = false;
+            btn.textContent = "مراجعة إجاباتك";
+            showError("تعذر تحميل الأسئلة. حاول تاني.");
+          }
         });
         startBtn.disabled = true;
         startBtn.textContent = "لا يمكنك إعادة الامتحان";
