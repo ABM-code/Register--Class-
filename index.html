@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1762,4 +1763,817 @@ function renderQuestionsBuilder() {
         <label>نوع السؤال</label>
         <select class="reg-input" onchange="updateQuestionType('${q.id}', this.value)">
           <option value="mcq" ${q.type==='mcq'?'selected':''}>اختيار من متعدد</option>
-          
+          <option value="complete" ${q.type==='complete'?'selected':''}>إكمال الفراغ</option>
+          <option value="rewrite" ${q.type==='rewrite'?'selected':''}>إعادة الصياغة (Rewrite)</option>
+          <option value="correct" ${q.type==='correct'?'selected':''}>تصحيح الخطأ (Correct)</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>نص/حوار (اختياري)</label>
+        <textarea class="reg-textarea" dir="auto" rows="2" placeholder="قطعة أو حوار يقرأه الطالب قبل السؤال (اختياري)" oninput="updateQuestionField('${q.id}','passage',this.value)">${escapeHtml(q.passage)}</textarea>
+      </div>
+      <div class="field-group">
+        <label>نص السؤال</label>
+        <input class="reg-input" dir="auto" placeholder="اكتب السؤال هنا" value="${escapeHtml(q.prompt)}" oninput="updateQuestionField('${q.id}','prompt',this.value)">
+      </div>
+      ${q.type === 'mcq' ? renderMcqOptions(q) : renderTextAnswer(q)}
+    </div>
+  `).join("");
+}
+
+function renderMcqOptions(q) {
+  return `
+    <label>الاختيارات (حدد الصح)</label>
+    ${q.options.map((opt, oi) => `
+      <div class="option-input-row">
+        <input type="radio" name="correct_${q.id}" ${q.correctIndex===oi?'checked':''} onchange="updateQuestionField('${q.id}','correctIndex',${oi})">
+        <input class="reg-input" dir="auto" placeholder="اختيار ${oi+1}" value="${escapeHtml(opt)}" oninput="updateOptionText('${q.id}',${oi},this.value)">
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderTextAnswer(q) {
+  const labels = {
+    complete: "الإجابات المقبولة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    rewrite: "الصياغة المقترحة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    correct: "الإجابة الصحيحة بعد التصحيح (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+  };
+  const placeholders = {
+    complete: "مثال: went, has gone",
+    rewrite: "مثال: She is taller than her sister.",
+    correct: "مثال: He goes to school every day.",
+  };
+  const label = labels[q.type] || labels.complete;
+  const placeholder = placeholders[q.type] || placeholders.complete;
+  return `
+    <div class="field-group">
+      <label>${label}</label>
+      <input class="reg-input" dir="auto" placeholder="${placeholder}" value="${escapeHtml((q.correctAnswers||[]).join(', '))}" oninput="updateCompleteAnswers('${q.id}',this.value)">
+    </div>
+  `;
+}
+
+function updateQuestionType(qId, type) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.type = type;
+  renderQuestionsBuilder();
+}
+function updateQuestionField(qId, field, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q[field] = value;
+}
+function updateOptionText(qId, idx, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.options[idx] = value;
+}
+function updateCompleteAnswers(qId, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.correctAnswers = value.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+async function saveExam() {
+  const title = document.getElementById("examTitleInput").value.trim();
+  const stage = document.getElementById("examStageInput").value;
+  const timeLimitRaw = document.getElementById("examTimeLimitInput").value.trim();
+  const timeLimitMinutes = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
+  if (!title) { showError("لازم تكتب عنوان للامتحان."); return; }
+  if (!stage) { showError("لازم تختار المرحلة."); return; }
+  if (timeLimitRaw && (isNaN(timeLimitMinutes) || timeLimitMinutes < 1)) { showError("مدة الامتحان لازم تكون رقم صحيح أكبر من صفر."); return; }
+  if (currentBuilderQuestions.length === 0) { showError("لازم تضيف سؤال واحد على الأقل."); return; }
+  for (const q of currentBuilderQuestions) {
+    if (!q.prompt.trim()) { showError("فيه سؤال من غير نص، اكتب كل الأسئلة."); return; }
+    if (q.type === "mcq" && q.options.filter(o => o.trim()).length < 2) {
+      showError("كل سؤال اختيار من متعدد لازم يكون فيه اختيارين على الأقل."); return;
+    }
+    if (q.type !== "mcq" && (!q.correctAnswers || q.correctAnswers.filter(a => a.trim()).length === 0)) {
+      showError("فيه سؤال من غير إجابة مقبولة، اكتب إجابة لكل سؤال."); return;
+    }
+  }
+  try {
+    const examData = {
+      title, stage, timeLimitMinutes,
+      questions: currentBuilderQuestions.map(q => ({
+        type: q.type, passage: q.passage || "", prompt: q.prompt,
+        options: q.type === "mcq" ? q.options : [],
+        correctIndex: q.type === "mcq" ? q.correctIndex : null,
+        correctAnswers: q.type !== "mcq" ? q.correctAnswers : [],
+        points: 1,
+      })),
+    };
+    if (editingExamId) {
+      await examsCol.doc(editingExamId).update(examData);
+      showSuccess("تم حفظ التعديلات بنجاح.");
+    } else {
+      examData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await examsCol.add(examData);
+      showSuccess("تم حفظ الامتحان بنجاح.");
+    }
+    closeExamBuilder();
+  } catch (err) {
+    showError("تعذر حفظ الامتحان. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function goToStudentProfile(studentId) {
+  const student = students.find(s => s.id === studentId);
+  const isTorail = student && student.group === "torail";
+  if (isTorail) {
+    switchTab("torail");
+    torailExpandedId = studentId;
+    document.getElementById("torailSearchInput").value = "";
+    torailOverdueOnly = false;
+    torailExemptOnly = false;
+    torailBookletFilter = null;
+    torailNoParentOnly = false;
+    renderTorail();
+  } else {
+    switchTab("students");
+    expandedId = studentId;
+    document.getElementById("searchInput").value = "";
+    overdueOnly = false;
+    exemptOnly = false;
+    bookletFilter = null;
+    noParentOnly = false;
+    render();
+  }
+  setTimeout(() => {
+    const card = document.querySelector(`.card-row[data-student-id="${studentId}"]`);
+    if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 50);
+}
+
+function viewExamResults(examId) {
+  viewingExamId = examId;
+  const ex = exams.find(e => e.id === examId);
+  document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
+  const searchInput = document.getElementById("examResultsSearchInput");
+  if (searchInput) searchInput.value = "";
+  resultsTorailOnly = false;
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "none";
+  document.getElementById("examResultsView").style.display = "block";
+  document.getElementById("examMissingView").style.display = "none";
+  renderExamResultsList();
+}
+function closeExamResults() {
+  viewingExamId = null;
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examResultsView").style.display = "none";
+}
+let expandedResultId = null;
+function toggleResultExpand(resultId) {
+  expandedResultId = expandedResultId === resultId ? null : resultId;
+  renderExamResultsList();
+}
+let resultsTorailOnly = false;
+function setResultsTorailFilter(isTorail) {
+  resultsTorailOnly = !!isTorail;
+  renderExamResultsList();
+}
+function toggleResultsTorailFilter() {
+  setResultsTorailFilter(!resultsTorailOnly);
+}
+function renderExamResultsList() {
+  const searchInput = document.getElementById("examResultsSearchInput");
+  const rawQuery = searchInput ? searchInput.value.trim() : "";
+  const normQuery = normalizeArabic(rawQuery);
+  let list = examResults.filter(r => r.examId === viewingExamId);
+  if (rawQuery) {
+    list = list.filter(r => normalizeArabic(r.studentName).includes(normQuery));
+  }
+  const allPill = document.getElementById("resultsAllPill");
+  const torailPill = document.getElementById("resultsTorailPill");
+  if (allPill) {
+    allPill.classList.toggle("active", !resultsTorailOnly);
+    allPill.style.borderColor = !resultsTorailOnly ? "#7FA98D" : "transparent";
+  }
+  if (torailPill) {
+    torailPill.classList.toggle("active", resultsTorailOnly);
+    torailPill.style.borderColor = resultsTorailOnly ? "#D4A93B" : "transparent";
+  }
+  if (resultsTorailOnly) {
+    list = list.filter(r => {
+      if (r.group === "torail") return true;
+      // Backward compatibility for old results created before group was stored.
+      const st = students.find(s => s.id === r.studentId);
+      return st && st.group === "torail";
+    });
+  }
+  const container = document.getElementById("examResultsList");
+  if (list.length === 0) {
+    const msg = resultsTorailOnly ? "لسه محدش من طلاب توريل سلّم الامتحان ده." : (rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.");
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
+    return;
+  }
+  const ex = exams.find(e => e.id === viewingExamId);
+  const questions = ex ? (ex.questions || []) : [];
+  container.innerHTML = list.map(r => {
+    const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+    const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString('ar-EG') : "";
+    const isOpen = expandedResultId === r.id;
+    const answersHtml = (r.answers || []).map(ad => {
+      const q = questions[ad.questionIndex];
+      if (!q) return "";
+      let givenText = "", correctText = "";
+      if (q.type === "mcq") {
+        const opts = q.options || [];
+        givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
+        correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
+      } else {
+        givenText = ad.given ? ad.given : "(لم يُجب)";
+        correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
+      }
+      return `
+        <div class="answer-detail-row ${ad.correct ? 'ok' : 'bad'}">
+          <div class="answer-detail-q">${ad.questionIndex + 1}. ${escapeHtml(q.prompt)}</div>
+          <div class="answer-detail-given">${ad.correct ? '✓' : '✗'} إجابته: ${escapeHtml(givenText)}</div>
+          ${!ad.correct ? `<div class="answer-detail-correct">الصح: ${escapeHtml(correctText)}</div>` : ""}
+        </div>`;
+    }).join("");
+    return `
+      <div class="result-row-wrap">
+        <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
+          <div>
+            <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
+            <div class="result-row-date">${dateStr}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+            ${r.studentId ? `<button class="wa-send-btn" style="background:#5B8FC4;" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
+            ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
+          </div>
+        </div>
+        ${isOpen ? `<div class="answer-detail-box">${answersHtml}</div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+function sendExamResultWhatsapp(r) {
+  const waNumber = formatPhoneForWhatsapp(r.parentPhone);
+  if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
+
+let viewingMissingExamId = null;
+function viewMissingStudents(examId) {
+  viewingMissingExamId = examId;
+  const ex = exams.find(e => e.id === examId);
+  document.getElementById("examMissingTitle").textContent = ex ? ex.title : "";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "none";
+  document.getElementById("examResultsView").style.display = "none";
+  document.getElementById("examMissingView").style.display = "block";
+  renderMissingStudentsList();
+}
+function closeExamMissing() {
+  viewingMissingExamId = null;
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examMissingView").style.display = "none";
+}
+function renderMissingStudentsList() {
+  const ex = exams.find(e => e.id === viewingMissingExamId);
+  const container = document.getElementById("examMissingList");
+  if (!ex) { container.innerHTML = ""; return; }
+  const submittedIds = new Set(examResults.filter(r => r.examId === viewingMissingExamId).map(r => r.studentId));
+  const stageStudents = students.filter(s => s.stage === ex.stage);
+  const missing = stageStudents.filter(s => !submittedIds.has(s.id)).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+
+  if (stageStudents.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p>`;
+    return;
+  }
+  if (missing.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">كل الطلاب دخلوا الامتحان ✓</p>`;
+    return;
+  }
+  container.innerHTML = missing.map(s => `
+    <div class="result-row">
+      <div class="result-row-name">${escapeHtml(s.name)}</div>
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+        ${s.studentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "student")'>تذكير للطالب</button>` : ""}
+        ${s.parentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "parent")'>تذكير لولي الأمر</button>` : ""}
+      </div>
+    </div>
+  `).join("");
+}
+function sendExamReminderWhatsapp(s, examTitle, target) {
+  const phone = target === "parent" ? s.parentPhone : s.studentPhone;
+  const waNumber = formatPhoneForWhatsapp(phone);
+  if (!waNumber) {
+    showError(target === "parent" ? "مفيش رقم ولي أمر مسجل لهذا الطالب." : "مفيش رقم هاتف مسجل لهذا الطالب.");
+    return;
+  }
+  const message = target === "parent"
+    ? `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${examTitle}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`
+    : `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
+
+let overdueOnly = false;
+let exemptOnly = false;
+let bookletFilter = null;
+let noParentOnly = false;
+let showStudentCount = false;
+let torailExpandedId = null;
+let torailOverdueOnly = false;
+let torailExemptOnly = false;
+let torailBookletFilter = null;
+let torailNoParentOnly = false;
+
+function render() {
+  const mainStudents = students.filter(s => s.group !== "torail");
+  const rawQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+  const normQuery = normalizeArabic(rawQuery);
+  let filtered = !rawQuery ? mainStudents : mainStudents.filter(s =>
+    normalizeArabic(s.name).includes(normQuery) ||
+    (s.studentPhone||"").includes(rawQuery) ||
+    (s.parentPhone||"").includes(rawQuery) ||
+    (s.stage||"").toLowerCase().includes(rawQuery)
+  );
+  if (overdueOnly) {
+    filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
+  }
+  if (exemptOnly) {
+    filtered = filtered.filter(s => s.exempt);
+  }
+  if (bookletFilter === "term1_received") {
+    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1));
+  } else if (bookletFilter === "term1_missing") {
+    filtered = filtered.filter(s => !(s.term1Received ?? s.term1));
+  } else if (bookletFilter === "term2_received") {
+    filtered = filtered.filter(s => !!(s.term2Received ?? s.term2));
+  } else if (bookletFilter === "term2_missing") {
+    filtered = filtered.filter(s => !(s.term2Received ?? s.term2));
+  }
+  if (noParentOnly) {
+    filtered = filtered.filter(s => !s.parentPhone);
+  }
+
+  document.getElementById("studentCount").textContent = showStudentCount
+    ? (mainStudents.length + (mainStudents.length === 1 ? " student" : " students"))
+    : "إظهار العدد";
+
+  const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
+  const counts = {};
+  stages.forEach(st => counts[st] = 0);
+  mainStudents.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
+  const stageCountsEl = document.getElementById("stageCounts");
+  stageCountsEl.innerHTML = stages.map(st => {
+    const isActive = rawQuery === st.toLowerCase();
+    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="filterByStage('${st}')">${st} <span class="count">${counts[st]}</span></span>`;
+  }).join("");
+
+  const now = new Date();
+  const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, term1ReceivedCount = 0, term1MissingCount = 0, term2ReceivedCount = 0, term2MissingCount = 0, noParentCount = 0;
+  mainStudents.forEach(s => {
+    const payments = getPayments(s);
+    payments.forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      grandTotal += amt;
+      if ((p.date||"").startsWith(curYM)) monthTotal += amt;
+    });
+    if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
+    if (s.exempt) exemptCount++;
+    if (s.term1Received ?? s.term1) term1ReceivedCount++; else term1MissingCount++;
+    if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
+    if (!s.parentPhone) noParentCount++;
+  });
+  document.getElementById("statMonth").textContent = monthTotal.toLocaleString() + " جنيه";
+  document.getElementById("statTotal").textContent = grandTotal.toLocaleString() + " جنيه";
+  document.getElementById("statOverdue").textContent = overdueCount + " طالب";
+  const overdueCard = document.getElementById("overduePill");
+  overdueCard.classList.toggle("active", overdueOnly);
+  document.getElementById("statExempt").textContent = exemptCount + " طالب";
+  const exemptCard = document.getElementById("exemptPill");
+  exemptCard.classList.toggle("active", exemptOnly);
+  document.getElementById("statTerm1Received").textContent = term1ReceivedCount + " طالب";
+  document.getElementById("term1ReceivedPill").classList.toggle("active", bookletFilter === "term1_received");
+  document.getElementById("statTerm1Missing").textContent = term1MissingCount + " طالب";
+  document.getElementById("term1MissingPill").classList.toggle("active", bookletFilter === "term1_missing");
+  document.getElementById("statTerm2Received").textContent = term2ReceivedCount + " طالب";
+  document.getElementById("term2ReceivedPill").classList.toggle("active", bookletFilter === "term2_received");
+  document.getElementById("statTerm2Missing").textContent = term2MissingCount + " طالب";
+  document.getElementById("term2MissingPill").classList.toggle("active", bookletFilter === "term2_missing");
+  document.getElementById("statNoParent").textContent = noParentCount + " طالب";
+  document.getElementById("noParentPill").classList.toggle("active", noParentOnly);
+
+  const listEl = document.getElementById("studentList");
+  const emptyEl = document.getElementById("emptyState");
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = "";
+    document.getElementById("emptyMsg").textContent = mainStudents.length === 0
+      ? "No students yet. Add your first one above."
+      : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
+        : (exemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
+        : (bookletFilter === "term1_received" ? "لسه محدش استلم مذكرة ترم أول."
+        : (bookletFilter === "term1_missing" ? "كل الطلاب استلموا مذكرة ترم أول ✓"
+        : (bookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
+        : (bookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
+        : (noParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
+        : "No matches for that search.")))))));
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  listEl.innerHTML = filtered.map(s => {
+    const payments = getPayments(s);
+    const badge = paymentBadge(payments, s.exempt);
+    const tone = toneStyles[badge.tone];
+    const isOpen = expandedId === s.id;
+    const paymentsHtml = payments.length
+      ? payments.map(p => `
+          <div class="payment-row">
+            <span class="payment-info">${p.amount ? p.amount + ' جنيه' : ''} — ${fmtDate(p.date)}</span>
+            <span class="payment-actions">
+              <button class="pay-icon-btn" title="إرسال إيصال واتساب" onclick='sendWhatsappReceipt(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(p).replace(/'/g,"&apos;")})'>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.16h-.01c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.155 8.155 0 0 1-1.25-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24z"/></svg>
+              </button>
+              <button class="pay-icon-btn" title="حذف الدفعة" onclick="deletePayment('${s.id}','${p.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C4B32" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+              </button>
+            </span>
+          </div>`).join("")
+      : `<p class="no-payments">لسه مفيش مدفوعات مسجلة</p>`;
+    return `
+      <div class="card-row" data-student-id="${s.id}">
+        <div class="card-head" onclick="toggleExpand('${s.id}')">
+          <div style="min-width:0;flex:1;">
+            <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
+            <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
+          </div>
+          <span class="badge" style="background:${tone.bg};color:${tone.fg};">
+            <span class="dot" style="background:${tone.dot};"></span>${badge.label}
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6B60" stroke-width="2">${isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>'}</svg>
+        </div>
+        <div class="card-details" style="display:${isOpen ? 'block' : 'none'};">
+          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم تاني</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term2Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term2Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term2Received ?? s.term2) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          ${s.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${escapeHtml(s.notes)}</span></div>` : ""}
+          <div class="detail-row"><span class="detail-label">رمز الامتحان</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem;">
+            ${s.pin
+              ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
+              : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
+          </span></div>
+
+          <div class="payments-section">
+            <div class="payments-title">سجل المدفوعات</div>
+            ${paymentsHtml}
+            <div class="add-payment-row">
+              <input type="date" class="reg-input" id="newPayDate_${s.id}" style="flex:1;">
+              <input type="number" min="0" step="1" class="reg-input" id="newPayAmount_${s.id}" placeholder="المبلغ" style="flex:1;">
+              <button class="add-pay-btn" onclick="addPayment('${s.id}')">إضافة</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="edit-btn" onclick='openEditForm(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Edit</button>
+            <button class="del-btn" onclick="handleDelete('${s.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderTorail() {
+  const torailStudents = students.filter(s => s.group === "torail");
+  const rawQuery = document.getElementById("torailSearchInput").value.trim().toLowerCase();
+  const normQuery = normalizeArabic(rawQuery);
+  let filtered = !rawQuery ? torailStudents : torailStudents.filter(s =>
+    normalizeArabic(s.name).includes(normQuery) ||
+    (s.studentPhone||"").includes(rawQuery) ||
+    (s.parentPhone||"").includes(rawQuery) ||
+    (s.stage||"").toLowerCase().includes(rawQuery)
+  );
+  if (torailOverdueOnly) {
+    filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
+  }
+  if (torailExemptOnly) {
+    filtered = filtered.filter(s => s.exempt);
+  }
+  if (torailBookletFilter === "term1_received") {
+    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1));
+  } else if (torailBookletFilter === "term1_missing") {
+    filtered = filtered.filter(s => !(s.term1Received ?? s.term1));
+  } else if (torailBookletFilter === "term2_received") {
+    filtered = filtered.filter(s => !!(s.term2Received ?? s.term2));
+  } else if (torailBookletFilter === "term2_missing") {
+    filtered = filtered.filter(s => !(s.term2Received ?? s.term2));
+  }
+  if (torailNoParentOnly) {
+    filtered = filtered.filter(s => !s.parentPhone);
+  }
+
+  const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
+  const counts = {};
+  stages.forEach(st => counts[st] = 0);
+  torailStudents.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
+  const stageCountsEl = document.getElementById("torailStageCounts");
+  stageCountsEl.innerHTML = stages.map(st => {
+    const isActive = rawQuery === st.toLowerCase();
+    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="torailFilterByStage('${st}')">${st} <span class="count">${counts[st]}</span></span>`;
+  }).join("");
+
+  const now = new Date();
+  const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, term1ReceivedCount = 0, term1MissingCount = 0, term2ReceivedCount = 0, term2MissingCount = 0, noParentCount = 0;
+  torailStudents.forEach(s => {
+    const payments = getPayments(s);
+    payments.forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      grandTotal += amt;
+      if ((p.date||"").startsWith(curYM)) monthTotal += amt;
+    });
+    if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
+    if (s.exempt) exemptCount++;
+    if (s.term1Received ?? s.term1) term1ReceivedCount++; else term1MissingCount++;
+    if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
+    if (!s.parentPhone) noParentCount++;
+  });
+  document.getElementById("torailStatMonth").textContent = monthTotal.toLocaleString() + " جنيه";
+  document.getElementById("torailStatTotal").textContent = grandTotal.toLocaleString() + " جنيه";
+  document.getElementById("torailStatOverdue").textContent = overdueCount + " طالب";
+  document.getElementById("torailOverduePill").classList.toggle("active", torailOverdueOnly);
+  document.getElementById("torailStatExempt").textContent = exemptCount + " طالب";
+  document.getElementById("torailExemptPill").classList.toggle("active", torailExemptOnly);
+  document.getElementById("torailStatTerm1Received").textContent = term1ReceivedCount + " طالب";
+  document.getElementById("torailTerm1ReceivedPill").classList.toggle("active", torailBookletFilter === "term1_received");
+  document.getElementById("torailStatTerm1Missing").textContent = term1MissingCount + " طالب";
+  document.getElementById("torailTerm1MissingPill").classList.toggle("active", torailBookletFilter === "term1_missing");
+  document.getElementById("torailStatTerm2Received").textContent = term2ReceivedCount + " طالب";
+  document.getElementById("torailTerm2ReceivedPill").classList.toggle("active", torailBookletFilter === "term2_received");
+  document.getElementById("torailStatTerm2Missing").textContent = term2MissingCount + " طالب";
+  document.getElementById("torailTerm2MissingPill").classList.toggle("active", torailBookletFilter === "term2_missing");
+  document.getElementById("torailStatNoParent").textContent = noParentCount + " طالب";
+  document.getElementById("torailNoParentPill").classList.toggle("active", torailNoParentOnly);
+
+  const listEl = document.getElementById("torailStudentList");
+  const emptyEl = document.getElementById("torailEmptyState");
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = "";
+    document.getElementById("torailEmptyMsg").textContent = torailStudents.length === 0
+      ? "لسه مفيش طلاب توريل. دوس Add عشان تضيف أول واحد."
+      : (torailOverdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
+        : (torailExemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
+        : (torailBookletFilter === "term1_received" ? "لسه محدش استلم مذكرة ترم أول."
+        : (torailBookletFilter === "term1_missing" ? "كل الطلاب استلموا مذكرة ترم أول ✓"
+        : (torailBookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
+        : (torailBookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
+        : (torailNoParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
+        : "No matches for that search.")))))));
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  listEl.innerHTML = filtered.map(s => {
+    const payments = getPayments(s);
+    const badge = paymentBadge(payments, s.exempt);
+    const tone = toneStyles[badge.tone];
+    const isOpen = torailExpandedId === s.id;
+    const paymentsHtml = payments.length
+      ? payments.map(p => `
+          <div class="payment-row">
+            <span class="payment-info">${p.amount ? p.amount + ' جنيه' : ''} — ${fmtDate(p.date)}</span>
+            <span class="payment-actions">
+              <button class="pay-icon-btn" title="إرسال إيصال واتساب" onclick='sendWhatsappReceipt(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(p).replace(/'/g,"&apos;")})'>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.16h-.01c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.155 8.155 0 0 1-1.25-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24z"/></svg>
+              </button>
+              <button class="pay-icon-btn" title="حذف الدفعة" onclick="deletePayment('${s.id}','${p.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C4B32" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+              </button>
+            </span>
+          </div>`).join("")
+      : `<p class="no-payments">لسه مفيش مدفوعات مسجلة</p>`;
+    return `
+      <div class="card-row" data-student-id="${s.id}">
+        <div class="card-head" onclick="toggleTorailExpand('${s.id}')">
+          <div style="min-width:0;flex:1;">
+            <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
+            <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
+          </div>
+          <span class="badge" style="background:${tone.bg};color:${tone.fg};">
+            <span class="dot" style="background:${tone.dot};"></span>${badge.label}
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6B60" stroke-width="2">${isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>'}</svg>
+        </div>
+        <div class="card-details" style="display:${isOpen ? 'block' : 'none'};">
+          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم تاني</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term2Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term2Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term2Received ?? s.term2) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          ${s.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${escapeHtml(s.notes)}</span></div>` : ""}
+          <div class="detail-row"><span class="detail-label">رمز الامتحان</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem;">
+            ${s.pin
+              ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
+              : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
+          </span></div>
+
+          <div class="payments-section">
+            <div class="payments-title">سجل المدفوعات</div>
+            ${paymentsHtml}
+            <div class="add-payment-row">
+              <input type="date" class="reg-input" id="newPayDate_${s.id}" style="flex:1;">
+              <input type="number" min="0" step="1" class="reg-input" id="newPayAmount_${s.id}" placeholder="المبلغ" style="flex:1;">
+              <button class="add-pay-btn" onclick="addPayment('${s.id}')">إضافة</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="edit-btn" onclick='openEditForm(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Edit</button>
+            <button class="del-btn" onclick="handleDelete('${s.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function torailFilterByStage(stage) {
+  const input = document.getElementById("torailSearchInput");
+  if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
+    input.value = "";
+  } else {
+    input.value = stage;
+  }
+  renderTorail();
+}
+function torailToggleOverdueFilter() { torailOverdueOnly = !torailOverdueOnly; renderTorail(); }
+function torailToggleExemptFilter() { torailExemptOnly = !torailExemptOnly; renderTorail(); }
+function torailToggleBookletFilter(mode) { torailBookletFilter = torailBookletFilter === mode ? null : mode; renderTorail(); }
+function torailToggleNoParentFilter() { torailNoParentOnly = !torailNoParentOnly; renderTorail(); }
+
+async function resetStudentPin(studentId) {
+  if (!confirm("هيتم مسح الرمز السري الحالي، وأول طالب يختار الاسم ده هيقدر يحدد رمز جديد. متأكد؟")) return;
+  try {
+    await studentsCol.doc(studentId).update({ pin: firebase.firestore.FieldValue.delete() });
+    showSuccess("تم إعادة تعيين الرمز بنجاح.");
+  } catch (err) {
+    showError("تعذر إعادة تعيين الرمز. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+document.getElementById("addBtn").addEventListener("click", openNewForm);
+document.getElementById("torailAddBtn").addEventListener("click", openNewTorailForm);
+document.getElementById("torailSearchInput").addEventListener("input", renderTorail);
+document.getElementById("torailOverduePill").addEventListener("click", torailToggleOverdueFilter);
+document.getElementById("torailExemptPill").addEventListener("click", torailToggleExemptFilter);
+document.getElementById("torailTerm1ReceivedPill").addEventListener("click", () => torailToggleBookletFilter("term1_received"));
+document.getElementById("torailTerm1MissingPill").addEventListener("click", () => torailToggleBookletFilter("term1_missing"));
+document.getElementById("torailTerm2ReceivedPill").addEventListener("click", () => torailToggleBookletFilter("term2_received"));
+document.getElementById("torailTerm2MissingPill").addEventListener("click", () => torailToggleBookletFilter("term2_missing"));
+document.getElementById("torailNoParentPill").addEventListener("click", torailToggleNoParentFilter);
+document.getElementById("torailExportExcelBtn").addEventListener("click", () => exportExcel(students.filter(s => s.group === "torail"), "طلاب توريل", "torail-students"));
+document.getElementById("torailExportPdfBtn").addEventListener("click", () => exportPdf(students.filter(s => s.group === "torail"), "كشف طلاب توريل"));
+document.getElementById("fName").addEventListener("input", checkDuplicateName);
+document.getElementById("newExamBtn").addEventListener("click", openExamBuilder);
+document.getElementById("aiImportBtn").addEventListener("click", () => document.getElementById("aiImageInput").click());
+document.getElementById("aiImageInput").addEventListener("change", (e) => {
+  if (e.target.files && e.target.files[0]) {
+    handleAiImage(e.target.files[0]);
+    e.target.value = "";
+  }
+});
+document.getElementById("overduePill").addEventListener("click", toggleOverdueFilter);
+document.getElementById("exemptPill").addEventListener("click", toggleExemptFilter);
+document.getElementById("term1ReceivedPill").addEventListener("click", () => toggleBookletFilter("term1_received"));
+document.getElementById("term1MissingPill").addEventListener("click", () => toggleBookletFilter("term1_missing"));
+document.getElementById("term2ReceivedPill").addEventListener("click", () => toggleBookletFilter("term2_received"));
+document.getElementById("term2MissingPill").addEventListener("click", () => toggleBookletFilter("term2_missing"));
+document.getElementById("noParentPill").addEventListener("click", toggleNoParentFilter);
+document.getElementById("exportExcelBtn").addEventListener("click", () => exportExcel());
+document.getElementById("exportPdfBtn").addEventListener("click", () => exportPdf());
+document.getElementById("fixPhonesBtn").addEventListener("click", fixAllPhoneNumbers);
+document.getElementById("enableNotifBtn").addEventListener("click", async () => {
+  if (typeof Notification === "undefined") { showError("المتصفح ده مش بيدعم الإشعارات."); return; }
+  try {
+    const perm = await Notification.requestPermission();
+    initNotifUi();
+    if (perm === "granted") showSuccess("تم تفعيل الإشعارات بنجاح.");
+  } catch (e) {}
+});
+document.getElementById("exportBtn").addEventListener("click", exportBackup);
+document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", (e) => {
+  if (e.target.files && e.target.files[0]) {
+    importBackup(e.target.files[0]);
+    e.target.value = "";
+  }
+});
+document.getElementById("closeFormBtn").addEventListener("click", closeForm);
+document.getElementById("cancelBtn").addEventListener("click", closeForm);
+document.getElementById("formCard").addEventListener("submit", handleSubmit);
+document.getElementById("searchInput").addEventListener("input", render);
+
+["fStudentPhone","fParentPhone"].forEach(id => {
+  document.getElementById(id).addEventListener("input", function() {
+    const converted = toEnglishDigits(this.value);
+    if (converted !== this.value) {
+      const pos = this.selectionStart;
+      this.value = converted;
+      this.setSelectionRange(pos, pos);
+    }
+  });
+});
+
+function showApp() {
+  document.getElementById("lockScreen").style.display = "none";
+  document.querySelectorAll(".app-content").forEach(el => {
+    el.style.display = el.classList.contains("tab-nav") ? "flex" : "block";
+  });
+  switchTab("students");
+  startSync();
+  startInactivityWatcher();
+}
+
+// قفل تلقائي بعد فترة عدم استخدام (بالميلي ثانية). عدّل الرقم لو حابب مدة مختلفة.
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 دقيقة
+let inactivityTimer = null;
+const inactivityEvents = ["mousemove", "keydown", "click", "touchstart", "scroll"];
+
+function resetInactivityTimer() {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(() => { logoutApp(); }, INACTIVITY_TIMEOUT_MS);
+}
+
+function startInactivityWatcher() {
+  inactivityEvents.forEach(evt => document.addEventListener(evt, resetInactivityTimer));
+  resetInactivityTimer();
+}
+
+function stopInactivityWatcher() {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  inactivityTimer = null;
+  inactivityEvents.forEach(evt => document.removeEventListener(evt, resetInactivityTimer));
+}
+
+function logoutApp() {
+  stopInactivityWatcher();
+  auth.signOut().then(() => location.reload()).catch(() => location.reload());
+}
+
+function setLockError(msg) {
+  const el = document.getElementById("lockErrorMsg");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+async function tryUnlock() {
+  const email = document.getElementById("lockEmailInput").value.trim();
+  const password = document.getElementById("lockPasswordInput").value;
+  if (!email || !password) { setLockError("اكتب البريد الإلكتروني وكلمة المرور."); return; }
+  const btn = document.getElementById("lockUnlockBtn");
+  btn.disabled = true;
+  btn.textContent = "جاري تسجيل الدخول...";
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    showApp();
+  } catch (err) {
+    let msg = "تعذر تسجيل الدخول.";
+    if (err && (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found")) msg = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    else if (err && err.code === "auth/too-many-requests") msg = "محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.";
+    else if (err && err.code === "auth/operation-not-allowed") msg = "تسجيل الدخول بالبريد غير مفعّل في Firebase بعد.";
+    setLockError(msg);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "دخول";
+  }
+}
+document.getElementById("lockUnlockBtn").addEventListener("click", tryUnlock);
+["lockEmailInput","lockPasswordInput"].forEach(id => document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); }));
+auth.onAuthStateChanged(user => {
+  if (user && !user.isAnonymous) showApp();
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+</script>
+</body>
+</html>
