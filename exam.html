@@ -63,8 +63,10 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
+const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
 const firebaseConfig = {
   apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
   authDomain: "register-class-302e6.firebaseapp.com",
@@ -75,6 +77,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -107,22 +110,18 @@ async function init() {
     return;
   }
   try {
-    const doc = await db.collection("exams").doc(examId).get();
-    if (!doc.exists) {
-      document.getElementById("examTitle").textContent = "الامتحان غير موجود";
-      showError("الامتحان ده مش موجود أو اتحذف.");
-      return;
-    }
-    exam = { id: doc.id, ...doc.data() };
-    document.getElementById("examTitle").textContent = exam.title || "امتحان";
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-exam?examId=${encodeURIComponent(examId)}`);
+    if (!res.ok) throw new Error("exam_lookup_failed");
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "exam_lookup_failed");
+    exam = { id: examId, title: data.title || "امتحان", stage: data.stage || "" };
+    document.getElementById("examTitle").textContent = exam.title;
     document.getElementById("examSub").textContent = (exam.stage || "") + " — " + TEACHER_NAME;
-
-    const snap = await db.collection("students").where("stage", "==", exam.stage).get();
-    studentsInStage = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (a.name||"").localeCompare(b.name||""));
-
+    studentsInStage = (data.students || []).sort((a,b) => (a.name||"").localeCompare(b.name||""));
     renderStudentPicker();
   } catch (err) {
-    showError("تعذر تحميل الامتحان. تأكد من اتصالك بالإنترنت وحاول تاني.");
+    document.getElementById("examTitle").textContent = "تعذر فتح الامتحان";
+    showError("تعذر تحميل الامتحان. تأكد من الرابط والإنترنت وحاول تاني.");
   }
 }
 
@@ -141,32 +140,17 @@ function renderStudentPicker() {
       <input type="text" id="pinInput" placeholder="4 أرقام" maxlength="4" inputmode="numeric">
       <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
     </div>
-    <p id="manualToggleLink" style="text-align:center; color:#9FB8AD; font-size:0.85rem; cursor:pointer; text-decoration:underline; margin:-0.4rem 0 1rem;">مش لاقي اسمك في القائمة؟ اضغط هنا</p>
-    <div class="card" id="manualEntryCard" style="display:none;">
-      <label>الاسم بالكامل</label>
-      <input type="text" id="manualNameInput" placeholder="اكتب اسمك بالكامل">
-      <label style="margin-top:0.6rem;">رقم هاتفك (اختياري)</label>
-      <input type="text" id="manualPhoneInput" placeholder="رقم هاتفك">
-      <label style="margin-top:0.6rem;">رقم هاتف ولي الأمر (اختياري)</label>
-      <input type="text" id="manualParentPhoneInput" placeholder="رقم هاتف ولي الأمر">
-    </div>
     <div id="alreadySubmittedMsg"></div>
     <button id="startBtn" disabled>ابدأ الامتحان</button>
   `;
   const select = document.getElementById("studentSelect");
   const startBtn = document.getElementById("startBtn");
   const msgBox = document.getElementById("alreadySubmittedMsg");
-  const manualLink = document.getElementById("manualToggleLink");
-  const manualCard = document.getElementById("manualEntryCard");
-  const manualNameInput = document.getElementById("manualNameInput");
-  const manualPhoneInput = document.getElementById("manualPhoneInput");
-  const manualParentPhoneInput = document.getElementById("manualParentPhoneInput");
   const pinCard = document.getElementById("pinCard");
   const pinLabel = document.getElementById("pinLabel");
   const pinInput = document.getElementById("pinInput");
   const pinMsg = document.getElementById("pinMsg");
 
-  let manualMode = false;
   let pinVerified = false;
 
   function resetStart() {
@@ -226,91 +210,49 @@ function renderStudentPicker() {
     }
   }
 
-  manualLink.addEventListener("click", () => {
-    manualMode = !manualMode;
-    manualCard.style.display = manualMode ? "block" : "none";
-    manualLink.textContent = manualMode ? "الرجوع لاختيار الاسم من القائمة" : "مش لاقي اسمك في القائمة؟ اضغط هنا";
-    select.value = "";
-    selectedStudent = null;
-    resetStart();
-    resetPin();
-  });
-
   select.addEventListener("change", async () => {
     selectedStudent = studentsInStage.find(s => s.id === select.value) || null;
     resetStart();
     resetPin();
     if (!selectedStudent) return;
-
-    if (selectedStudent.pin) {
-      pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
-      pinCard.style.display = "block";
-      pinInput.focus();
-    } else {
-      pinLabel.textContent = "اختار رمز سري من 4 أرقام هتستخدمه في كل الامتحانات الجاية، عشان محدش تاني يمتحن مكانك";
-      pinCard.style.display = "block";
-      pinInput.focus();
-    }
+    pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
+    pinCard.style.display = "block";
+    pinInput.focus();
   });
 
   pinInput.addEventListener("input", async () => {
     const typed = pinInput.value.replace(/\D/g, "");
     pinInput.value = typed;
-    if (typed.length < 4) {
+    if (typed.length < 4 || !selectedStudent) {
       pinMsg.style.display = "none";
       startBtn.disabled = true;
       return;
     }
-    if (selectedStudent.pin) {
-      // تحقق من رمز موجود بالفعل
-      if (typed === selectedStudent.pin) {
-        pinVerified = true;
-        pinMsg.textContent = "✓ تم التأكيد";
-        pinMsg.style.color = "#3F6B4A";
-        pinMsg.style.display = "block";
-        await checkAlreadySubmitted();
-      } else {
-        pinVerified = false;
-        pinMsg.textContent = "الرمز غير صحيح.";
-        pinMsg.style.color = "#C15B3C";
-        pinMsg.style.display = "block";
-        startBtn.disabled = true;
-        startBtn.textContent = "ابدأ الامتحان";
+    startBtn.disabled = true;
+    startBtn.textContent = "جاري التحقق...";
+    try {
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ examId: exam.id, studentId: selectedStudent.id, pin: typed })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.customToken) {
+        throw new Error(data.error || "invalid_pin");
       }
-    } else {
-      // أول استخدام — نسجّل الرمز الجديد
-      try {
-        await db.collection("students").doc(selectedStudent.id).update({ pin: typed });
-        selectedStudent.pin = typed;
-        pinVerified = true;
-        pinMsg.textContent = "✓ تم حفظ الرمز، افتكره كويس هتحتاجه المرات الجاية";
-        pinMsg.style.color = "#3F6B4A";
-        pinMsg.style.display = "block";
-        await checkAlreadySubmitted();
-      } catch (err) {
-        pinMsg.textContent = "تعذر حفظ الرمز. تأكد من اتصالك بالإنترنت.";
-        pinMsg.style.color = "#C15B3C";
-        pinMsg.style.display = "block";
-      }
-    }
-  });
-
-  let manualDebounceTimer = null;
-  [manualNameInput, manualPhoneInput, manualParentPhoneInput].forEach(inp => {
-    inp.addEventListener("input", () => {
-      clearTimeout(manualDebounceTimer);
-      const name = manualNameInput.value.trim();
-      if (!name) { selectedStudent = null; resetStart(); return; }
-      selectedStudent = {
-        id: null,
-        name,
-        studentPhone: manualPhoneInput.value.trim(),
-        parentPhone: manualParentPhoneInput.value.trim(),
-      };
+      await auth.signInWithCustomToken(data.customToken);
+      selectedStudent = { ...selectedStudent, ...(data.student || {}) };
+      pinMsg.textContent = "✓ تم التأكيد";
+      pinMsg.style.color = "#3F6B4A";
+      pinMsg.style.display = "block";
+      await checkAlreadySubmitted();
+    } catch (err) {
+      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
+      pinMsg.style.color = "#C15B3C";
+      pinMsg.style.display = "block";
       startBtn.disabled = true;
       startBtn.textContent = "ابدأ الامتحان";
-      manualDebounceTimer = setTimeout(checkAlreadySubmitted, 500);
-    });
+    }
   });
 
   startBtn.addEventListener("click", renderExam);
@@ -324,7 +266,16 @@ function getTimerStorageKey() {
   return "examTimerStart_" + exam.id + "_" + studentKey;
 }
 
-function renderExam() {
+async function renderExam() {
+  try {
+    if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error("not_authenticated");
+    const doc = await db.collection("exams").doc(exam.id).get();
+    if (!doc.exists) throw new Error("exam_missing");
+    exam = { id: doc.id, ...doc.data() };
+  } catch (e) {
+    showError("تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.");
+    return;
+  }
   answers = {};
   const content = document.getElementById("content");
   const questions = exam.questions || [];
@@ -479,26 +430,25 @@ async function submitExam(isTimeout) {
     submitBtn.disabled = true;
     submitBtn.textContent = isTimeout ? "انتهى الوقت، جاري التسليم..." : "جاري التسليم...";
   }
-  const { score, total, answerDetails } = gradeExam();
+  const { answerDetails } = gradeExam();
   try {
-    await db.collection("examResults").add({
-      examId: exam.id,
-      examTitle: exam.title || "",
-      stage: exam.stage || "",
-      studentId: selectedStudent.id,
-      studentName: selectedStudent.name || "",
-      studentPhone: selectedStudent.studentPhone || "",
-      parentPhone: selectedStudent.parentPhone || "",
-      group: selectedStudent.group || "normal",
-      manual: !selectedStudent.id,
-      score,
-      total,
-      answers: answerDetails,
-      timedOut: !!isTimeout,
-      submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    if (!auth.currentUser || auth.currentUser.isAnonymous || !selectedStudent?.id) throw new Error("not_authenticated");
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/submit-result`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${await auth.currentUser.getIdToken()}`
+      },
+      body: JSON.stringify({
+        examId: exam.id,
+        answers: answerDetails.map(a => ({ questionIndex: a.questionIndex, given: a.given })),
+        timedOut: !!isTimeout
+      })
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || "submit_failed");
     try { localStorage.removeItem(getTimerStorageKey()); } catch (e) {}
-    renderResult(score, total, answerDetails, true, isTimeout);
+    renderResult(data.score, data.total, data.answerDetails || answerDetails, true, isTimeout);
   } catch (err) {
     if (submitBtn) {
       submitBtn.disabled = false;
