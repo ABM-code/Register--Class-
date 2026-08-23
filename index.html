@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -134,13 +135,13 @@
   }
   .search-wrap { position: relative; flex: 1; }
   .search-wrap svg { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); }
-  #searchInput {
+  .search-wrap input, #searchInput, #torailSearchInput, #examResultsSearchInput {
     width: 100%; padding: 0.7rem 0.9rem 0.7rem 2.4rem; border-radius: 10px;
     border: 1px solid rgba(245,241,230,0.18); background: rgba(245,241,230,0.06);
     color: #F5F1E6; font-size: 0.95rem;
   }
-  #searchInput::placeholder { color: rgba(245,241,230,0.45); }
-  #addBtn {
+  .search-wrap input::placeholder, #searchInput::placeholder, #torailSearchInput::placeholder, #examResultsSearchInput::placeholder { color: rgba(245,241,230,0.45); }
+  #addBtn, #torailAddBtn {
     display: flex; align-items: center; gap: 0.4rem; background: #D4A93B; color: #1B2420;
     border: none; border-radius: 10px; padding: 0 1rem; font-weight: 600; font-size: 0.92rem;
     cursor: pointer; white-space: nowrap;
@@ -282,39 +283,47 @@
     </div>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-card exempt-card" id="exemptPill">
-      <div class="stat-label">معفيين من الدفع</div>
-      <div class="stat-value" id="statExempt">0 طالب</div>
-    </div>
-  </div>
+  <button id="filterPillsToggleBtn" class="tools-toggle-btn" onclick="toggleFilterPillsSection()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+    فلاتر إضافية (إعفاء، مذكرات، بيانات ولي الأمر)
+    <svg id="filterPillsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
 
-  <div class="stats-row">
-    <div class="stat-card good-card" id="term1ReceivedPill">
-      <div class="stat-label">استلموا مذكرة ترم أول</div>
-      <div class="stat-value" id="statTerm1Received">0 طالب</div>
+  <div id="filterPillsSection" style="display:none;">
+    <div class="stats-row">
+      <div class="stat-card exempt-card" id="exemptPill">
+        <div class="stat-label">معفيين من الدفع</div>
+        <div class="stat-value" id="statExempt">0 طالب</div>
+      </div>
     </div>
-    <div class="stat-card overdue-card" id="term1MissingPill">
-      <div class="stat-label">لسه مستلموش ترم أول</div>
-      <div class="stat-value" id="statTerm1Missing">0 طالب</div>
-    </div>
-  </div>
 
-  <div class="stats-row">
-    <div class="stat-card good-card" id="term2ReceivedPill">
-      <div class="stat-label">استلموا مذكرة ترم تاني</div>
-      <div class="stat-value" id="statTerm2Received">0 طالب</div>
+    <div class="stats-row">
+      <div class="stat-card good-card" id="term1ReceivedPill">
+        <div class="stat-label">استلموا مذكرة ترم أول</div>
+        <div class="stat-value" id="statTerm1Received">0 طالب</div>
+      </div>
+      <div class="stat-card overdue-card" id="term1MissingPill">
+        <div class="stat-label">لسه مستلموش ترم أول</div>
+        <div class="stat-value" id="statTerm1Missing">0 طالب</div>
+      </div>
     </div>
-    <div class="stat-card overdue-card" id="term2MissingPill">
-      <div class="stat-label">لسه مستلموش ترم تاني</div>
-      <div class="stat-value" id="statTerm2Missing">0 طالب</div>
-    </div>
-  </div>
 
-  <div class="stats-row">
-    <div class="stat-card overdue-card" id="noParentPill">
-      <div class="stat-label">بدون رقم ولي الأمر</div>
-      <div class="stat-value" id="statNoParent">0 طالب</div>
+    <div class="stats-row">
+      <div class="stat-card good-card" id="term2ReceivedPill">
+        <div class="stat-label">استلموا مذكرة ترم تاني</div>
+        <div class="stat-value" id="statTerm2Received">0 طالب</div>
+      </div>
+      <div class="stat-card overdue-card" id="term2MissingPill">
+        <div class="stat-label">لسه مستلموش ترم تاني</div>
+        <div class="stat-value" id="statTerm2Missing">0 طالب</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card overdue-card" id="noParentPill">
+        <div class="stat-label">بدون رقم ولي الأمر</div>
+        <div class="stat-value" id="statNoParent">0 طالب</div>
+      </div>
     </div>
   </div>
 
