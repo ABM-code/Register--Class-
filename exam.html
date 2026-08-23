@@ -63,6 +63,17 @@
   .student-suggestion-item:last-child { border-radius: 0 0 9px 9px; }
   .student-suggestion-item:active { background: #FBF3DF; }
   .student-suggestion-empty { padding: 0.65rem 0.8rem; font-size: 0.85rem; color: #9C4B32; background: #F6E7E2; border-radius: 9px; }
+  .explain-actions { display: flex; gap: 0.5rem; margin-top: 0.7rem; flex-wrap: wrap; }
+  .explain-btn {
+    background: none; border: 1px solid rgba(0,0,0,0.15); color: #4A5A50; border-radius: 8px;
+    padding: 0.4rem 0.75rem; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;
+  }
+  .explain-btn:active { background: rgba(0,0,0,0.05); }
+  .explain-btn[disabled] { opacity: 0.5; cursor: default; }
+  .explain-box {
+    margin-top: 0.6rem; background: #EFF5F0; border-radius: 9px; padding: 0.7rem 0.85rem;
+    font-size: 0.85rem; line-height: 1.6; color: #3a3a34; unicode-bidi: plaintext; text-align: start;
+  }
 </style>
 </head>
 <body>
@@ -79,6 +90,7 @@
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
+const AI_EXPLAIN_WORKER_URL = "https://register-class.abm319.workers.dev/explain";
 const firebaseConfig = {
   apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
   authDomain: "register-class-302e6.firebaseapp.com",
@@ -520,6 +532,16 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
       givenText = ad.given ? ad.given : "(لم يُجب)";
       correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
     }
+    const explainId = `explain_${ad.questionIndex}`;
+    const payload = {
+      type: q.type,
+      passage: q.passage || "",
+      prompt: q.prompt || "",
+      options: q.type === "mcq" ? (q.options || []) : [],
+      correctAnswer: correctText,
+      studentAnswer: givenText === "(لم يُجب)" ? "" : givenText,
+    };
+    const payloadAttr = escapeHtml(JSON.stringify(payload));
     return `
       <div class="card review-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
         <div class="q-num">سؤال ${ad.questionIndex + 1}</div>
@@ -536,6 +558,11 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
           <span class="review-label">الإجابة الصحيحة:</span>
           <span class="review-value review-correct-text">${escapeHtml(correctText)}</span>
         </div>` : ""}
+        <div class="explain-actions">
+          <button class="explain-btn" id="${explainId}_explainBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'explain', this)">💡 اشرحلي السبب</button>
+          <button class="explain-btn" id="${explainId}_translateBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'translate', this)">🌐 ترجملي السؤال</button>
+        </div>
+        <div class="explain-box" id="${explainId}_box" style="display:none;"></div>
       </div>`;
   }).join("");
 
@@ -552,6 +579,43 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
     <p style="color:#9FB8AD; text-align:center; font-size:0.85rem; margin-bottom:1rem;">${subMessage}</p>
     ${reviewHtml}
   `;
+}
+
+async function requestExplain(explainId, action, btnEl) {
+  const box = document.getElementById(`${explainId}_box`);
+  const explainBtn = document.getElementById(`${explainId}_explainBtn`);
+  const translateBtn = document.getElementById(`${explainId}_translateBtn`);
+  if (!box || !btnEl) return;
+
+  const payload = JSON.parse(btnEl.getAttribute("data-payload"));
+  payload.action = action;
+
+  explainBtn.disabled = true;
+  translateBtn.disabled = true;
+  const originalText = btnEl.textContent;
+  btnEl.textContent = "جاري التحميل...";
+  box.style.display = "block";
+  box.textContent = "";
+
+  try {
+    const res = await fetch(AI_EXPLAIN_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data || !data.text) {
+      box.textContent = "معلش، حصلت مشكلة وإحنا بنجيب الشرح. جربي تاني كمان شوية.";
+    } else {
+      box.textContent = data.text;
+    }
+  } catch (err) {
+    box.textContent = "معلش، حصلت مشكلة في الاتصال. جربي تاني كمان شوية.";
+  } finally {
+    explainBtn.disabled = false;
+    translateBtn.disabled = false;
+    btnEl.textContent = originalText;
+  }
 }
 
 init();
