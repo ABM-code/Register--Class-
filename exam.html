@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -52,6 +53,16 @@
   .review-value { color: #1B2420; font-weight: 600; unicode-bidi: plaintext; }
   .review-correct-text { color: #3F6B4A; }
   .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
+  .student-suggestions { margin-top: 0.4rem; border-radius: 9px; overflow: hidden; display: none; }
+  .student-suggestion-item {
+    display: block; width: 100%; text-align: right; background: #FFFDF8; color: #1B2420;
+    border: 1px solid rgba(0,0,0,0.12); border-top: none; padding: 0.65rem 0.8rem;
+    font-size: 0.92rem; font-weight: 500; cursor: pointer; border-radius: 0;
+  }
+  .student-suggestion-item:first-child { border-top: 1px solid rgba(0,0,0,0.12); border-radius: 9px 9px 0 0; }
+  .student-suggestion-item:last-child { border-radius: 0 0 9px 9px; }
+  .student-suggestion-item:active { background: #FBF3DF; }
+  .student-suggestion-empty { padding: 0.65rem 0.8rem; font-size: 0.85rem; color: #9C4B32; background: #F6E7E2; border-radius: 9px; }
 </style>
 </head>
 <body>
@@ -130,11 +141,9 @@ function renderStudentPicker() {
   const content = document.getElementById("content");
   content.innerHTML = `
     <div class="card">
-      <label>اختر اسمك من القائمة</label>
-      <select id="studentSelect">
-        <option value="">— اختر اسمك —</option>
-        ${studentsInStage.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join("")}
-      </select>
+      <label>اكتب اسمك للبحث</label>
+      <input type="text" id="studentSearchInput" placeholder="اكتب أول كام حرف من اسمك" autocomplete="off">
+      <div class="student-suggestions" id="studentSuggestions"></div>
     </div>
     <div class="card" id="pinCard" style="display:none;">
       <label id="pinLabel"></label>
@@ -144,7 +153,8 @@ function renderStudentPicker() {
     <div id="alreadySubmittedMsg"></div>
     <button id="startBtn" disabled>ابدأ الامتحان</button>
   `;
-  const select = document.getElementById("studentSelect");
+  const searchInput = document.getElementById("studentSearchInput");
+  const suggestionsBox = document.getElementById("studentSuggestions");
   const startBtn = document.getElementById("startBtn");
   const msgBox = document.getElementById("alreadySubmittedMsg");
   const pinCard = document.getElementById("pinCard");
@@ -166,6 +176,48 @@ function renderStudentPicker() {
     pinInput.value = "";
     pinMsg.style.display = "none";
   }
+
+  function hideSuggestions() {
+    suggestionsBox.style.display = "none";
+    suggestionsBox.innerHTML = "";
+  }
+
+  async function onStudentChosen() {
+    hideSuggestions();
+    resetStart();
+    resetPin();
+    if (!selectedStudent) return;
+    pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
+    pinCard.style.display = "block";
+    pinInput.focus();
+  }
+
+  searchInput.addEventListener("input", () => {
+    if (selectedStudent) {
+      selectedStudent = null;
+      resetStart();
+      resetPin();
+    }
+    const q = searchInput.value.trim();
+    if (q.length < 2) { hideSuggestions(); return; }
+    const normQ = normalizeArabic(q.toLowerCase());
+    const matches = studentsInStage.filter(s => normalizeArabic((s.name || "").toLowerCase()).includes(normQ)).slice(0, 6);
+    if (matches.length === 0) {
+      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">مفيش اسم متطابق. تأكد من كتابة اسمك صح.</div>`;
+      suggestionsBox.style.display = "block";
+      return;
+    }
+    suggestionsBox.innerHTML = matches.map(s => `<button type="button" class="student-suggestion-item" data-id="${s.id}">${escapeHtml(s.name)}</button>`).join("");
+    suggestionsBox.style.display = "block";
+    suggestionsBox.querySelectorAll(".student-suggestion-item").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const chosen = studentsInStage.find(s => s.id === btn.dataset.id) || null;
+        selectedStudent = chosen;
+        searchInput.value = chosen ? chosen.name : "";
+        onStudentChosen();
+      });
+    });
+  });
 
   async function checkAlreadySubmitted() {
     startBtn.disabled = true;
@@ -210,16 +262,6 @@ function renderStudentPicker() {
       startBtn.textContent = "ابدأ الامتحان";
     }
   }
-
-  select.addEventListener("change", async () => {
-    selectedStudent = studentsInStage.find(s => s.id === select.value) || null;
-    resetStart();
-    resetPin();
-    if (!selectedStudent) return;
-    pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
-    pinCard.style.display = "block";
-    pinInput.focus();
-  });
 
   pinInput.addEventListener("input", async () => {
     const typed = pinInput.value.replace(/\D/g, "");
