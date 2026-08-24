@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1044,37 +1043,68 @@ function exportExcel(customList, sheetLabel, fileTag) {
   XLSX.writeFile(wb, (fileTag || "class-register") + "-" + today + ".xlsx");
 }
 
+const ROSTER_ROWS_PER_PAGE = 32;
 function exportPdf(customList, titleLabel) {
   const sourceList = customList || students.filter(s => s.group !== "torail");
   const sorted = sortByStageThenName(sourceList);
   const monthLabels = ["٨","٩","١٠","١١","١٢","١","٢","٣","٤","٥","٦"];
-  let currentStage = null;
-  let isFirstStage = true;
-  let serial = 0;
   const monthCellsHtml = `<td class="month-cell"></td>`.repeat(monthLabels.length);
-  const rowsHtml = sorted.map(s => {
-    let sectionHeader = "";
-    const stageLabel = s.stage || "بدون مرحلة";
-    if (stageLabel !== currentStage) {
-      currentStage = stageLabel;
-      serial = 0;
-      const breakClass = isFirstStage ? "" : " page-break";
-      isFirstStage = false;
-      sectionHeader = `<tr class="stage-header${breakClass}"><td colspan="18">${escapeHtml(stageLabel)}</td></tr>`;
-    }
-    serial++;
-    return sectionHeader + `<tr>
-      <td>${serial}</td>
-      <td class="name-cell">${escapeHtml(s.name)}</td>
-      ${monthCellsHtml}
-      <td>${escapeHtml(s.studentPhone)||""}</td>
-      <td>${escapeHtml(s.parentPhone)||""}</td>
-      <td>${fmtDate(s.entryDate)}</td>
-      <td>${s.term1Paid?'✓':'✗'} / ${(s.term1Received??s.term1)?'✓':'✗'}</td>
-      <td>${s.term2Paid?'✓':'✗'} / ${(s.term2Received??s.term2)?'✓':'✗'}</td>
-    </tr>`;
-  }).join("");
   const monthHeadersHtml = monthLabels.map(m => `<th class="month-cell">${m}</th>`).join("");
+  const emptyRowHtml = `<tr><td></td><td class="name-cell"></td>${monthCellsHtml}<td></td><td></td><td></td><td></td><td></td></tr>`;
+
+  // نقسّم الطلاب حسب المرحلة بالترتيب، وكل مرحلة تتقسم لصفحات كاملة بذاتها
+  const stageGroups = [];
+  sorted.forEach(s => {
+    const stageLabel = s.stage || "بدون مرحلة";
+    let group = stageGroups[stageGroups.length - 1];
+    if (!group || group.stage !== stageLabel) {
+      group = { stage: stageLabel, students: [] };
+      stageGroups.push(group);
+    }
+    group.students.push(s);
+  });
+
+  const pagesHtml = [];
+  stageGroups.forEach(group => {
+    const chunks = [];
+    for (let i = 0; i < group.students.length; i += ROSTER_ROWS_PER_PAGE) {
+      chunks.push(group.students.slice(i, i + ROSTER_ROWS_PER_PAGE));
+    }
+    if (chunks.length === 0) chunks.push([]);
+    chunks.forEach((chunk, chunkIndex) => {
+      let serial = chunkIndex * ROSTER_ROWS_PER_PAGE;
+      const rowsHtml = chunk.map(s => {
+        serial++;
+        return `<tr>
+          <td>${serial}</td>
+          <td class="name-cell">${escapeHtml(s.name)}</td>
+          ${monthCellsHtml}
+          <td>${escapeHtml(s.studentPhone)||""}</td>
+          <td>${escapeHtml(s.parentPhone)||""}</td>
+          <td>${fmtDate(s.entryDate)}</td>
+          <td>${s.term1Paid?'✓':'✗'} / ${(s.term1Received??s.term1)?'✓':'✗'}</td>
+          <td>${s.term2Paid?'✓':'✗'} / ${(s.term2Received??s.term2)?'✓':'✗'}</td>
+        </tr>`;
+      }).join("");
+      const blanksNeeded = Math.max(0, ROSTER_ROWS_PER_PAGE - chunk.length);
+      const blankRowsHtml = emptyRowHtml.repeat(blanksNeeded);
+      const stageTitle = chunks.length > 1 ? `${group.stage} (${chunkIndex + 1}/${chunks.length})` : group.stage;
+      pagesHtml.push(`
+        <div class="roster-page${pagesHtml.length > 0 ? ' page-break' : ''}">
+          <h2 class="stage-title">${escapeHtml(stageTitle)}</h2>
+          <table>
+            <thead><tr>
+              <th>م</th><th class="name-cell">الاسم</th>
+              ${monthHeadersHtml}
+              <th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
+              <th>تاريخ الدخول</th><th>ترم أول<br>(دفع/استلم)</th><th>ترم تاني<br>(دفع/استلم)</th>
+            </tr></thead>
+            <tbody>${rowsHtml}${blankRowsHtml}</tbody>
+          </table>
+        </div>`);
+    });
+  });
+
   const pageTitle = titleLabel || "كشف الطلاب";
   const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
     <title>${pageTitle} - ${TEACHER_NAME}</title>
@@ -1082,7 +1112,8 @@ function exportPdf(customList, titleLabel) {
       @page { size: A4 landscape; margin: 10mm; }
       body { font-family: Arial, sans-serif; padding: 10px; direction: rtl; }
       h1 { font-size: 18px; margin-bottom: 4px; }
-      p.sub { color: #555; margin-top: 0; margin-bottom: 14px; font-size: 12px; }
+      p.sub { color: #555; margin-top: 0; margin-bottom: 10px; font-size: 12px; }
+      .stage-title { font-size: 14px; margin: 0 0 6px; color: #16302B; }
       table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
       th, td { border: 1px solid #ccc; padding: 5px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       th { background: #16302B; color: #fff; }
@@ -1090,22 +1121,12 @@ function exportPdf(customList, titleLabel) {
       .name-cell { text-align: right; width: 110px; white-space: normal; }
       .month-cell { width: 24px; }
       tr:nth-child(even) { background: #f7f5ef; }
-      tr.stage-header td { background: #D4A93B; color: #1B2420; font-weight: bold; font-size: 13px; padding: 7px; text-align: right; }
-      tr.page-break { page-break-before: always; break-before: page; }
-      tr.page-break td { padding-top: 12px; }
+      .roster-page.page-break { page-break-before: always; break-before: page; }
     </style></head>
     <body>
       <h1>${pageTitle} — ${TEACHER_NAME}</h1>
       <p class="sub">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${sourceList.length}</p>
-      <table>
-        <thead><tr>
-          <th>م</th><th class="name-cell">الاسم</th>
-          ${monthHeadersHtml}
-          <th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
-          <th>تاريخ الدخول</th><th>ترم أول<br>(دفع/استلم)</th><th>ترم تاني<br>(دفع/استلم)</th>
-        </tr></thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
+      ${pagesHtml.join("")}
     </body></html>`;
   const win = window.open("", "_blank");
   if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
