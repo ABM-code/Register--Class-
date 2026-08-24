@@ -1075,17 +1075,18 @@ function exportPdf(customList, titleLabel) {
     <title>${pageTitle} - ${TEACHER_NAME}</title>
     <style>
       @page { size: A4 landscape; margin: 10mm; }
-      body { font-family: Arial, sans-serif; padding: 10px; direction: rtl; }
-      h1 { font-size: 18px; margin-bottom: 4px; }
-      p.sub { color: #555; margin-top: 0; margin-bottom: 10px; font-size: 12px; }
-      .stage-title { font-size: 14px; margin: 0 0 6px; color: #16302B; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+      body { font-family: Arial, sans-serif; padding: 10px; direction: rtl; color: #000; }
+      h1 { font-size: 18px; margin-bottom: 4px; color: #000; }
+      p.sub { color: #000; margin-top: 0; margin-bottom: 10px; font-size: 12px; }
+      .stage-title { font-size: 14px; margin: 0 0 6px; color: #000; font-weight: 700; }
       table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
-      th, td { border: 1px solid #ccc; padding: 5px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      th { background: #16302B; color: #fff; }
+      th, td { border: 1.5px solid #000; padding: 5px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #000; font-weight: 600; }
+      th { background: #16302B; color: #fff; font-weight: 700; }
       th:first-child, td:first-child { width: 22px; }
       .name-cell { text-align: right; width: 110px; white-space: normal; }
       .month-cell { width: 24px; }
-      tr:nth-child(even) { background: #f7f5ef; }
+      tr:nth-child(even) { background: #eee; }
       .roster-page.page-break { page-break-before: always; break-before: page; }
       #measureBox { position: absolute; visibility: hidden; top: 0; right: 0; width: 100%; }
     </style></head>
