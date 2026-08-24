@@ -1043,66 +1043,31 @@ function exportExcel(customList, sheetLabel, fileTag) {
   XLSX.writeFile(wb, (fileTag || "class-register") + "-" + today + ".xlsx");
 }
 
-const ROSTER_ROWS_PER_PAGE = 32;
 function exportPdf(customList, titleLabel) {
   const sourceList = customList || students.filter(s => s.group !== "torail");
   const sorted = sortByStageThenName(sourceList);
   const monthLabels = ["٨","٩","١٠","١١","١٢","١","٢","٣","٤","٥","٦"];
   const monthCellsHtml = `<td class="month-cell"></td>`.repeat(monthLabels.length);
   const monthHeadersHtml = monthLabels.map(m => `<th class="month-cell">${m}</th>`).join("");
-  const emptyRowHtml = `<tr><td></td><td class="name-cell"></td>${monthCellsHtml}<td></td><td></td><td></td><td></td><td></td></tr>`;
 
-  // نقسّم الطلاب حسب المرحلة بالترتيب، وكل مرحلة تتقسم لصفحات كاملة بذاتها
+  // نجهز بيانات الطلاب فاضية من أي حسابات صفوف-لكل-صفحة، ونسيب الصفحة نفسها
+  // تقيس ارتفاع الصف الحقيقي عندها وتحسب العدد الصح وقت الفتح (عشان يطابق الخط الفعلي عند المستخدم)
   const stageGroups = [];
   sorted.forEach(s => {
     const stageLabel = s.stage || "بدون مرحلة";
     let group = stageGroups[stageGroups.length - 1];
     if (!group || group.stage !== stageLabel) {
-      group = { stage: stageLabel, students: [] };
+      group = { stage: stageLabel, rows: [] };
       stageGroups.push(group);
     }
-    group.students.push(s);
-  });
-
-  const pagesHtml = [];
-  stageGroups.forEach(group => {
-    const chunks = [];
-    for (let i = 0; i < group.students.length; i += ROSTER_ROWS_PER_PAGE) {
-      chunks.push(group.students.slice(i, i + ROSTER_ROWS_PER_PAGE));
-    }
-    if (chunks.length === 0) chunks.push([]);
-    chunks.forEach((chunk, chunkIndex) => {
-      let serial = chunkIndex * ROSTER_ROWS_PER_PAGE;
-      const rowsHtml = chunk.map(s => {
-        serial++;
-        return `<tr>
-          <td>${serial}</td>
-          <td class="name-cell">${escapeHtml(s.name)}</td>
-          ${monthCellsHtml}
-          <td>${escapeHtml(s.studentPhone)||""}</td>
-          <td>${escapeHtml(s.parentPhone)||""}</td>
-          <td>${fmtDate(s.entryDate)}</td>
-          <td>${s.term1Paid?'✓':'✗'} / ${(s.term1Received??s.term1)?'✓':'✗'}</td>
-          <td>${s.term2Paid?'✓':'✗'} / ${(s.term2Received??s.term2)?'✓':'✗'}</td>
-        </tr>`;
-      }).join("");
-      const blanksNeeded = Math.max(0, ROSTER_ROWS_PER_PAGE - chunk.length);
-      const blankRowsHtml = emptyRowHtml.repeat(blanksNeeded);
-      const stageTitle = chunks.length > 1 ? `${group.stage} (${chunkIndex + 1}/${chunks.length})` : group.stage;
-      pagesHtml.push(`
-        <div class="roster-page${pagesHtml.length > 0 ? ' page-break' : ''}">
-          <h2 class="stage-title">${escapeHtml(stageTitle)}</h2>
-          <table>
-            <thead><tr>
-              <th>م</th><th class="name-cell">الاسم</th>
-              ${monthHeadersHtml}
-              <th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
-              <th>تاريخ الدخول</th><th>ترم أول<br>(دفع/استلم)</th><th>ترم تاني<br>(دفع/استلم)</th>
-            </tr></thead>
-            <tbody>${rowsHtml}${blankRowsHtml}</tbody>
-          </table>
-        </div>`);
-    });
+    group.rows.push([
+      escapeHtml(s.name),
+      escapeHtml(s.studentPhone) || "",
+      escapeHtml(s.parentPhone) || "",
+      fmtDate(s.entryDate),
+      `${s.term1Paid?'✓':'✗'} / ${(s.term1Received??s.term1)?'✓':'✗'}`,
+      `${s.term2Paid?'✓':'✗'} / ${(s.term2Received??s.term2)?'✓':'✗'}`,
+    ]);
   });
 
   const pageTitle = titleLabel || "كشف الطلاب";
@@ -1122,17 +1087,87 @@ function exportPdf(customList, titleLabel) {
       .month-cell { width: 24px; }
       tr:nth-child(even) { background: #f7f5ef; }
       .roster-page.page-break { page-break-before: always; break-before: page; }
+      #measureBox { position: absolute; visibility: hidden; top: 0; right: 0; width: 100%; }
     </style></head>
     <body>
-      <h1>${pageTitle} — ${TEACHER_NAME}</h1>
-      <p class="sub">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${sourceList.length}</p>
-      ${pagesHtml.join("")}
+      <h1 id="mainTitle">${pageTitle} — ${TEACHER_NAME}</h1>
+      <p class="sub" id="subLine">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${sourceList.length}</p>
+      <h2 class="stage-title" id="measureStageTitle" style="visibility:hidden; position:absolute;">قياس</h2>
+      <div id="measureBox">
+        <table id="measureTable">
+          <thead><tr>
+            <th>م</th><th class="name-cell">الاسم</th>
+            ${monthHeadersHtml}
+            <th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
+            <th>تاريخ الدخول</th><th>ترم أول<br>(دفع/استلم)</th><th>ترم تاني<br>(دفع/استلم)</th>
+          </tr></thead>
+          <tbody><tr id="measureRow"><td>1</td><td class="name-cell">اسم تجريبي طويل شوية</td>${monthCellsHtml}<td>01000000000</td><td>01000000000</td><td>01/09/2026</td><td>✓ / ✓</td><td>✓ / ✓</td></tr></tbody>
+        </table>
+      </div>
+      <div id="pagesRoot"></div>
+      <script>
+        const stageGroups = ${JSON.stringify(stageGroups)};
+        const monthHeadersHtml = ${JSON.stringify(monthHeadersHtml)};
+        const monthCellsHtml = ${JSON.stringify(monthCellsHtml)};
+
+        function buildAndPrint() {
+          const mmToPx = 96 / 25.4;
+          const pageUsableHeightPx = (210 - 20) * mmToPx; // A4 landscape height 210mm - 10mm top/bottom margins
+          const headerRowHeight = document.querySelector('#measureTable thead tr').offsetHeight;
+          const dataRowHeight = document.getElementById('measureRow').offsetHeight;
+          const titleBlockHeight = document.getElementById('mainTitle').offsetHeight + document.getElementById('subLine').offsetHeight + 20;
+          const stageTitleHeight = document.getElementById('measureStageTitle').offsetHeight + 10;
+
+          const rowsPerPageFirst = Math.max(5, Math.floor((pageUsableHeightPx - titleBlockHeight - stageTitleHeight - headerRowHeight) / dataRowHeight) - 1);
+          const rowsPerPageRest = Math.max(5, Math.floor((pageUsableHeightPx - stageTitleHeight - headerRowHeight) / dataRowHeight) - 1);
+
+          const emptyRowHtml = '<tr><td></td><td class="name-cell"></td>' + monthCellsHtml + '<td></td><td></td><td></td><td></td><td></td></tr>';
+          const pages = [];
+          stageGroups.forEach(group => {
+            let rowsLeft = group.rows.slice();
+            const chunks = [];
+            let first = true;
+            while (rowsLeft.length > 0 || chunks.length === 0) {
+              const capacity = (pages.length === 0 && first) ? rowsPerPageFirst : rowsPerPageRest;
+              chunks.push(rowsLeft.slice(0, capacity));
+              rowsLeft = rowsLeft.slice(capacity);
+              first = false;
+              if (rowsLeft.length === 0) break;
+            }
+            chunks.forEach((chunk, chunkIndex) => {
+              const capacity = (pages.length === 0 && chunkIndex === 0) ? rowsPerPageFirst : rowsPerPageRest;
+              let serial = chunks.slice(0, chunkIndex).reduce((sum, c) => sum + c.length, 0);
+              const rowsHtml = chunk.map(cells => {
+                serial++;
+                return '<tr><td>' + serial + '</td><td class="name-cell">' + cells[0] + '</td>' + monthCellsHtml +
+                  '<td>' + cells[1] + '</td><td>' + cells[2] + '</td><td>' + cells[3] + '</td><td>' + cells[4] + '</td><td>' + cells[5] + '</td></tr>';
+              }).join('');
+              const blanksNeeded = Math.max(0, capacity - chunk.length);
+              const blankRowsHtml = emptyRowHtml.repeat(blanksNeeded);
+              const stageTitle = chunks.length > 1 ? (group.stage + ' (' + (chunkIndex + 1) + '/' + chunks.length + ')') : group.stage;
+              pages.push(
+                '<div class="roster-page' + (pages.length > 0 ? ' page-break' : '') + '">' +
+                  '<h2 class="stage-title">' + stageTitle + '</h2>' +
+                  '<table><thead><tr><th>م</th><th class="name-cell">الاسم</th>' + monthHeadersHtml +
+                  '<th>هاتف الطالب</th><th>هاتف ولي الأمر</th><th>تاريخ الدخول</th><th>ترم أول<br>(دفع/استلم)</th><th>ترم تاني<br>(دفع/استلم)</th></tr></thead>' +
+                  '<tbody>' + rowsHtml + blankRowsHtml + '</tbody></table>' +
+                '</div>'
+              );
+            });
+          });
+
+          document.getElementById('measureBox').remove();
+          document.getElementById('measureStageTitle').remove();
+          document.getElementById('pagesRoot').innerHTML = pages.join('');
+          setTimeout(() => window.print(), 50);
+        }
+        window.addEventListener('load', buildAndPrint);
+      <\/script>
     </body></html>`;
   const win = window.open("", "_blank");
   if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
   win.document.write(html);
   win.document.close();
-  win.onload = () => win.print();
 }
 
 let formGroupContext = "main";
