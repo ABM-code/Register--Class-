@@ -416,6 +416,14 @@
         <option value="Sec 3">Sec 3</option>
       </select>
     </div>
+    <div class="field-group">
+      <label>الجنس</label>
+      <select class="reg-input" id="fGender">
+        <option value="">— غير محدد —</option>
+        <option value="female">بنت</option>
+        <option value="male">ولد</option>
+      </select>
+    </div>
     <div class="field-row">
       <div class="field-group">
         <label>Student phone</label>
@@ -1012,6 +1020,20 @@ function sortByStageThenName(list) {
     return (a.name || "").localeCompare(b.name || "");
   });
 }
+const GENDER_ORDER = { female: 0, male: 1, "": 2 };
+function sortByStageThenGenderThenName(list) {
+  return [...list].sort((a, b) => {
+    const ai = STAGE_ORDER.indexOf(a.stage || "");
+    const bi = STAGE_ORDER.indexOf(b.stage || "");
+    const aRank = ai === -1 ? STAGE_ORDER.length : ai;
+    const bRank = bi === -1 ? STAGE_ORDER.length : bi;
+    if (aRank !== bRank) return aRank - bRank;
+    const aG = GENDER_ORDER[a.gender || ""] ?? 2;
+    const bG = GENDER_ORDER[b.gender || ""] ?? 2;
+    if (aG !== bG) return aG - bG;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
 
 function exportExcel(customList, sheetLabel, fileTag) {
   const sourceList = customList || students.filter(s => s.group !== "torail");
@@ -1045,7 +1067,7 @@ function exportExcel(customList, sheetLabel, fileTag) {
 
 function exportPdf(customList, titleLabel) {
   const sourceList = customList || students.filter(s => s.group !== "torail");
-  const sorted = sortByStageThenName(sourceList);
+  const sorted = sortByStageThenGenderThenName(sourceList);
   const monthLabels = ["٨","٩","١٠","١١","١٢","١","٢","٣","٤","٥","٦"];
   const monthCellsHtml = `<td class="month-cell"></td>`.repeat(monthLabels.length);
   const monthHeadersHtml = monthLabels.map(m => `<th class="month-cell">${m}</th>`).join("");
@@ -1084,7 +1106,7 @@ function exportPdf(customList, titleLabel) {
       th, td { border: 1.5px solid #000; padding: 5px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #000; font-weight: 600; }
       th { background: #16302B; color: #fff; font-weight: 700; }
       th:first-child, td:first-child { width: 22px; }
-      .name-cell { text-align: right; width: 110px; white-space: normal; }
+      .name-cell { text-align: right; width: 130px; white-space: nowrap; }
       .month-cell { width: 24px; }
       tr:nth-child(even) { background: #eee; }
       .roster-page.page-break { page-break-before: always; break-before: page; }
@@ -1179,6 +1201,7 @@ function openNewForm() {
   document.getElementById("saveBtnLabel").textContent = "Add student";
   ["fName","fStudentPhone","fParentPhone","fEntryDate","fNotes"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("fStage").value = "";
+  document.getElementById("fGender").value = "";
   document.getElementById("dupNameWarning").style.display = "none";
   ["fTerm1Paid","fTerm1Received","fTerm2Paid","fTerm2Received"].forEach(id => document.getElementById(id).checked = false);
   document.getElementById("fExempt").checked = false;
@@ -1198,6 +1221,7 @@ function openEditForm(s) {
   document.getElementById("fName").value = s.name || "";
   document.getElementById("dupNameWarning").style.display = "none";
   document.getElementById("fStage").value = s.stage || "";
+  document.getElementById("fGender").value = s.gender || "";
   document.getElementById("fStudentPhone").value = s.studentPhone || "";
   document.getElementById("fParentPhone").value = s.parentPhone || "";
   document.getElementById("fEntryDate").value = s.entryDate || "";
@@ -1224,6 +1248,7 @@ async function handleSubmit(e) {
     name,
     group: formGroupContext,
     stage: document.getElementById("fStage").value,
+    gender: document.getElementById("fGender").value,
     studentPhone: toEnglishDigits(document.getElementById("fStudentPhone").value.trim()),
     parentPhone: toEnglishDigits(document.getElementById("fParentPhone").value.trim()),
     entryDate: document.getElementById("fEntryDate").value,
