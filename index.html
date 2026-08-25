@@ -65,6 +65,11 @@
   .answer-detail-row.ok .answer-detail-given { color: #3F6B4A; }
   .answer-detail-row.bad .answer-detail-given { color: #C15B3C; }
   .answer-detail-correct { color: #3F6B4A; font-weight: 600; margin-top: 0.15rem; }
+  .manual-toggle-btn { flex-shrink: 0; background: none; border: 1px solid rgba(0,0,0,0.15); border-radius: 7px; padding: 0.3rem 0.55rem; font-size: 0.72rem; cursor: pointer; color: #4A5A50; white-space: nowrap; }
+  .manual-toggle-btn:active { background: rgba(0,0,0,0.05); }
+  .regrade-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.7rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .save-regrade-btn { background: #3F6B4A; color: #fff; border: none; border-radius: 7px; padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .pending-score-note { background: #FBF3DF; color: #8A6A1F; font-size: 0.8rem; padding: 0.5rem 0.7rem; border-radius: 8px; margin-bottom: 0.7rem; }
   .result-row-name { font-weight: 600; }
   .result-row-score { font-family: 'Fraunces', serif; font-weight: 700; color: #3F6B4A; }
   .result-row-date { font-size: 0.75rem; color: #6B6B60; width: 100%; }
@@ -712,6 +717,7 @@
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
+const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
@@ -2058,6 +2064,67 @@ function toggleResultExpand(resultId) {
   expandedResultId = expandedResultId === resultId ? null : resultId;
   renderExamResultsList();
 }
+let pendingManualEdits = {};
+function toggleManualAnswer(resultId, questionIndex) {
+  const r = examResults.find(x => x.id === resultId);
+  if (!r) return;
+  if (!pendingManualEdits[resultId]) {
+    pendingManualEdits[resultId] = (r.answers || []).map(a => ({ ...a }));
+  }
+  const ad = pendingManualEdits[resultId].find(a => a.questionIndex === questionIndex);
+  if (ad) ad.correct = !ad.correct;
+  renderExamResultsList();
+}
+function cancelManualEdits(resultId) {
+  delete pendingManualEdits[resultId];
+  renderExamResultsList();
+}
+async function saveManualRegrade(resultId) {
+  const edited = pendingManualEdits[resultId];
+  if (!edited) return;
+  const r = examResults.find(x => x.id === resultId);
+  const ex = exams.find(e => e.id === viewingExamId);
+  const questions = ex ? (ex.questions || []) : [];
+  let score = 0, total = 0;
+  edited.forEach(ad => {
+    const q = questions[ad.questionIndex] || {};
+    const points = Number(q.points || 1);
+    total += points;
+    if (ad.correct) score += points;
+  });
+  try {
+    await examResultsCol.doc(resultId).update({
+      answers: edited.map(({ questionIndex, given, correct }) => ({ questionIndex, given: given ?? null, correct })),
+      score,
+      total,
+    });
+    delete pendingManualEdits[resultId];
+  } catch (err) {
+    showError("تعذر حفظ التصحيح اليدوي: " + (err.message || err));
+  }
+}
+async function aiRegrade(resultId, examId, studentId) {
+  const btn = document.getElementById(`aiRegradeBtn_${resultId}`);
+  if (btn) { btn.disabled = true; btn.textContent = "جاري إعادة التصحيح..."; }
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/regrade`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ examId, studentId }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data || !data.ok) {
+      showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. حاول تاني.");
+      return;
+    }
+    delete pendingManualEdits[resultId];
+  } catch (err) {
+    showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. تأكد من الاتصال بالإنترنت.");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🔄 إعادة تصحيح بالذكاء الاصطناعي"; }
+  }
+}
 let resultsTorailOnly = false;
 function setResultsTorailFilter(isTorail) {
   resultsTorailOnly = !!isTorail;
@@ -2150,7 +2217,9 @@ function renderExamResultsList() {
     const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
     const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString('ar-EG') : "";
     const isOpen = expandedResultId === r.id;
-    const answersHtml = (r.answers || []).map(ad => {
+    const workingAnswers = pendingManualEdits[r.id] || r.answers || [];
+    const hasEdits = !!pendingManualEdits[r.id];
+    const answersHtml = workingAnswers.map(ad => {
       const q = questions[ad.questionIndex];
       if (!q) return "";
       let givenText = "", correctText = "";
@@ -2164,11 +2233,27 @@ function renderExamResultsList() {
       }
       return `
         <div class="answer-detail-row ${ad.correct ? 'ok' : 'bad'}">
-          <div class="answer-detail-q">${ad.questionIndex + 1}. ${escapeHtml(q.prompt)}</div>
-          <div class="answer-detail-given">${ad.correct ? '✓' : '✗'} إجابته: ${escapeHtml(givenText)}</div>
-          ${!ad.correct ? `<div class="answer-detail-correct">الصح: ${escapeHtml(correctText)}</div>` : ""}
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
+            <div style="flex:1;">
+              <div class="answer-detail-q">${ad.questionIndex + 1}. ${escapeHtml(q.prompt)}</div>
+              <div class="answer-detail-given">${ad.correct ? '✓' : '✗'} إجابته: ${escapeHtml(givenText)}</div>
+              ${!ad.correct ? `<div class="answer-detail-correct">الصح: ${escapeHtml(correctText)}</div>` : ""}
+            </div>
+            <button type="button" class="manual-toggle-btn ${ad.correct ? 'is-correct' : 'is-wrong'}"
+              onclick="event.stopPropagation(); toggleManualAnswer('${r.id}', ${ad.questionIndex})">
+              ${ad.correct ? 'اعتبرها غلط' : 'اعتبرها صح'}
+            </button>
+          </div>
         </div>`;
     }).join("");
+    const regradeBarHtml = isOpen ? `
+      <div class="regrade-bar">
+        <button type="button" class="explain-btn" id="aiRegradeBtn_${r.id}" onclick="event.stopPropagation(); aiRegrade('${r.id}', '${r.examId}', '${r.studentId}')">🔄 إعادة تصحيح بالذكاء الاصطناعي</button>
+        ${hasEdits ? `
+          <button type="button" class="save-regrade-btn" onclick="event.stopPropagation(); saveManualRegrade('${r.id}')">💾 حفظ التصحيح</button>
+          <button type="button" class="explain-btn" onclick="event.stopPropagation(); cancelManualEdits('${r.id}')">إلغاء التعديل</button>
+        ` : ""}
+      </div>` : "";
     return `
       <div class="result-row-wrap">
         <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
@@ -2185,7 +2270,7 @@ function renderExamResultsList() {
             ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
           </div>
         </div>
-        ${isOpen ? `<div class="answer-detail-box">${answersHtml}</div>` : ""}
+        ${isOpen ? `<div class="answer-detail-box">${regradeBarHtml}${hasEdits ? `<div class="pending-score-note">درجة مؤقتة بعد التعديل: ${workingAnswers.reduce((sum,a)=>sum+(a.correct?Number((questions[a.questionIndex]||{}).points||1):0),0)}/${r.total} (لسه محفوظتش)</div>` : ""}${answersHtml}</div>` : ""}
       </div>`;
   }).join("");
   updateResultsSelectionUI();
