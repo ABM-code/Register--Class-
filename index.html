@@ -2115,10 +2115,15 @@ async function aiRegrade(resultId, examId, studentId) {
     });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data || !data.ok) {
-      showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. حاول تاني.");
+      showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. حاول تاني. (" + (data?.error || res.status) + ")");
       return;
     }
     delete pendingManualEdits[resultId];
+    if (data.aiStatus && data.aiStatus.startsWith("fallback")) {
+      showError("تم التصحيح، لكن الذكاء الاصطناعي مكنش متاح فرجع للمطابقة النصية القديمة مؤقتًا. السبب: " + data.aiStatus.replace("fallback: ", ""));
+    } else if (data.aiStatus === "success") {
+      showSuccess("تم التصحيح بالذكاء الاصطناعي بنجاح.");
+    }
   } catch (err) {
     showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. تأكد من الاتصال بالإنترنت.");
   } finally {
