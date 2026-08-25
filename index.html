@@ -79,6 +79,13 @@
   main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
   .toolbar { display: flex; gap: 0.6rem; margin-bottom: 0.6rem; }
   .backup-row { display: flex; gap: 0.6rem; margin-bottom: 1.25rem; }
+  .scroll-top-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    background: rgba(245,241,230,0.06); color: #9FB8AD; border: 1px solid rgba(245,241,230,0.16);
+    border-radius: 10px; padding: 0.7rem 0.9rem; font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; font-family: inherit; margin: 0.9rem 0;
+  }
+  .scroll-top-btn:hover { background: rgba(245,241,230,0.1); }
   .tools-toggle-btn {
     width: 100%; display: flex; align-items: center; gap: 0.5rem; background: rgba(245,241,230,0.06);
     color: #9FB8AD; border: 1px solid rgba(245,241,230,0.16); border-radius: 10px; padding: 0.65rem 0.9rem;
@@ -389,6 +396,10 @@
   </div>
 
   <div id="studentList"></div>
+  <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})" style="display:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+    ارجع لفوق
+  </button>
 </main>
 
   <form id="formCard" style="display:none;">
@@ -1264,10 +1275,16 @@ async function handleSubmit(e) {
   try {
     if (editingId) {
       await studentsCol.doc(editingId).update(data);
+      const savedId = editingId;
+      closeForm();
+      setTimeout(() => {
+        const card = document.querySelector(`.card-row[data-student-id="${savedId}"]`);
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
     } else {
       await studentsCol.add(data);
+      closeForm();
     }
-    closeForm();
   } catch (err) {
     showError("حصل خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت وحاول تاني.");
   } finally {
@@ -2310,6 +2327,8 @@ function render() {
 
   const listEl = document.getElementById("studentList");
   const emptyEl = document.getElementById("emptyState");
+  const scrollTopBtn = document.getElementById("scrollTopBtn");
+  if (scrollTopBtn) scrollTopBtn.style.display = filtered.length > 8 ? "flex" : "none";
 
   if (filtered.length === 0) {
     listEl.innerHTML = "";
