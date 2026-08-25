@@ -1205,9 +1205,26 @@ function exportPdf(customList, titleLabel) {
 }
 
 let formGroupContext = "main";
+function resetFormPosition() {
+  const form = document.getElementById("formCard");
+  if (form) { form.style.position = ""; form.style.top = ""; form.style.left = ""; form.style.right = ""; form.style.width = ""; form.style.zIndex = ""; }
+}
+function positionFormNearCard(studentId) {
+  const card = document.querySelector(`.card-row[data-student-id="${studentId}"]`);
+  const form = document.getElementById("formCard");
+  if (!card || !form) return;
+  const rect = card.getBoundingClientRect();
+  const top = rect.top + window.scrollY;
+  form.style.position = "absolute";
+  form.style.top = top + "px";
+  form.style.left = rect.left + "px";
+  form.style.width = rect.width + "px";
+  form.style.zIndex = "50";
+}
 function openNewForm() {
   editingId = null;
   formGroupContext = "main";
+  resetFormPosition();
   document.getElementById("formTitle").textContent = "New student";
   document.getElementById("saveBtnLabel").textContent = "Add student";
   ["fName","fStudentPhone","fParentPhone","fEntryDate","fNotes"].forEach(id => document.getElementById(id).value = "");
@@ -1217,6 +1234,7 @@ function openNewForm() {
   ["fTerm1Paid","fTerm1Received","fTerm2Paid","fTerm2Received"].forEach(id => document.getElementById(id).checked = false);
   document.getElementById("fExempt").checked = false;
   document.getElementById("formCard").style.display = "block";
+  document.getElementById("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
   document.getElementById("fName").focus();
 }
 function openNewTorailForm() {
@@ -1243,10 +1261,12 @@ function openEditForm(s) {
   document.getElementById("fTerm2Paid").checked = !!s.term2Paid;
   document.getElementById("fTerm2Received").checked = !!(s.term2Received ?? s.term2);
   document.getElementById("formCard").style.display = "block";
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  positionFormNearCard(s.id);
+  document.getElementById("formCard").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 function closeForm() {
   document.getElementById("formCard").style.display = "none";
+  resetFormPosition();
   editingId = null;
 }
 
