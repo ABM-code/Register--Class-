@@ -2113,10 +2113,7 @@ async function aiRegrade(resultId, examId, studentId) {
       headers: { "content-type": "application/json", "authorization": `Bearer ${idToken}` },
       body: JSON.stringify({ examId, studentId }),
     });
-    const rawText = await res.text();
-    let data = null;
-    try { data = JSON.parse(rawText); } catch (_) {}
-    alert("DEBUG:\nHTTP status: " + res.status + "\nRaw response:\n" + rawText.slice(0, 1000));
+    const data = await res.json().catch(() => null);
     if (!res.ok || !data || !data.ok) {
       showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. حاول تاني. (" + (data?.error || res.status) + ")");
       return;
@@ -2128,7 +2125,6 @@ async function aiRegrade(resultId, examId, studentId) {
       showSuccess("تم التصحيح بالذكاء الاصطناعي بنجاح.");
     }
   } catch (err) {
-    alert("DEBUG: JS error before request finished:\n" + (err && err.message ? err.message : String(err)));
     showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. تأكد من الاتصال بالإنترنت.");
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = "🔄 إعادة تصحيح بالذكاء الاصطناعي"; }
