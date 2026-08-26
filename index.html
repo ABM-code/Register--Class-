@@ -2115,9 +2115,12 @@ async function aiRegrade(resultId, examId, studentId) {
     });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data || !data.ok) {
+      alert("DEBUG - فشل الطلب:\nHTTP: " + res.status + "\n" + JSON.stringify(data).slice(0, 500));
       showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. حاول تاني. (" + (data?.error || res.status) + ")");
       return;
     }
+    const wrongCount = (data.answerDetails || []).filter(a => !a.correct).length;
+    alert("DEBUG - نجح الطلب:\naiStatus: " + data.aiStatus + "\nscore: " + data.score + "/" + data.total + "\nعدد الأسئلة الغلط: " + wrongCount);
     delete pendingManualEdits[resultId];
     if (data.aiStatus && data.aiStatus.startsWith("fallback")) {
       showError("تم التصحيح، لكن الذكاء الاصطناعي مكنش متاح فرجع للمطابقة النصية القديمة مؤقتًا. السبب: " + data.aiStatus.replace("fallback: ", ""));
