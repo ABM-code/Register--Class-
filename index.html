@@ -38,7 +38,8 @@
   .tab-btn.active { background: #D4A93B; color: #1B2420; border-color: #D4A93B; }
   .badge-dot { background: #C15B3C; color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.4rem; min-width: 18px; display: inline-block; }
   .exam-card { background: #F5F1E6; border-radius: 12px; padding: 1rem; margin-bottom: 0.7rem; }
-  .exam-card-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; }
+  .exam-card-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .exam-new-badge { background: #C15B3C; color: #fff; font-family: inherit; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 20px; }
   .exam-card-stage { font-size: 0.78rem; color: #6B6B60; margin-bottom: 0.7rem; }
   .exam-card-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
   .exam-card-actions button {
@@ -1631,9 +1632,12 @@ function renderExamsList() {
       const submittedIdsForCard = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId));
       const missingCount = students.filter(s => s.stage === ex.stage && !submittedIdsForCard.has(s.id)).length;
       const link = window.location.origin + window.location.pathname.replace(/index\\.html$/, "") + "exam.html?examId=" + ex.id;
+      const examLastSeen = getExamLastSeen(ex.id);
+      const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
+      const newBadgeHtml = newCount > 0 ? `<span class="exam-new-badge">🔔 ${newCount} جديد</span>` : "";
       return `
       <div class="exam-card">
-        <div class="exam-card-title">${escapeHtml(ex.title)}</div>
+        <div class="exam-card-title">${escapeHtml(ex.title)}${newBadgeHtml}</div>
         <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${resultCount} إجابة مسجلة${ex.timeLimitMinutes ? ' — ⏱ ' + ex.timeLimitMinutes + ' دقيقة' : ''}</div>
         <div class="exam-card-actions">
           <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
@@ -2040,8 +2044,15 @@ function goToStudentProfile(studentId) {
   }, 50);
 }
 
+function getExamLastSeen(examId) {
+  try { return parseInt(localStorage.getItem("examSeen_" + examId) || "0", 10); } catch (e) { return 0; }
+}
+function markExamSeen(examId) {
+  try { localStorage.setItem("examSeen_" + examId, Date.now().toString()); } catch (e) {}
+}
 function viewExamResults(examId) {
   viewingExamId = examId;
+  markExamSeen(examId);
   const ex = exams.find(e => e.id === examId);
   document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
   const searchInput = document.getElementById("examResultsSearchInput");
@@ -2053,6 +2064,7 @@ function viewExamResults(examId) {
   document.getElementById("examResultsView").style.display = "block";
   document.getElementById("examMissingView").style.display = "none";
   renderExamResultsList();
+  renderExamsList();
 }
 function closeExamResults() {
   viewingExamId = null;
