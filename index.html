@@ -2127,16 +2127,19 @@ async function aiRegrade(resultId, examId, studentId) {
     });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data || !data.ok) {
+      alert("فشل الطلب: " + res.status + " - " + JSON.stringify(data).slice(0, 300));
       showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. حاول تاني. (" + (data?.error || res.status) + ")");
       return;
     }
     delete pendingManualEdits[resultId];
+    alert("نجح الطلب!\naiStatus: " + data.aiStatus + "\nscore: " + data.score + "/" + data.total);
     if (data.aiStatus && data.aiStatus.startsWith("fallback")) {
       showError("تم التصحيح، لكن الذكاء الاصطناعي مكنش متاح فرجع للمطابقة النصية القديمة مؤقتًا. السبب: " + data.aiStatus.replace("fallback: ", ""));
     } else if (data.aiStatus === "success") {
       showSuccess("تم التصحيح بالذكاء الاصطناعي بنجاح.");
     }
   } catch (err) {
+    alert("خطأ في الجافاسكريبت قبل ما الطلب يخلص:\n" + (err && err.message ? err.message : String(err)));
     showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. تأكد من الاتصال بالإنترنت.");
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = "🔄 إعادة تصحيح بالذكاء الاصطناعي"; }
