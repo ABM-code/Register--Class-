@@ -1384,6 +1384,11 @@ function toggleStudentCount() {
   showStudentCount = !showStudentCount;
   render();
 }
+function toggleStageCounts() {
+  showStageCounts = !showStageCounts;
+  render();
+  renderTorail();
+}
 
 function switchTab(tab) {
   document.getElementById("viewStudents").style.display = tab === "students" ? "block" : "none";
@@ -2385,6 +2390,7 @@ let exemptOnly = false;
 let bookletFilter = null;
 let noParentOnly = false;
 let showStudentCount = false;
+let showStageCounts = false;
 let torailExpandedId = null;
 let torailOverdueOnly = false;
 let torailExemptOnly = false;
@@ -2431,7 +2437,8 @@ function render() {
   const stageCountsEl = document.getElementById("stageCounts");
   stageCountsEl.innerHTML = stages.map(st => {
     const isActive = rawQuery === st.toLowerCase();
-    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="filterByStage('${st}')">${st} <span class="count">${counts[st]}</span></span>`;
+    const countLabel = showStageCounts ? counts[st] : "؟";
+    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="filterByStage('${st}')">${st} <span class="count" onclick="event.stopPropagation(); toggleStageCounts();">${countLabel}</span></span>`;
   }).join("");
 
   const now = new Date();
@@ -2596,7 +2603,8 @@ function renderTorail() {
   const stageCountsEl = document.getElementById("torailStageCounts");
   stageCountsEl.innerHTML = stages.map(st => {
     const isActive = rawQuery === st.toLowerCase();
-    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="torailFilterByStage('${st}')">${st} <span class="count">${counts[st]}</span></span>`;
+    const countLabel = showStageCounts ? counts[st] : "؟";
+    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="torailFilterByStage('${st}')">${st} <span class="count" onclick="event.stopPropagation(); toggleStageCounts();">${countLabel}</span></span>`;
   }).join("");
 
   const now = new Date();
