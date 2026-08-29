@@ -127,6 +127,8 @@
   .bar-fill.green { background: #5E9468; }
   .bar-fill.blue { background: #5B8FC4; }
   .stat-card { flex: 1; background: rgba(245,241,230,0.06); border: 1px solid rgba(245,241,230,0.14); border-radius: 10px; padding: 0.6rem 0.7rem; cursor: default; }
+  .money-hide-card { cursor: pointer; }
+  .eye-icon { font-size: 0.75rem; opacity: 0.7; }
   .stat-label { font-size: 0.7rem; color: #9FB8AD; margin-bottom: 0.2rem; }
   .stat-value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: #F5F1E6; }
   .overdue-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
@@ -282,13 +284,13 @@
   <div id="stageCounts" class="stage-counts"></div>
 
   <div class="stats-row">
-    <div class="stat-card" style="display:none;">
-      <div class="stat-label">إجمالي هذا الشهر</div>
-      <div class="stat-value" id="statMonth">0 جنيه</div>
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('statMonth')">
+      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="statMonth_eye">👁</span></div>
+      <div class="stat-value" id="statMonth" data-real="0 جنيه">••••••</div>
     </div>
-    <div class="stat-card" style="display:none;">
-      <div class="stat-label">الإجمالي الكلي</div>
-      <div class="stat-value" id="statTotal">0 جنيه</div>
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('statTotal')">
+      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="statTotal_eye">👁</span></div>
+      <div class="stat-value" id="statTotal" data-real="0 جنيه">••••••</div>
     </div>
     <div class="stat-card overdue-card" id="overduePill">
       <div class="stat-label">متأخرين في الدفع</div>
@@ -644,13 +646,13 @@
   <div id="torailStageCounts" class="stage-counts"></div>
 
   <div class="stats-row">
-    <div class="stat-card" style="display:none;">
-      <div class="stat-label">إجمالي هذا الشهر</div>
-      <div class="stat-value" id="torailStatMonth">0 جنيه</div>
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('torailStatMonth')">
+      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="torailStatMonth_eye">👁</span></div>
+      <div class="stat-value" id="torailStatMonth" data-real="0 جنيه">••••••</div>
     </div>
-    <div class="stat-card" style="display:none;">
-      <div class="stat-label">الإجمالي الكلي</div>
-      <div class="stat-value" id="torailStatTotal">0 جنيه</div>
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('torailStatTotal')">
+      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="torailStatTotal_eye">👁</span></div>
+      <div class="stat-value" id="torailStatTotal" data-real="0 جنيه">••••••</div>
     </div>
     <div class="stat-card overdue-card" id="torailOverduePill">
       <div class="stat-label">متأخرين في الدفع</div>
@@ -734,6 +736,23 @@ const auth = firebase.auth();
 const studentsCol = db.collection("students");
 const examsCol = db.collection("exams");
 const examResultsCol = db.collection("examResults");
+
+let moneyRevealed = {};
+try { moneyRevealed = JSON.parse(localStorage.getItem("moneyRevealed") || "{}"); } catch (e) { moneyRevealed = {}; }
+function setMoneyStat(elId, realText) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.setAttribute("data-real", realText);
+  el.textContent = moneyRevealed[elId] ? realText : "••••••";
+}
+function toggleMoneyReveal(elId) {
+  moneyRevealed[elId] = !moneyRevealed[elId];
+  try { localStorage.setItem("moneyRevealed", JSON.stringify(moneyRevealed)); } catch (e) {}
+  const el = document.getElementById(elId);
+  const eye = document.getElementById(elId + "_eye");
+  if (el) el.textContent = moneyRevealed[elId] ? el.getAttribute("data-real") : "••••••";
+  if (eye) eye.textContent = moneyRevealed[elId] ? "🙈" : "👁";
+}
 
 let students = [];
 let editingId = null;
@@ -2431,8 +2450,8 @@ function render() {
     if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
     if (!s.parentPhone) noParentCount++;
   });
-  document.getElementById("statMonth").textContent = monthTotal.toLocaleString() + " جنيه";
-  document.getElementById("statTotal").textContent = grandTotal.toLocaleString() + " جنيه";
+  setMoneyStat("statMonth", monthTotal.toLocaleString() + " جنيه");
+  setMoneyStat("statTotal", grandTotal.toLocaleString() + " جنيه");
   document.getElementById("statOverdue").textContent = overdueCount + " طالب";
   const overdueCard = document.getElementById("overduePill");
   overdueCard.classList.toggle("active", overdueOnly);
@@ -2596,8 +2615,8 @@ function renderTorail() {
     if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
     if (!s.parentPhone) noParentCount++;
   });
-  document.getElementById("torailStatMonth").textContent = monthTotal.toLocaleString() + " جنيه";
-  document.getElementById("torailStatTotal").textContent = grandTotal.toLocaleString() + " جنيه";
+  setMoneyStat("torailStatMonth", monthTotal.toLocaleString() + " جنيه");
+  setMoneyStat("torailStatTotal", grandTotal.toLocaleString() + " جنيه");
   document.getElementById("torailStatOverdue").textContent = overdueCount + " طالب";
   document.getElementById("torailOverduePill").classList.toggle("active", torailOverdueOnly);
   document.getElementById("torailStatExempt").textContent = exemptCount + " طالب";
