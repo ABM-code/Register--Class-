@@ -27,21 +27,27 @@
   --c-successbg: #EAF2E7;
   --c-dangerbg: #F6E7E2;
   --c-white: #FFFDF8;
+  --c-onaccent: #1B2420;
+  --c-textonpage: #F5F1E6;
+  --c-onsuccess: #FFFDF8;
 }
 [data-theme="light"] {
-  --c-pagebg: #EFF1F4;
+  --c-pagebg: #F6F4EE;
   --c-cardbg: #FFFFFF;
-  --c-textoncard: #1B2420;
-  --c-mutedonpage: #5B6B72;
-  --c-mutedoncard: #6B6B60;
-  --c-accent: #3B6FE0;
-  --c-success: #2E8B57;
-  --c-danger: #D14343;
-  --c-dangertext: #B23A2E;
-  --c-cardalt: #F1F2F5;
-  --c-successbg: #E9F7EF;
-  --c-dangerbg: #FCEBEA;
+  --c-textoncard: #1E2B24;
+  --c-mutedonpage: #6B7A72;
+  --c-mutedoncard: #74796F;
+  --c-accent: #1F6F54;
+  --c-success: #2F8F5B;
+  --c-danger: #B7583F;
+  --c-dangertext: #9C4B32;
+  --c-cardalt: #F1EFE7;
+  --c-successbg: #E7F3EC;
+  --c-dangerbg: #FBEAE6;
   --c-white: #FFFFFF;
+  --c-onaccent: #FFFFFF;
+  --c-textonpage: #1E2B24;
+  --c-onsuccess: #FFFFFF;
 }
 .theme-toggle-btn {
   position: absolute; top: 1rem; left: 7rem; background: rgba(245,241,230,0.08);
@@ -63,7 +69,7 @@
   @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
 
   header { padding: 2.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(245,241,230,0.12); position: relative; }
-  .logout-btn { position: absolute; top: 1rem; left: 1.25rem; background: rgba(245,241,230,0.08); border: 1px solid rgba(245,241,230,0.2); color: var(--c-cardbg); border-radius: 8px; padding: 0.4rem 0.7rem; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
+  .logout-btn { position: absolute; top: 1rem; left: 1.25rem; background: rgba(245,241,230,0.08); border: 1px solid rgba(245,241,230,0.2); color: var(--c-textonpage); border-radius: 8px; padding: 0.4rem 0.7rem; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
   .logout-btn:active { background: rgba(245,241,230,0.16); }
   .tab-nav { display: flex; flex-direction: row-reverse; flex-wrap: wrap; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
   .tab-btn {
@@ -71,7 +77,7 @@
     border-radius: 10px; padding: 0.6rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: inherit;
     display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   }
-  .tab-btn.active { background: var(--c-accent); color: var(--c-textoncard); border-color: var(--c-accent); }
+  .tab-btn.active { background: var(--c-accent); color: var(--c-onaccent); border-color: var(--c-accent); }
   .badge-dot { background: var(--c-danger); color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.4rem; min-width: 18px; display: inline-block; }
   .exam-card { background: var(--c-cardbg); border-radius: 12px; padding: 1rem; margin-bottom: 0.7rem; }
   .exam-card-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
@@ -115,7 +121,7 @@
   .header-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 1.1rem; }
   .avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--c-accent); flex-shrink: 0; }
   .eyebrow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; color: var(--c-mutedonpage); font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase; }
-  h1.tname { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem; color: var(--c-cardbg); margin: 0; line-height: 1.2; }
+  h1.tname { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem; color: var(--c-textonpage); margin: 0; line-height: 1.2; }
   .subline { color: var(--c-mutedonpage); margin-top: 0.3rem; font-size: 0.86rem; display: flex; align-items: center; gap: 0.35rem; }
 
   main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
@@ -143,11 +149,11 @@
     border: 1px solid rgba(245,241,230,0.16); color: var(--c-mutedonpage); border-radius: 999px;
     padding: 0.3rem 0.7rem; font-size: 0.78rem; cursor: pointer; user-select: none;
   }
-  .stage-pill.active { background: var(--c-accent); color: var(--c-textoncard); border-color: var(--c-accent); font-weight: 600; }
+  .stage-pill.active { background: var(--c-accent); color: var(--c-onaccent); border-color: var(--c-accent); font-weight: 600; }
   .stage-pill .count { font-weight: 700; }
   .stats-row { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
   .notif-card { background: rgba(212,169,59,0.1); border: 1px solid rgba(212,169,59,0.35); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1.2rem; }
-  .stat-section-title { color: var(--c-cardbg); font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin: 1.4rem 0 0.7rem; }
+  .stat-section-title { color: var(--c-textonpage); font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin: 1.4rem 0 0.7rem; }
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
   .stat-card-box { background: var(--c-cardbg); border-radius: 12px; padding: 0.9rem; text-align: center; }
   .stat-box-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.6rem; color: var(--c-textoncard); }
@@ -166,7 +172,7 @@
   .money-hide-card { cursor: pointer; }
   .eye-icon { font-size: 0.75rem; opacity: 0.7; }
   .stat-label { font-size: 0.7rem; color: var(--c-mutedonpage); margin-bottom: 0.2rem; }
-  .stat-value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--c-cardbg); }
+  .stat-value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--c-textonpage); }
   .overdue-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
   .overdue-card:hover { background: rgba(193,91,60,0.15); }
   .overdue-card.active { background: var(--c-danger); border-color: var(--c-danger); }
@@ -189,11 +195,11 @@
   .search-wrap input, #searchInput, #torailSearchInput, #examResultsSearchInput {
     width: 100%; padding: 0.7rem 0.9rem 0.7rem 2.4rem; border-radius: 10px;
     border: 1px solid rgba(245,241,230,0.18); background: rgba(245,241,230,0.06);
-    color: var(--c-cardbg); font-size: 0.95rem;
+    color: var(--c-textonpage); font-size: 0.95rem;
   }
   .search-wrap input::placeholder, #searchInput::placeholder, #torailSearchInput::placeholder, #examResultsSearchInput::placeholder { color: rgba(245,241,230,0.45); }
   #addBtn, #torailAddBtn {
-    display: flex; align-items: center; gap: 0.4rem; background: var(--c-accent); color: var(--c-textoncard);
+    display: flex; align-items: center; gap: 0.4rem; background: var(--c-accent); color: var(--c-onaccent);
     border: none; border-radius: 10px; padding: 0 1rem; font-weight: 600; font-size: 0.92rem;
     cursor: pointer; white-space: nowrap;
   }
@@ -219,7 +225,7 @@
   textarea.reg-textarea { resize: vertical; }
   .form-actions { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
   #saveBtn {
-    flex: 1; background: var(--c-success); color: var(--c-cardbg); border: none; border-radius: 9px; padding: 0.7rem;
+    flex: 1; background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 9px; padding: 0.7rem;
     font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
   }
   #cancelBtn {
@@ -255,7 +261,7 @@
   .no-payments { font-size: 0.85rem; color: var(--c-mutedoncard); margin: 0.3rem 0 0.6rem; }
   .add-payment-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
   .add-payment-row input { font-size: 0.85rem; padding: 0.5rem 0.6rem; }
-  .add-pay-btn { background: var(--c-success); color: var(--c-cardbg); border: none; border-radius: 8px; padding: 0 0.85rem; font-size: 0.83rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .add-pay-btn { background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 8px; padding: 0 0.85rem; font-size: 0.83rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
