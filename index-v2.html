@@ -1,0 +1,2964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Class Register">
+<meta name="theme-color" content="#16302B">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Class Register — Mr. Abd El Rahman Moneer</title>
+<style>
+:root {
+  --c-pagebg: #16302B;
+  --c-cardbg: #F5F1E6;
+  --c-textoncard: #1B2420;
+  --c-mutedonpage: #9FB8AD;
+  --c-mutedoncard: #6B6B60;
+  --c-accent: #D4A93B;
+  --c-success: #3F6B4A;
+  --c-danger: #C15B3C;
+  --c-dangertext: #9C4B32;
+  --c-cardalt: #EAEAE4;
+  --c-successbg: #EAF2E7;
+  --c-dangerbg: #F6E7E2;
+  --c-white: #FFFDF8;
+  --c-onaccent: #1B2420;
+  --c-textonpage: #F5F1E6;
+  --c-onsuccess: #FFFDF8;
+  --c-subtle-rgb: 245,241,230;
+}
+[data-theme="light"] {
+  --c-pagebg: #F6F4EE;
+  --c-cardbg: #FFFFFF;
+  --c-textoncard: #1E2B24;
+  --c-mutedonpage: #6B7A72;
+  --c-mutedoncard: #74796F;
+  --c-accent: #1F6F54;
+  --c-success: #2F8F5B;
+  --c-danger: #B7583F;
+  --c-dangertext: #9C4B32;
+  --c-cardalt: #F1EFE7;
+  --c-successbg: #E7F3EC;
+  --c-dangerbg: #FBEAE6;
+  --c-white: #FFFFFF;
+  --c-onaccent: #FFFFFF;
+  --c-textonpage: #1E2B24;
+  --c-onsuccess: #FFFFFF;
+  --c-subtle-rgb: 30,43,36;
+}
+.theme-toggle-btn {
+  position: absolute; top: 1rem; left: 7rem; background: rgba(var(--c-subtle-rgb),0.08);
+  border: 1px solid rgba(var(--c-subtle-rgb),0.2); color: var(--c-white); border-radius: 8px;
+  padding: 0.4rem 0.6rem; font-size: 0.9rem; cursor: pointer;
+}
+[data-theme="light"] .theme-toggle-btn { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.15); color: var(--c-textoncard); }
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--c-pagebg); color: var(--c-textoncard); }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--c-accent) !important;
+    box-shadow: 0 0 0 3px rgba(212,169,59,0.18);
+  }
+  button { font-family: inherit; transition: transform 0.08s ease, background 0.15s ease; }
+  button:active { transform: scale(0.97); }
+  .card-row:hover { background: #F3EFE2 !important; }
+  @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
+
+  header { padding: 2.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(var(--c-subtle-rgb),0.12); position: relative; }
+  .logout-btn { position: absolute; top: 1rem; left: 1.25rem; background: rgba(var(--c-subtle-rgb),0.08); border: 1px solid rgba(var(--c-subtle-rgb),0.2); color: var(--c-textonpage); border-radius: 8px; padding: 0.4rem 0.7rem; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
+  .logout-btn:active { background: rgba(var(--c-subtle-rgb),0.16); }
+  .tab-nav { display: flex; flex-direction: row-reverse; flex-wrap: wrap; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
+  .tab-btn {
+    flex: 1 1 calc(50% - 0.25rem); min-width: 130px; background: rgba(var(--c-subtle-rgb),0.06); color: var(--c-mutedonpage); border: 1px solid rgba(var(--c-subtle-rgb),0.16);
+    border-radius: 10px; padding: 0.6rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  }
+  .tab-btn.active { background: var(--c-accent); color: var(--c-onaccent); border-color: var(--c-accent); }
+  .badge-dot { background: var(--c-danger); color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.4rem; min-width: 18px; display: inline-block; }
+  .exam-card { background: var(--c-cardbg); border-radius: 12px; padding: 1rem; margin-bottom: 0.7rem; }
+  .exam-card-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .exam-new-badge { background: var(--c-danger); color: #fff; font-family: inherit; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 20px; }
+  .exam-card-stage { font-size: 0.78rem; color: var(--c-mutedoncard); margin-bottom: 0.7rem; }
+  .exam-card-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .exam-card-actions button {
+    flex: 1; min-width: 90px; border: none; border-radius: 8px; padding: 0.5rem; font-size: 0.8rem;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .stage-group-title { color: var(--c-mutedonpage); font-size: 0.8rem; font-weight: 700; margin: 1rem 0 0.5rem; letter-spacing: 0.05em; }
+  .form-card-exam { background: var(--c-cardbg); border-radius: 14px; padding: 1.25rem; }
+  .ai-import-box { background: #FBF3DF; border: 1px dashed var(--c-accent); border-radius: 10px; padding: 0.9rem; margin-bottom: 1rem; }
+  .question-card { background: var(--c-white); border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 0.9rem; margin-bottom: 0.8rem; }
+  .question-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+  .question-card-head strong { font-size: 0.85rem; color: var(--c-textoncard); }
+  .remove-q-btn { background: none; border: none; color: var(--c-danger); cursor: pointer; font-size: 0.8rem; }
+  .option-input-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .option-input-row input[type=radio] { accent-color: var(--c-success); flex-shrink: 0; }
+  .result-row { background: var(--c-cardbg); border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .result-row-wrap { margin-bottom: 0.5rem; }
+  .result-row-wrap .result-row { margin-bottom: 0; border-radius: 10px 10px 0 0; }
+  .answer-detail-box { background: var(--c-white); border: 1px solid rgba(0,0,0,0.08); border-top: none; border-radius: 0 0 10px 10px; padding: 0.7rem 0.9rem; }
+  .answer-detail-row { padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.85rem; }
+  .answer-detail-row:last-child { border-bottom: none; }
+  .answer-detail-q { font-weight: 600; margin-bottom: 0.2rem; color: var(--c-textoncard); }
+  .answer-detail-given { color: var(--c-mutedoncard); }
+  .answer-detail-row.ok .answer-detail-given { color: var(--c-success); }
+  .answer-detail-row.bad .answer-detail-given { color: var(--c-danger); }
+  .answer-detail-correct { color: var(--c-success); font-weight: 600; margin-top: 0.15rem; }
+  .manual-toggle-btn { flex-shrink: 0; background: none; border: 1px solid rgba(0,0,0,0.15); border-radius: 7px; padding: 0.3rem 0.55rem; font-size: 0.72rem; cursor: pointer; color: #4A5A50; white-space: nowrap; }
+  .manual-toggle-btn:active { background: rgba(0,0,0,0.05); }
+  .regrade-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.7rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .save-regrade-btn { background: var(--c-success); color: #fff; border: none; border-radius: 7px; padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .pending-score-note { background: #FBF3DF; color: #8A6A1F; font-size: 0.8rem; padding: 0.5rem 0.7rem; border-radius: 8px; margin-bottom: 0.7rem; }
+  .result-row-name { font-weight: 600; }
+  .result-row-score { font-family: 'Fraunces', serif; font-weight: 700; color: var(--c-success); }
+  .result-row-date { font-size: 0.75rem; color: var(--c-mutedoncard); width: 100%; }
+  .wa-send-btn { background: #25D366; color: #fff; border: none; border-radius: 7px; padding: 0.35rem 0.6rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+  .app-content { display: none; }
+  .header-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 1.1rem; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--c-accent); flex-shrink: 0; }
+  .eyebrow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; color: var(--c-mutedonpage); font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  h1.tname { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem; color: var(--c-textonpage); margin: 0; line-height: 1.2; }
+  .subline { color: var(--c-mutedonpage); margin-top: 0.3rem; font-size: 0.86rem; display: flex; align-items: center; gap: 0.35rem; }
+
+  main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+  .toolbar { display: flex; gap: 0.6rem; margin-bottom: 0.6rem; }
+  .backup-row { display: flex; gap: 0.6rem; margin-bottom: 1.25rem; }
+  .scroll-top-btn {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    background: rgba(var(--c-subtle-rgb),0.06); color: var(--c-mutedonpage); border: 1px solid rgba(var(--c-subtle-rgb),0.16);
+    border-radius: 10px; padding: 0.7rem 0.9rem; font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; font-family: inherit; margin: 0.9rem 0;
+  }
+  .scroll-top-btn:hover { background: rgba(var(--c-subtle-rgb),0.1); }
+  .tools-toggle-btn {
+    width: 100%; display: flex; align-items: center; gap: 0.5rem; background: rgba(var(--c-subtle-rgb),0.06);
+    color: var(--c-mutedonpage); border: 1px solid rgba(var(--c-subtle-rgb),0.16); border-radius: 10px; padding: 0.65rem 0.9rem;
+    font-weight: 600; font-size: 0.85rem; cursor: pointer; font-family: inherit; margin-bottom: 0.9rem;
+  }
+  .tools-toggle-btn:hover { background: rgba(var(--c-subtle-rgb),0.1); }
+  .tools-toggle-btn.open #toolsToggleIcon,
+  .tools-toggle-btn.open #filterPillsToggleIcon { transform: rotate(180deg); }
+  .tools-group-title { color: var(--c-mutedonpage); font-size: 0.78rem; font-weight: 700; margin: 0 0 0.5rem; letter-spacing: 0.03em; }
+  .stage-counts { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; }
+  .stage-pill {
+    display: flex; align-items: center; gap: 0.35rem; background: rgba(var(--c-subtle-rgb),0.08);
+    border: 1px solid rgba(var(--c-subtle-rgb),0.16); color: var(--c-mutedonpage); border-radius: 999px;
+    padding: 0.3rem 0.7rem; font-size: 0.78rem; cursor: pointer; user-select: none;
+  }
+  .stage-pill.active { background: var(--c-accent); color: var(--c-onaccent); border-color: var(--c-accent); font-weight: 600; }
+  .stage-pill .count { font-weight: 700; }
+  .stats-row { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
+  .notif-card { background: rgba(212,169,59,0.1); border: 1px solid rgba(212,169,59,0.35); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1.2rem; }
+  .stat-section-title { color: var(--c-textonpage); font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin: 1.4rem 0 0.7rem; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .stat-card-box { background: var(--c-cardbg); border-radius: 12px; padding: 0.9rem; text-align: center; }
+  .stat-box-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.6rem; color: var(--c-textoncard); }
+  .stat-box-label { font-size: 0.76rem; color: var(--c-mutedoncard); margin-top: 0.2rem; }
+  .chart-box { background: var(--c-cardbg); border-radius: 12px; padding: 1rem; }
+  .chart-empty { color: var(--c-mutedoncard); font-size: 0.85rem; text-align: center; padding: 1rem 0; }
+  .bar-row { margin-bottom: 0.8rem; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-row-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.3rem; color: var(--c-textoncard); }
+  .bar-row-label .val { font-weight: 700; color: var(--c-success); }
+  .bar-track { background: var(--c-cardalt); border-radius: 6px; height: 10px; overflow: hidden; }
+  .bar-fill { background: var(--c-accent); height: 100%; border-radius: 6px; transition: width 0.4s ease; }
+  .bar-fill.green { background: #5E9468; }
+  .bar-fill.blue { background: #5B8FC4; }
+  .stat-card { flex: 1; background: rgba(var(--c-subtle-rgb),0.06); border: 1px solid rgba(var(--c-subtle-rgb),0.14); border-radius: 10px; padding: 0.6rem 0.7rem; cursor: default; }
+  .money-hide-card { cursor: pointer; }
+  .eye-icon { font-size: 0.75rem; opacity: 0.7; }
+  .stat-label { font-size: 0.7rem; color: var(--c-mutedonpage); margin-bottom: 0.2rem; }
+  .stat-value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--c-textonpage); }
+  .overdue-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+  .overdue-card:hover { background: rgba(193,91,60,0.15); }
+  .overdue-card.active { background: var(--c-danger); border-color: var(--c-danger); }
+  .overdue-card.active .stat-label, .overdue-card.active .stat-value { color: #ffffff; }
+  .exempt-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+  .exempt-card:hover { background: rgba(91,143,196,0.15); }
+  .exempt-card.active { background: #5B8FC4; border-color: #5B8FC4; }
+  .exempt-card.active .stat-label, .exempt-card.active .stat-value { color: #ffffff; }
+  .good-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+  .good-card:hover { background: rgba(94,148,104,0.15); }
+  .good-card.active { background: #5E9468; border-color: #5E9468; }
+  .good-card.active .stat-label, .good-card.active .stat-value { color: #ffffff; }
+  .backup-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    background: rgba(var(--c-subtle-rgb),0.08); color: var(--c-mutedonpage); border: 1px solid rgba(var(--c-subtle-rgb),0.18);
+    border-radius: 9px; padding: 0.55rem; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+  }
+  .search-wrap { position: relative; flex: 1; }
+  .search-wrap svg { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); }
+  .search-wrap input, #searchInput, #torailSearchInput, #examResultsSearchInput {
+    width: 100%; padding: 0.7rem 0.9rem 0.7rem 2.4rem; border-radius: 10px;
+    border: 1px solid rgba(var(--c-subtle-rgb),0.18); background: rgba(var(--c-subtle-rgb),0.06);
+    color: var(--c-textonpage); font-size: 0.95rem;
+  }
+  .search-wrap input::placeholder, #searchInput::placeholder, #torailSearchInput::placeholder, #examResultsSearchInput::placeholder { color: rgba(var(--c-subtle-rgb),0.45); }
+  #addBtn, #torailAddBtn {
+    display: flex; align-items: center; gap: 0.4rem; background: var(--c-accent); color: var(--c-onaccent);
+    border: none; border-radius: 10px; padding: 0 1rem; font-weight: 600; font-size: 0.92rem;
+    cursor: pointer; white-space: nowrap;
+  }
+
+  #errorBox { background: var(--c-dangerbg); color: var(--c-dangertext); padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
+
+  #formCard { background: var(--c-cardbg); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: none; }
+  .form-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .form-head h2 { font-family: 'Fraunces', serif; font-size: 1.15rem; margin: 0; font-weight: 600; }
+  .close-x { background: none; border: none; cursor: pointer; color: var(--c-mutedoncard); padding: 4px; }
+  .field-group { margin-bottom: 0.75rem; }
+  .checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); background: var(--c-white); cursor: pointer; }
+  .checkbox-row input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--c-success); cursor: pointer; flex-shrink: 0; }
+  .checkbox-row label { margin: 0; cursor: pointer; font-size: 0.9rem; color: var(--c-textoncard); font-weight: 500; }
+  .mini-badge { font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap; }
+  .field-row { display: flex; gap: 0.7rem; }
+  .field-row .field-group { flex: 1; }
+  label { display: block; font-size: 0.78rem; color: var(--c-mutedoncard); margin-bottom: 0.3rem; font-weight: 500; }
+  input.reg-input, select.reg-input, textarea.reg-textarea {
+    width: 100%; padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15);
+    background: var(--c-white); font-size: 0.92rem; color: var(--c-textoncard); font-family: inherit;
+  }
+  textarea.reg-textarea { resize: vertical; }
+  .form-actions { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
+  #saveBtn {
+    flex: 1; background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 9px; padding: 0.7rem;
+    font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  }
+  #cancelBtn {
+    background: transparent; color: var(--c-mutedoncard); border: 1px solid rgba(0,0,0,0.15); border-radius: 9px;
+    padding: 0.7rem 1rem; font-weight: 500; cursor: pointer;
+  }
+
+  #emptyState { text-align: center; padding: 3rem 1.5rem; color: var(--c-mutedonpage); border: 1px dashed rgba(var(--c-subtle-rgb),0.2); border-radius: 14px; display: none; }
+
+  #studentList { display: flex; flex-direction: column; gap: 0.6rem; }
+  .card-row { background: var(--c-cardbg); border-radius: 12px; overflow: hidden; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; cursor: pointer; gap: 0.75rem; }
+  .card-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.02rem; }
+  .stage-tag { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.68rem; color: #4F7864; background: var(--c-successbg); padding: 0.1rem 0.45rem; border-radius: 999px; vertical-align: middle; }
+  .card-entry { font-size: 0.82rem; color: var(--c-mutedoncard); margin-top: 0.15rem; }
+  .badge { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 999px; display: flex; align-items: center; gap: 0.35rem; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .card-details { padding: 0 1rem 1rem; border-top: 1px solid rgba(0,0,0,0.06); display: none; }
+  .detail-row { display: flex; gap: 0.5rem; padding: 0.5rem 0; font-size: 0.88rem; border-bottom: 1px solid rgba(0,0,0,0.04); }
+  .detail-label { color: var(--c-mutedoncard); min-width: 90px; display: flex; align-items: center; gap: 0.3rem; }
+  .detail-value { color: var(--c-textoncard); flex: 1; }
+  .card-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+  .edit-btn, .del-btn, .wa-btn { flex: 1; min-width: 100px; display: flex; align-items: center; justify-content: center; gap: 0.35rem; border: none; border-radius: 8px; padding: 0.55rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .edit-btn { background: var(--c-cardalt); color: var(--c-textoncard); }
+  .del-btn { background: var(--c-dangerbg); color: var(--c-dangertext); }
+  .wa-btn { background: #25D366; color: #ffffff; flex-basis: 100%; }
+  .payments-section { margin-top: 0.9rem; padding-top: 0.85rem; border-top: 1px solid rgba(0,0,0,0.06); }
+  .payments-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.92rem; color: var(--c-textoncard); margin-bottom: 0.5rem; }
+  .payment-row { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.55rem; background: var(--c-white); border-radius: 7px; margin-bottom: 0.4rem; font-size: 0.85rem; }
+  .payment-info { color: var(--c-textoncard); }
+  .payment-actions { display: flex; gap: 0.3rem; }
+  .pay-icon-btn { background: none; border: none; padding: 3px; cursor: pointer; display: flex; align-items: center; }
+  .no-payments { font-size: 0.85rem; color: var(--c-mutedoncard); margin: 0.3rem 0 0.6rem; }
+  .add-payment-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+  .add-payment-row input { font-size: 0.85rem; padding: 0.5rem 0.6rem; }
+  .add-pay-btn { background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 8px; padding: 0 0.85rem; font-size: 0.83rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div id="lockScreen" style="position:fixed;inset:0;background:#16302B;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.9rem;padding:1.5rem;text-align:center;">
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">دخول المدرس</h2>
+  <input id="lockEmailInput" type="email" placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
+  <input id="lockPasswordInput" type="password" placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
+  <button id="lockUnlockBtn" style="background:#D4A93B;color:#1B2420;border:none;border-radius:10px;padding:0.65rem 1.6rem;font-weight:600;font-size:0.92rem;cursor:pointer;">دخول</button>
+  <p id="lockErrorMsg" style="color:#C15B3C;font-size:0.85rem;display:none;margin:0;"></p>
+</div>
+
+<header class="app-content">
+  <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="تبديل الألوان">🎨</button>
+  <button class="logout-btn" onclick="logoutApp()" title="تسجيل الخروج">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    خروج
+  </button>
+  <div class="header-inner">
+    <img class="avatar" src="data:image/jpeg;base64,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" alt="Mr. Abd El Rahman Moneer">
+    <div style="min-width:0;">
+      <div class="eyebrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Class Register
+      </div>
+      <h1 class="tname">Mr. Abd El Rahman Moneer</h1>
+      <p class="subline">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9FB8AD" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        01220524090
+        <span style="margin:0 0.3rem;opacity:0.5;">•</span>
+        <span id="studentCount" onclick="toggleStudentCount()" style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;" title="اضغط لإظهار العدد">إظهار العدد</span>
+      </p>
+    </div>
+  </div>
+</header>
+
+<div class="app-content tab-nav">
+  <button class="tab-btn active" id="tabStudentsBtn" onclick="switchTab('students')">الطلاب</button>
+  <button class="tab-btn" id="tabExamsBtn" onclick="switchTab('exams')">
+    الامتحانات <span id="examsBadge" class="badge-dot" style="display:none;"></span>
+  </button>
+  <button class="tab-btn" id="tabStatsBtn" onclick="switchTab('stats')">الإحصائيات</button>
+  <button class="tab-btn" id="tabTorailBtn" onclick="switchTab('torail')">طلاب توريل</button>
+</div>
+
+<main class="app-content" id="viewStudents">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="searchInput" placeholder="Search by name, phone, or stage">
+    </div>
+    <button id="addBtn">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B2420" stroke-width="2.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+      Add
+    </button>
+  </div>
+
+  <div style="margin-bottom:0.4rem;">
+    <span id="stageCountsToggle" onclick="toggleStageCounts()" style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; font-size:0.82rem; color:#9FB8AD;">إظهار أعداد المراحل</span>
+  </div>
+  <div id="stageCounts" class="stage-counts"></div>
+
+  <div class="stats-row">
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('statMonth')">
+      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="statMonth_eye">👁</span></div>
+      <div class="stat-value" id="statMonth" data-real="0 جنيه">••••••</div>
+    </div>
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('statTotal')">
+      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="statTotal_eye">👁</span></div>
+      <div class="stat-value" id="statTotal" data-real="0 جنيه">••••••</div>
+    </div>
+    <div class="stat-card overdue-card" id="overduePill">
+      <div class="stat-label">متأخرين في الدفع</div>
+      <div class="stat-value" id="statOverdue">0 طالب</div>
+    </div>
+  </div>
+
+  <button id="filterPillsToggleBtn" class="tools-toggle-btn" onclick="toggleFilterPillsSection()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+    فلاتر إضافية (إعفاء، مذكرات، بيانات ولي الأمر)
+    <svg id="filterPillsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+
+  <div id="filterPillsSection" style="display:none;">
+    <div class="stats-row">
+      <div class="stat-card exempt-card" id="exemptPill">
+        <div class="stat-label">معفيين من الدفع</div>
+        <div class="stat-value" id="statExempt">0 طالب</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card good-card" id="term1ReceivedPill">
+        <div class="stat-label">استلموا مذكرة ترم أول</div>
+        <div class="stat-value" id="statTerm1Received">0 طالب</div>
+      </div>
+      <div class="stat-card overdue-card" id="term1MissingPill">
+        <div class="stat-label">لسه مستلموش ترم أول</div>
+        <div class="stat-value" id="statTerm1Missing">0 طالب</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card good-card" id="term2ReceivedPill">
+        <div class="stat-label">استلموا مذكرة ترم تاني</div>
+        <div class="stat-value" id="statTerm2Received">0 طالب</div>
+      </div>
+      <div class="stat-card overdue-card" id="term2MissingPill">
+        <div class="stat-label">لسه مستلموش ترم تاني</div>
+        <div class="stat-value" id="statTerm2Missing">0 طالب</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card overdue-card" id="noParentPill">
+        <div class="stat-label">بدون رقم ولي الأمر</div>
+        <div class="stat-value" id="statNoParent">0 طالب</div>
+      </div>
+    </div>
+  </div>
+
+  <button id="toolsToggleBtn" class="tools-toggle-btn" onclick="toggleToolsSection()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    أدوات إضافية (نسخ احتياطي وتصدير)
+    <svg id="toolsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+
+  <div id="toolsSection" style="display:none;">
+
+    <div class="tools-group-title">النسخ الاحتياطي</div>
+    <div class="backup-row">
+      <button id="exportBtn" class="backup-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        نسخة احتياطية
+      </button>
+      <button id="importBtn" class="backup-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        استرجاع
+      </button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </div>
+    <div class="backup-row">
+      <button id="autoBackupsBtn" class="backup-btn" onclick="toggleAutoBackupsList()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        النسخ التلقائية
+      </button>
+      <button id="manualBackupNowBtn" class="backup-btn" onclick="takeManualBackupNow()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        خد نسخة دلوقتي
+      </button>
+    </div>
+    <div id="autoBackupsList" style="display:none; margin-bottom:1rem;"></div>
+
+    <div class="tools-group-title">التصدير</div>
+    <div class="backup-row">
+      <button id="exportExcelBtn" class="backup-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18M3 9h18M3 15h18"/></svg>
+        تصدير Excel
+      </button>
+      <button id="exportPdfBtn" class="backup-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h9l5 5v15H6v-4"/><path d="M6 14H2v6h4z"/></svg>
+        طباعة / PDF
+      </button>
+    </div>
+
+    <div class="tools-group-title">أدوات تصحيح البيانات</div>
+    <div class="backup-row">
+      <button id="fixPhonesBtn" class="backup-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12a10 10 0 1 1-4-8"/><path d="M22 4v6h-6"/></svg>
+        تصحيح أرقام الهواتف (عربي → إنجليزي)
+      </button>
+    </div>
+
+  </div>
+
+  <div id="errorBox"></div>
+
+  <div id="emptyState">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9FB8AD" stroke-width="1.75" style="margin-bottom:0.6rem;opacity:0.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <p id="emptyMsg" style="margin:0;font-size:0.95rem;">No students yet. Add your first one above.</p>
+  </div>
+
+  <div id="studentList"></div>
+  <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})" style="display:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
+    ارجع لفوق
+  </button>
+</main>
+
+  <form id="formCard" style="display:none;">
+    <div class="form-head">
+      <h2 id="formTitle">New student</h2>
+      <button type="button" class="close-x" id="closeFormBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="field-group">
+      <label>Name *</label>
+      <input class="reg-input" id="fName" placeholder="Full name">
+      <div id="dupNameWarning" style="display:none; font-size:0.8rem; color:#946A26; background:#FBF0DE; padding:0.4rem 0.6rem; border-radius:6px; margin-top:0.4rem;"></div>
+    </div>
+    <div class="field-group">
+      <label>المرحلة</label>
+      <select class="reg-input" id="fStage">
+        <option value="">— اختر المرحلة —</option>
+        <option value="Prep 1">Prep 1</option>
+        <option value="Prep 2">Prep 2</option>
+        <option value="Prep 3">Prep 3</option>
+        <option value="Sec 1">Sec 1</option>
+        <option value="Sec 2">Sec 2</option>
+        <option value="Sec 3">Sec 3</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>الجنس</label>
+      <select class="reg-input" id="fGender">
+        <option value="">— غير محدد —</option>
+        <option value="female">بنت</option>
+        <option value="male">ولد</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label>Student phone</label>
+        <input class="reg-input" id="fStudentPhone" placeholder="e.g. 010 123 4567">
+      </div>
+      <div class="field-group">
+        <label>Parent phone</label>
+        <input class="reg-input" id="fParentPhone" placeholder="e.g. 010 987 6543">
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Entry date</label>
+      <input class="reg-input" type="date" id="fEntryDate">
+    </div>
+    <div class="field-group">
+      <label>مذكرة ترم أول</label>
+      <div style="display:flex;gap:0.5rem;">
+        <div class="checkbox-row" style="flex:1;" onclick="document.getElementById('fTerm1Paid').click()">
+          <input type="checkbox" id="fTerm1Paid" onclick="event.stopPropagation()">
+          <label for="fTerm1Paid" onclick="event.stopPropagation()">دفع</label>
+        </div>
+        <div class="checkbox-row" style="flex:1;" onclick="document.getElementById('fTerm1Received').click()">
+          <input type="checkbox" id="fTerm1Received" onclick="event.stopPropagation()">
+          <label for="fTerm1Received" onclick="event.stopPropagation()">استلم</label>
+        </div>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>مذكرة ترم تاني</label>
+      <div style="display:flex;gap:0.5rem;">
+        <div class="checkbox-row" style="flex:1;" onclick="document.getElementById('fTerm2Paid').click()">
+          <input type="checkbox" id="fTerm2Paid" onclick="event.stopPropagation()">
+          <label for="fTerm2Paid" onclick="event.stopPropagation()">دفع</label>
+        </div>
+        <div class="checkbox-row" style="flex:1;" onclick="document.getElementById('fTerm2Received').click()">
+          <input type="checkbox" id="fTerm2Received" onclick="event.stopPropagation()">
+          <label for="fTerm2Received" onclick="event.stopPropagation()">استلم</label>
+        </div>
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="checkbox-row" onclick="document.getElementById('fExempt').click()" style="background:#FBF0DE; border-color:#D4A93B;">
+        <input type="checkbox" id="fExempt" onclick="event.stopPropagation()">
+        <label for="fExempt" onclick="event.stopPropagation()">معفى من الدفع</label>
+      </div>
+    </div>
+    <div class="field-group">
+      <label>Notes</label>
+      <textarea class="reg-textarea" id="fNotes" rows="3" placeholder="Grade, schedule, anything else worth remembering"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" id="saveBtn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        <span id="saveBtnLabel">Add student</span>
+      </button>
+      <button type="button" id="cancelBtn">Cancel</button>
+    </div>
+  </form>
+
+
+<main class="app-content" id="viewExams" style="display:none;">
+  <div id="examsListView">
+    <button id="newExamBtn" class="reg-btn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.75rem; font-weight:700; margin-bottom:1rem; cursor:pointer;">+ امتحان جديد</button>
+    <div id="examsByStage"></div>
+  </div>
+
+  <div id="examBuilderView" style="display:none;">
+    <button onclick="closeExamBuilder()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examBuilderTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;">امتحان جديد</h2>
+    <div class="form-card-exam">
+      <div class="field-group">
+        <label>عنوان الامتحان</label>
+        <input class="reg-input" id="examTitleInput" placeholder="مثلاً: امتحان الوحدة الأولى">
+      </div>
+      <div class="field-group">
+        <label>المرحلة</label>
+        <select class="reg-input" id="examStageInput">
+          <option value="">— اختر المرحلة —</option>
+          <option value="Prep 1">Prep 1</option>
+          <option value="Prep 2">Prep 2</option>
+          <option value="Prep 3">Prep 3</option>
+          <option value="Sec 1">Sec 1</option>
+          <option value="Sec 2">Sec 2</option>
+          <option value="Sec 3">Sec 3</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>مدة الامتحان بالدقائق (اختياري)</label>
+        <input class="reg-input" type="number" min="1" step="1" id="examTimeLimitInput" placeholder="مثلاً: 30 — سيبها فاضية لو مفيش وقت محدد">
+      </div>
+      <div class="ai-import-box" id="aiImportBox">
+        <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/></svg>
+          <strong style="font-size:0.9rem;">استيراد أسئلة من صورة (AI)</strong>
+        </div>
+        <p style="font-size:0.78rem; color:#6B6B60; margin:0 0 0.6rem;">صوّر ورقة الأسئلة وارفعها، وهيحاول الذكاء الاصطناعي يحولها لأسئلة جاهزة تراجعها قبل الحفظ.</p>
+        <input type="file" id="aiImageInput" accept="image/*" style="display:none;">
+        <button id="aiImportBtn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:700; cursor:pointer;">ارفع صورة الأسئلة</button>
+        <div id="aiImportStatus" style="font-size:0.82rem; margin-top:0.5rem; display:none;"></div>
+      </div>
+      <div id="questionsBuilder"></div>
+      <button onclick="addQuestionCard()" style="width:100%; background:#EAEAE4; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer; margin:0.5rem 0 1rem;">+ ضيف سؤال</button>
+      <button onclick="saveExam()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveExamBtnLabel">حفظ الامتحان</span></button>
+    </div>
+  </div>
+
+  <div id="examResultsView" style="display:none;">
+    <button onclick="closeExamResults()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;"></h2>
+    <div class="search-wrap" style="margin-bottom:0.9rem;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="examResultsSearchInput" placeholder="ابحث باسم الطالب" oninput="renderExamResultsList()">
+    </div>
+    <div class="stats-row" style="margin-bottom:0.9rem; gap:0.5rem;">
+      <button id="resultsAllPill" type="button" class="stat-card good-card" style="flex:1; padding:0.6rem 0.9rem; border:2px solid transparent; cursor:pointer;" onclick="setResultsTorailFilter(false)">
+        <div class="stat-label">كل النتائج</div>
+      </button>
+      <button id="resultsTorailPill" type="button" class="stat-card exempt-card" style="flex:1; padding:0.6rem 0.9rem; border:2px solid transparent; cursor:pointer;" onclick="setResultsTorailFilter(true)">
+        <div class="stat-label">نتائج طلاب توريل</div>
+      </button>
+    </div>
+    <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.7rem; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:0.4rem; color:#9FB8AD; font-size:0.85rem; cursor:pointer;">
+        <input type="checkbox" id="resultsSelectAllBox" onchange="toggleSelectAllResults(this.checked)">
+        تحديد الكل
+      </label>
+      <button id="deleteSelectedResultsBtn" onclick="deleteSelectedResults()" disabled style="background:#C15B3C; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+        حذف المحدد (<span id="selectedResultsCount">0</span>)
+      </button>
+      <button onclick="deleteAllResultsForExam()" style="background:none; color:#C15B3C; border:1px solid #C15B3C; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; margin-right:auto;">
+        حذف كل النتائج
+      </button>
+    </div>
+    <div id="examResultsList"></div>
+  </div>
+
+  <div id="examMissingView" style="display:none;">
+    <button onclick="closeExamMissing()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examMissingTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.3rem;"></h2>
+    <p style="color:#9FB8AD; font-size:0.85rem; margin:0 0 0.9rem;">الطلاب اللي لسه ما دخلوش الامتحان ده</p>
+    <div id="examMissingList"></div>
+  </div>
+</main>
+
+<main class="app-content" id="viewStats" style="display:none;">
+  <div class="notif-card" id="notifPermCard" style="display:none;">
+    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <strong style="font-size:0.9rem;">تفعيل إشعارات النتائج</strong>
+    </div>
+    <p style="font-size:0.8rem; color:#6B6B60; margin:0 0 0.6rem;">هتوصلك إشعارات فورية لما طالب يسلّم امتحان، طول ما التطبيق شغال (حتى مصغّر).</p>
+    <button id="enableNotifBtn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:9px; padding:0.6rem; font-weight:700; cursor:pointer;">تفعيل الإشعارات</button>
+  </div>
+
+  <div class="stat-section-title">نظرة عامة</div>
+  <div class="stats-grid">
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashTotalStudents">0</div>
+      <div class="stat-box-label">إجمالي الطلاب</div>
+    </div>
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashTotalExams">0</div>
+      <div class="stat-box-label">إجمالي الامتحانات</div>
+    </div>
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashAvgScore">—</div>
+      <div class="stat-box-label">متوسط الدرجات العام</div>
+    </div>
+    <div class="stat-card-box">
+      <div class="stat-box-value" id="dashTotalSubmissions">0</div>
+      <div class="stat-box-label">إجمالي محاولات الامتحانات</div>
+    </div>
+  </div>
+
+  <div class="stat-section-title">متوسط الدرجات حسب المرحلة</div>
+  <div class="chart-box" id="chartScoreByStage"></div>
+
+  <div class="stat-section-title">عدد الطلاب حسب المرحلة</div>
+  <div class="chart-box" id="chartStudentsByStage"></div>
+
+  <div class="stat-section-title">المدفوعات آخر 6 شهور</div>
+  <div class="chart-box" id="chartPaymentsByMonth"></div>
+
+  <div class="stat-section-title">نسبة المشاركة في كل امتحان</div>
+  <div class="chart-box" id="chartExamParticipation"></div>
+</main>
+
+<main class="app-content" id="viewTorail" style="display:none;">
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="torailSearchInput" placeholder="Search by name, phone, or stage">
+    </div>
+    <button id="torailAddBtn">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B2420" stroke-width="2.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+      Add
+    </button>
+  </div>
+
+  <div id="torailStageCounts" class="stage-counts"></div>
+
+  <div class="stats-row">
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('torailStatMonth')">
+      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="torailStatMonth_eye">👁</span></div>
+      <div class="stat-value" id="torailStatMonth" data-real="0 جنيه">••••••</div>
+    </div>
+    <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('torailStatTotal')">
+      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="torailStatTotal_eye">👁</span></div>
+      <div class="stat-value" id="torailStatTotal" data-real="0 جنيه">••••••</div>
+    </div>
+    <div class="stat-card overdue-card" id="torailOverduePill">
+      <div class="stat-label">متأخرين في الدفع</div>
+      <div class="stat-value" id="torailStatOverdue">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card exempt-card" id="torailExemptPill">
+      <div class="stat-label">معفيين من الدفع</div>
+      <div class="stat-value" id="torailStatExempt">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card good-card" id="torailTerm1ReceivedPill">
+      <div class="stat-label">استلموا مذكرة ترم أول</div>
+      <div class="stat-value" id="torailStatTerm1Received">0 طالب</div>
+    </div>
+    <div class="stat-card overdue-card" id="torailTerm1MissingPill">
+      <div class="stat-label">لسه مستلموش ترم أول</div>
+      <div class="stat-value" id="torailStatTerm1Missing">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card good-card" id="torailTerm2ReceivedPill">
+      <div class="stat-label">استلموا مذكرة ترم تاني</div>
+      <div class="stat-value" id="torailStatTerm2Received">0 طالب</div>
+    </div>
+    <div class="stat-card overdue-card" id="torailTerm2MissingPill">
+      <div class="stat-label">لسه مستلموش ترم تاني</div>
+      <div class="stat-value" id="torailStatTerm2Missing">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card overdue-card" id="torailNoParentPill">
+      <div class="stat-label">بدون رقم ولي الأمر</div>
+      <div class="stat-value" id="torailStatNoParent">0 طالب</div>
+    </div>
+  </div>
+
+  <div class="backup-row">
+    <button id="torailExportExcelBtn" class="backup-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18M3 9h18M3 15h18"/></svg>
+      تصدير Excel
+    </button>
+    <button id="torailExportPdfBtn" class="backup-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h9l5 5v15H6v-4"/><path d="M6 14H2v6h4z"/></svg>
+      طباعة / PDF
+    </button>
+  </div>
+
+  <div id="torailErrorBox"></div>
+
+  <div id="torailEmptyState">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9FB8AD" stroke-width="1.75" style="margin-bottom:0.6rem;opacity:0.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <p id="torailEmptyMsg" style="margin:0;font-size:0.95rem;">لسه مفيش طلاب توريل. دوس Add عشان تضيف أول واحد.</p>
+  </div>
+
+  <div id="torailStudentList"></div>
+</main>
+
+<script>
+const TEACHER_NAME = "أ/ عبد الرحمن منير";
+const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
+const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
+  authDomain: "register-class-302e6.firebaseapp.com",
+  projectId: "register-class-302e6",
+  storageBucket: "register-class-302e6.firebasestorage.app",
+  messagingSenderId: "230991294181",
+  appId: "1:230991294181:web:167cb0a370c68b6a6f6e0c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+const studentsCol = db.collection("students");
+const examsCol = db.collection("exams");
+const examResultsCol = db.collection("examResults");
+
+let moneyRevealed = {};
+try { moneyRevealed = JSON.parse(localStorage.getItem("moneyRevealed") || "{}"); } catch (e) { moneyRevealed = {}; }
+function setMoneyStat(elId, realText) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.setAttribute("data-real", realText);
+  el.textContent = moneyRevealed[elId] ? realText : "••••••";
+}
+function toggleMoneyReveal(elId) {
+  moneyRevealed[elId] = !moneyRevealed[elId];
+  try { localStorage.setItem("moneyRevealed", JSON.stringify(moneyRevealed)); } catch (e) {}
+  const el = document.getElementById(elId);
+  const eye = document.getElementById(elId + "_eye");
+  if (el) el.textContent = moneyRevealed[elId] ? el.getAttribute("data-real") : "••••••";
+  if (eye) eye.textContent = moneyRevealed[elId] ? "🙈" : "👁";
+}
+
+let students = [];
+let editingId = null;
+let expandedId = null;
+let exams = [];
+let examResults = [];
+let currentBuilderQuestions = [];
+let viewingExamId = null;
+let editingExamId = null;
+
+let firstResultsSnapshot = true;
+let autoBackupChecked = false;
+
+function isStatsTabVisible() {
+  const el = document.getElementById("viewStats");
+  return el && el.style.display !== "none";
+}
+
+function maybeNotifyNewResult(r) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  try {
+    new Notification("نتيجة جديدة: " + (r.studentName || ""), {
+      body: `${r.examTitle || ""} — ${r.score}/${r.total} (${pct}%)`,
+      icon: "icon-192.png",
+    });
+  } catch (e) {}
+}
+
+function startSync() {
+  studentsCol.onSnapshot(
+    (snapshot) => {
+      students = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      students.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+      render();
+      renderTorail();
+      if (isStatsTabVisible()) renderStatsDashboard();
+      if (!autoBackupChecked) {
+        autoBackupChecked = true;
+        setTimeout(maybeRunAutoBackup, 4000);
+      }
+    },
+    (err) => {
+      showError("تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
+    }
+  );
+  examsCol.onSnapshot((snapshot) => {
+    exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderExamsList();
+    if (isStatsTabVisible()) renderStatsDashboard();
+  });
+  examResultsCol.orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
+    examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!firstResultsSnapshot) {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === "added" && !change.doc.metadata.hasPendingWrites) {
+          maybeNotifyNewResult(change.doc.data());
+        }
+      });
+    }
+    firstResultsSnapshot = false;
+    updateExamsBadge();
+    renderExamsList();
+    if (viewingExamId) renderExamResultsList();
+    if (viewingMissingExamId) renderMissingStudentsList();
+    if (isStatsTabVisible()) renderStatsDashboard();
+  });
+}
+function fmtDate(d) {
+  if (!d) return "—";
+  const dt = new Date(d + "T00:00:00");
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" });
+}
+function getPayments(s) {
+  if (Array.isArray(s.payments) && s.payments.length) {
+    return [...s.payments].sort((a,b) => (b.date||"").localeCompare(a.date||""));
+  }
+  if (s.paymentDate) {
+    return [{ date: s.paymentDate, amount: s.paymentAmount || "" }];
+  }
+  return [];
+}
+function paymentBadge(payments, exempt) {
+  if (exempt) return { label: "معفى من الدفع", tone: "exempt" };
+  if (!payments.length) return { label: "No record", tone: "neutral" };
+  const latest = payments[0];
+  const paid = new Date(latest.date + "T00:00:00");
+  const now = new Date();
+  const days = Math.floor((now - paid) / (1000*60*60*24));
+  if (days <= 31) return { label: "Current", tone: "good" };
+  if (days <= 45) return { label: "Due soon", tone: "warn" };
+  return { label: "Overdue", tone: "bad" };
+}
+const toneStyles = {
+  good: { bg: "#EAF2E7", fg: "#3F6B4A", dot: "#5E9468" },
+  warn: { bg: "#FBF0DE", fg: "#946A26", dot: "#D4A93B" },
+  bad: { bg: "#F6E7E2", fg: "#9C4B32", dot: "#C15B3C" },
+  neutral: { bg: "#EAEAE4", fg: "#6B6B60", dot: "#A3A398" },
+  exempt: { bg: "#E4EDF6", fg: "#2E5C8A", dot: "#5B8FC4" },
+};
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function normalizeArabic(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+function checkDuplicateName() {
+  const warningBox = document.getElementById("dupNameWarning");
+  const name = document.getElementById("fName").value.trim();
+  if (name.length < 2) { warningBox.style.display = "none"; return; }
+  const targetNorm = normalizeArabic(name);
+  const matches = students.filter(s => {
+    if (s.id === editingId) return false;
+    const sNorm = normalizeArabic(s.name);
+    return sNorm === targetNorm || sNorm.includes(targetNorm) || targetNorm.includes(sNorm);
+  });
+  if (matches.length) {
+    const isExact = matches.some(m => normalizeArabic(m.name) === targetNorm);
+    const namesList = matches.slice(0, 3).map(m => `"${m.name}"${m.stage ? " (" + m.stage + ")" : ""}`).join("، ") + (matches.length > 3 ? " وغيرهم" : "");
+    warningBox.textContent = isExact
+      ? `⚠️ يوجد طالب بنفس الاسم بالفعل: ${namesList} — تقدر تكمل عادي لو ده طالب مختلف فعلاً.`
+      : `⚠️ فيه أسامي قريبة من اللي كتبته: ${namesList} — تأكد إنك مش بتضيف نفس الطالب مرتين.`;
+    warningBox.style.display = "block";
+  } else {
+    warningBox.style.display = "none";
+  }
+}
+function toEnglishDigits(str) {
+  if (!str) return str;
+  const arabicIndic = "٠١٢٣٤٥٦٧٨٩";
+  const persian = "۰۱۲۳۴۵۶۷۸۹";
+  return String(str).replace(/[٠-٩۰-۹]/g, (c) => {
+    let idx = arabicIndic.indexOf(c);
+    if (idx === -1) idx = persian.indexOf(c);
+    return idx === -1 ? c : String(idx);
+  });
+}
+function formatPhoneForWhatsapp(phone) {
+  let digits = (phone || "").replace(/[^0-9]/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("0")) digits = "2" + digits;
+  else if (!digits.startsWith("20")) digits = "20" + digits;
+  return digits;
+}
+function sendWhatsappReceipt(s, payment) {
+  const waNumber = formatPhoneForWhatsapp(s.parentPhone);
+  if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
+  const amount = payment.amount ? payment.amount + " جنيه" : "";
+  const date = fmtDate(payment.date);
+  const message = `تحية طيبة،\nنفيدكم بأنه تم استلام مبلغ ${amount} من الطالب/ة ${s.name} بتاريخ ${date}.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
+async function addPayment(studentId) {
+  const dateInput = document.getElementById("newPayDate_" + studentId);
+  const amountInput = document.getElementById("newPayAmount_" + studentId);
+  const date = dateInput.value;
+  const amount = amountInput.value;
+  if (!date || !amount) { showError("لازم تحدد التاريخ والمبلغ عشان تسجل الدفعة."); return; }
+  const student = students.find(s => s.id === studentId);
+  let payments = Array.isArray(student.payments) ? [...student.payments] : [];
+  if (payments.length === 0 && student.paymentDate) {
+    payments.push({ date: student.paymentDate, amount: student.paymentAmount || "", id: "legacy_" + studentId });
+  }
+  payments.push({ date, amount, id: Date.now().toString(36) + Math.random().toString(36).slice(2,6) });
+  try {
+    await studentsCol.doc(studentId).update({
+      payments,
+      paymentDate: firebase.firestore.FieldValue.delete(),
+      paymentAmount: firebase.firestore.FieldValue.delete(),
+    });
+  } catch (err) {
+    showError("تعذر تسجيل الدفعة. تأكد من اتصالك بالإنترنت.");
+  }
+}
+async function deletePayment(studentId, paymentId) {
+  if (!confirm("متأكد إنك عايز تمسح هذه الدفعة من السجل؟")) return;
+  const student = students.find(s => s.id === studentId);
+  const payments = getPayments(student).filter(p => p.id !== paymentId);
+  try {
+    await studentsCol.doc(studentId).update({ payments });
+  } catch (err) {
+    showError("تعذر حذف الدفعة. تأكد من اتصالك بالإنترنت.");
+  }
+}
+function showError(msg) {
+  [document.getElementById("errorBox"), document.getElementById("torailErrorBox")].forEach(box => {
+    if (!box) return;
+    box.style.background = "#F6E7E2";
+    box.style.color = "#9C4B32";
+    box.textContent = msg;
+    box.style.display = "block";
+  });
+}
+function showSuccess(msg) {
+  [document.getElementById("errorBox"), document.getElementById("torailErrorBox")].forEach(box => {
+    if (!box) return;
+    box.style.background = "#EAF2E7";
+    box.style.color = "#3F6B4A";
+    box.textContent = msg;
+    box.style.display = "block";
+  });
+}
+function clearError() {
+  [document.getElementById("errorBox"), document.getElementById("torailErrorBox")].forEach(box => {
+    if (!box) return;
+    box.style.display = "none";
+    box.textContent = "";
+  });
+}
+
+function exportBackup() {
+  const dataStr = JSON.stringify(students, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const today = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = "class-register-backup-" + today + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showSuccess("تم تنزيل النسخة الاحتياطية بنجاح.");
+}
+
+async function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    let incoming;
+    try {
+      incoming = JSON.parse(e.target.result);
+      if (!Array.isArray(incoming)) throw new Error("bad format");
+    } catch (err) {
+      showError("ملف النسخة الاحتياطية غير صالح.");
+      return;
+    }
+    const replace = confirm("اضغط \"موافق\" لاستبدال كل البيانات الحالية بالكامل، أو \"إلغاء\" للدمج مع البيانات الموجودة.");
+    try {
+      if (replace) {
+        const existing = await studentsCol.get();
+        const batchDelete = db.batch();
+        existing.docs.forEach(d => batchDelete.delete(d.ref));
+        await batchDelete.commit();
+      }
+      const batchWrite = db.batch();
+      incoming.forEach(s => {
+        const { id, ...data } = s;
+        const ref = id ? studentsCol.doc(id) : studentsCol.doc();
+        batchWrite.set(ref, data, { merge: true });
+      });
+      await batchWrite.commit();
+      showSuccess("تم استرجاع البيانات بنجاح.");
+    } catch (err) {
+      showError("تعذر استرجاع البيانات. تأكد من اتصالك بالإنترنت.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+async function fixAllPhoneNumbers() {
+  const toFix = students.filter(s => {
+    const newStudent = toEnglishDigits(s.studentPhone || "");
+    const newParent = toEnglishDigits(s.parentPhone || "");
+    return newStudent !== (s.studentPhone || "") || newParent !== (s.parentPhone || "");
+  });
+  if (toFix.length === 0) {
+    showSuccess("كل الأرقام أصلاً بالإنجليزي، مفيش حاجة تتصحح.");
+    return;
+  }
+  if (!confirm(`هيتم تصحيح أرقام ${toFix.length} طالب. متأكد؟`)) return;
+  try {
+    const batch = db.batch();
+    toFix.forEach(s => {
+      batch.update(studentsCol.doc(s.id), {
+        studentPhone: toEnglishDigits(s.studentPhone || ""),
+        parentPhone: toEnglishDigits(s.parentPhone || ""),
+      });
+    });
+    await batch.commit();
+    showSuccess(`تم تصحيح أرقام ${toFix.length} طالب بنجاح.`);
+  } catch (err) {
+    showError("تعذر تصحيح الأرقام. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+const STAGE_ORDER = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
+function sortByStageThenName(list) {
+  return [...list].sort((a, b) => {
+    const ai = STAGE_ORDER.indexOf(a.stage || "");
+    const bi = STAGE_ORDER.indexOf(b.stage || "");
+    const aRank = ai === -1 ? STAGE_ORDER.length : ai;
+    const bRank = bi === -1 ? STAGE_ORDER.length : bi;
+    if (aRank !== bRank) return aRank - bRank;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
+const GENDER_ORDER = { female: 0, male: 1, "": 2 };
+function sortByStageThenGenderThenName(list) {
+  return [...list].sort((a, b) => {
+    const ai = STAGE_ORDER.indexOf(a.stage || "");
+    const bi = STAGE_ORDER.indexOf(b.stage || "");
+    const aRank = ai === -1 ? STAGE_ORDER.length : ai;
+    const bRank = bi === -1 ? STAGE_ORDER.length : bi;
+    if (aRank !== bRank) return aRank - bRank;
+    const aG = GENDER_ORDER[a.gender || ""] ?? 2;
+    const bG = GENDER_ORDER[b.gender || ""] ?? 2;
+    if (aG !== bG) return aG - bG;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
+
+function exportExcel(customList, sheetLabel, fileTag) {
+  const sourceList = customList || students.filter(s => s.group !== "torail");
+  const sorted = sortByStageThenName(sourceList);
+  const rows = sorted.map(s => {
+    const payments = getPayments(s);
+    const latest = payments[0] || {};
+    return {
+      "الاسم": s.name || "",
+      "المرحلة": s.stage || "",
+      "هاتف الطالب": s.studentPhone || "",
+      "هاتف ولي الأمر": s.parentPhone || "",
+      "تاريخ الدخول": s.entryDate || "",
+      "معفى من الدفع": s.exempt ? "نعم" : "لا",
+      "آخر دفعة - التاريخ": latest.date || "",
+      "آخر دفعة - المبلغ": latest.amount || "",
+      "إجمالي المدفوع": payments.reduce((sum,p) => sum + (parseFloat(p.amount)||0), 0),
+      "مذكرة ترم أول - دفع": s.term1Paid ? "نعم" : "لا",
+      "مذكرة ترم أول - استلم": (s.term1Received ?? s.term1) ? "نعم" : "لا",
+      "مذكرة ترم تاني - دفع": s.term2Paid ? "نعم" : "لا",
+      "مذكرة ترم تاني - استلم": (s.term2Received ?? s.term2) ? "نعم" : "لا",
+      "ملاحظات": s.notes || "",
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetLabel || "الطلاب");
+  const today = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, (fileTag || "class-register") + "-" + today + ".xlsx");
+}
+
+function exportPdf(customList, titleLabel) {
+  const sourceList = customList || students.filter(s => s.group !== "torail");
+  const sorted = sortByStageThenGenderThenName(sourceList);
+  const monthLabels = ["٨","٩","١٠","١١","١٢","١","٢","٣","٤","٥","٦"];
+  const monthCellsHtml = `<td class="month-cell"></td>`.repeat(monthLabels.length);
+  const monthHeadersHtml = monthLabels.map(m => `<th class="month-cell">${m}</th>`).join("");
+
+  // نجهز بيانات الطلاب فاضية من أي حسابات صفوف-لكل-صفحة، ونسيب الصفحة نفسها
+  // تقيس ارتفاع الصف الحقيقي عندها وتحسب العدد الصح وقت الفتح (عشان يطابق الخط الفعلي عند المستخدم)
+  const stageGroups = [];
+  sorted.forEach(s => {
+    const stageLabel = s.stage || "بدون مرحلة";
+    let group = stageGroups[stageGroups.length - 1];
+    if (!group || group.stage !== stageLabel) {
+      group = { stage: stageLabel, rows: [] };
+      stageGroups.push(group);
+    }
+    group.rows.push([
+      escapeHtml(s.name),
+      escapeHtml(s.studentPhone) || "",
+      escapeHtml(s.parentPhone) || "",
+      fmtDate(s.entryDate),
+      `${s.term1Paid?'✓':'✗'} / ${(s.term1Received??s.term1)?'✓':'✗'}`,
+      `${s.term2Paid?'✓':'✗'} / ${(s.term2Received??s.term2)?'✓':'✗'}`,
+    ]);
+  });
+
+  const pageTitle = titleLabel || "كشف الطلاب";
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>${pageTitle} - ${TEACHER_NAME}</title>
+    <style>
+      @page { size: A4 landscape; margin: 10mm; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+      body { font-family: Arial, sans-serif; padding: 10px; direction: rtl; color: #000; }
+      h1 { font-size: 18px; margin-bottom: 4px; color: #000; }
+      p.sub { color: #000; margin-top: 0; margin-bottom: 10px; font-size: 12px; }
+      .stage-title { font-size: 14px; margin: 0 0 6px; color: #000; font-weight: 700; }
+      table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed; }
+      th, td { border: 1.5px solid #000; padding: 5px 4px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #000; font-weight: 600; }
+      th { background: #16302B; color: #fff; font-weight: 700; }
+      th:first-child, td:first-child { width: 22px; }
+      .name-cell { text-align: right; width: 130px; white-space: nowrap; }
+      .month-cell { width: 24px; }
+      tr:nth-child(even) { background: #eee; }
+      .roster-page.page-break { page-break-before: always; break-before: page; }
+      #measureBox { position: absolute; visibility: hidden; top: 0; right: 0; width: 100%; }
+    </style></head>
+    <body>
+      <h1 id="mainTitle">${pageTitle} — ${TEACHER_NAME}</h1>
+      <p class="sub" id="subLine">تاريخ الطباعة: ${new Date().toLocaleDateString('en-GB')} — إجمالي الطلاب: ${sourceList.length}</p>
+      <h2 class="stage-title" id="measureStageTitle" style="visibility:hidden; position:absolute;">قياس</h2>
+      <div id="measureBox">
+        <table id="measureTable">
+          <thead><tr>
+            <th>م</th><th class="name-cell">الاسم</th>
+            ${monthHeadersHtml}
+            <th>هاتف الطالب</th><th>هاتف ولي الأمر</th>
+            <th>تاريخ الدخول</th><th>ترم أول<br>(دفع/استلم)</th><th>ترم تاني<br>(دفع/استلم)</th>
+          </tr></thead>
+          <tbody><tr id="measureRow"><td>1</td><td class="name-cell">اسم تجريبي طويل شوية</td>${monthCellsHtml}<td>01000000000</td><td>01000000000</td><td>01/09/2026</td><td>✓ / ✓</td><td>✓ / ✓</td></tr></tbody>
+        </table>
+      </div>
+      <div id="pagesRoot"></div>
+      <script>
+        const stageGroups = ${JSON.stringify(stageGroups)};
+        const monthHeadersHtml = ${JSON.stringify(monthHeadersHtml)};
+        const monthCellsHtml = ${JSON.stringify(monthCellsHtml)};
+
+        function buildAndPrint() {
+          const mmToPx = 96 / 25.4;
+          const pageUsableHeightPx = (210 - 20) * mmToPx; // A4 landscape height 210mm - 10mm top/bottom margins
+          const headerRowHeight = document.querySelector('#measureTable thead tr').offsetHeight;
+          const dataRowHeight = document.getElementById('measureRow').offsetHeight;
+          const titleBlockHeight = document.getElementById('mainTitle').offsetHeight + document.getElementById('subLine').offsetHeight + 20;
+          const stageTitleHeight = document.getElementById('measureStageTitle').offsetHeight + 10;
+
+          const rowsPerPageFirst = Math.max(5, Math.floor((pageUsableHeightPx - titleBlockHeight - stageTitleHeight - headerRowHeight) / dataRowHeight) - 1);
+          const rowsPerPageRest = Math.max(5, Math.floor((pageUsableHeightPx - stageTitleHeight - headerRowHeight) / dataRowHeight) - 1);
+
+          const emptyRowHtml = '<tr><td></td><td class="name-cell"></td>' + monthCellsHtml + '<td></td><td></td><td></td><td></td><td></td></tr>';
+          const pages = [];
+          stageGroups.forEach(group => {
+            let rowsLeft = group.rows.slice();
+            const chunks = [];
+            let first = true;
+            while (rowsLeft.length > 0 || chunks.length === 0) {
+              const capacity = (pages.length === 0 && first) ? rowsPerPageFirst : rowsPerPageRest;
+              chunks.push(rowsLeft.slice(0, capacity));
+              rowsLeft = rowsLeft.slice(capacity);
+              first = false;
+              if (rowsLeft.length === 0) break;
+            }
+            chunks.forEach((chunk, chunkIndex) => {
+              const capacity = (pages.length === 0 && chunkIndex === 0) ? rowsPerPageFirst : rowsPerPageRest;
+              let serial = chunks.slice(0, chunkIndex).reduce((sum, c) => sum + c.length, 0);
+              const rowsHtml = chunk.map(cells => {
+                serial++;
+                return '<tr><td>' + serial + '</td><td class="name-cell">' + cells[0] + '</td>' + monthCellsHtml +
+                  '<td>' + cells[1] + '</td><td>' + cells[2] + '</td><td>' + cells[3] + '</td><td>' + cells[4] + '</td><td>' + cells[5] + '</td></tr>';
+              }).join('');
+              const blanksNeeded = Math.max(0, capacity - chunk.length);
+              const blankRowsHtml = emptyRowHtml.repeat(blanksNeeded);
+              const stageTitle = chunks.length > 1 ? (group.stage + ' (' + (chunkIndex + 1) + '/' + chunks.length + ')') : group.stage;
+              pages.push(
+                '<div class="roster-page' + (pages.length > 0 ? ' page-break' : '') + '">' +
+                  '<h2 class="stage-title">' + stageTitle + '</h2>' +
+                  '<table><thead><tr><th>م</th><th class="name-cell">الاسم</th>' + monthHeadersHtml +
+                  '<th>هاتف الطالب</th><th>هاتف ولي الأمر</th><th>تاريخ الدخول</th><th>ترم أول<br>(دفع/استلم)</th><th>ترم تاني<br>(دفع/استلم)</th></tr></thead>' +
+                  '<tbody>' + rowsHtml + blankRowsHtml + '</tbody></table>' +
+                '</div>'
+              );
+            });
+          });
+
+          document.getElementById('measureBox').remove();
+          document.getElementById('measureStageTitle').remove();
+          document.getElementById('pagesRoot').innerHTML = pages.join('');
+          setTimeout(() => window.print(), 50);
+        }
+        window.addEventListener('load', buildAndPrint);
+      <\/script>
+    </body></html>`;
+  const win = window.open("", "_blank");
+  if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
+let formGroupContext = "main";
+function resetFormPosition() {
+  const form = document.getElementById("formCard");
+  if (form) { form.style.position = ""; form.style.top = ""; form.style.left = ""; form.style.right = ""; form.style.width = ""; form.style.zIndex = ""; }
+}
+function positionFormNearCard(studentId) {
+  const card = document.querySelector(`.card-row[data-student-id="${studentId}"]`);
+  const form = document.getElementById("formCard");
+  if (!card || !form) return;
+  const rect = card.getBoundingClientRect();
+  const top = rect.top + window.scrollY;
+  form.style.position = "absolute";
+  form.style.top = top + "px";
+  form.style.left = rect.left + "px";
+  form.style.width = rect.width + "px";
+  form.style.zIndex = "50";
+}
+function openNewForm() {
+  editingId = null;
+  formGroupContext = "main";
+  resetFormPosition();
+  document.getElementById("formTitle").textContent = "New student";
+  document.getElementById("saveBtnLabel").textContent = "Add student";
+  ["fName","fStudentPhone","fParentPhone","fEntryDate","fNotes"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("fStage").value = "";
+  document.getElementById("fGender").value = "";
+  document.getElementById("dupNameWarning").style.display = "none";
+  ["fTerm1Paid","fTerm1Received","fTerm2Paid","fTerm2Received"].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById("fExempt").checked = false;
+  document.getElementById("formCard").style.display = "block";
+  document.getElementById("formCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById("fName").focus();
+}
+function openNewTorailForm() {
+  openNewForm();
+  formGroupContext = "torail";
+  document.getElementById("formTitle").textContent = "طالب توريل جديد";
+}
+function openEditForm(s) {
+  editingId = s.id;
+  formGroupContext = s.group === "torail" ? "torail" : "main";
+  document.getElementById("formTitle").textContent = s.group === "torail" ? "تعديل طالب توريل" : "Edit student";
+  document.getElementById("saveBtnLabel").textContent = "Save changes";
+  document.getElementById("fName").value = s.name || "";
+  document.getElementById("dupNameWarning").style.display = "none";
+  document.getElementById("fStage").value = s.stage || "";
+  document.getElementById("fGender").value = s.gender || "";
+  document.getElementById("fStudentPhone").value = s.studentPhone || "";
+  document.getElementById("fParentPhone").value = s.parentPhone || "";
+  document.getElementById("fEntryDate").value = s.entryDate || "";
+  document.getElementById("fNotes").value = s.notes || "";
+  document.getElementById("fExempt").checked = !!s.exempt;
+  document.getElementById("fTerm1Paid").checked = !!s.term1Paid;
+  document.getElementById("fTerm1Received").checked = !!(s.term1Received ?? s.term1);
+  document.getElementById("fTerm2Paid").checked = !!s.term2Paid;
+  document.getElementById("fTerm2Received").checked = !!(s.term2Received ?? s.term2);
+  document.getElementById("formCard").style.display = "block";
+  positionFormNearCard(s.id);
+  document.getElementById("formCard").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function closeForm() {
+  document.getElementById("formCard").style.display = "none";
+  resetFormPosition();
+  editingId = null;
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const name = document.getElementById("fName").value.trim();
+  if (!name) { showError("Student name is required."); return; }
+  clearError();
+  const data = {
+    name,
+    group: formGroupContext,
+    stage: document.getElementById("fStage").value,
+    gender: document.getElementById("fGender").value,
+    studentPhone: toEnglishDigits(document.getElementById("fStudentPhone").value.trim()),
+    parentPhone: toEnglishDigits(document.getElementById("fParentPhone").value.trim()),
+    entryDate: document.getElementById("fEntryDate").value,
+    term1Paid: document.getElementById("fTerm1Paid").checked,
+    term1Received: document.getElementById("fTerm1Received").checked,
+    term2Paid: document.getElementById("fTerm2Paid").checked,
+    term2Received: document.getElementById("fTerm2Received").checked,
+    notes: document.getElementById("fNotes").value.trim(),
+    exempt: document.getElementById("fExempt").checked,
+  };
+  const saveBtn = document.getElementById("saveBtn");
+  saveBtn.disabled = true;
+  try {
+    if (editingId) {
+      await studentsCol.doc(editingId).update(data);
+      const savedId = editingId;
+      closeForm();
+      setTimeout(() => {
+        const card = document.querySelector(`.card-row[data-student-id="${savedId}"]`);
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    } else {
+      await studentsCol.add(data);
+      closeForm();
+    }
+  } catch (err) {
+    showError("حصل خطأ أثناء الحفظ. تأكد من اتصالك بالإنترنت وحاول تاني.");
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+async function handleDelete(id) {
+  if (!confirm("متأكد إنك عايز تمسح بيانات هذا الطالب؟")) return;
+  try {
+    await studentsCol.doc(id).delete();
+    if (expandedId === id) expandedId = null;
+    if (torailExpandedId === id) torailExpandedId = null;
+  } catch (err) {
+    showError("تعذر الحذف. تأكد من اتصالك بالإنترنت.");
+  }
+}
+function toggleExpand(id) {
+  expandedId = expandedId === id ? null : id;
+  render();
+}
+function toggleTorailExpand(id) {
+  torailExpandedId = torailExpandedId === id ? null : id;
+  renderTorail();
+}
+function filterByStage(stage) {
+  const input = document.getElementById("searchInput");
+  if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
+    input.value = "";
+  } else {
+    input.value = stage;
+  }
+  render();
+}
+function toggleOverdueFilter() {
+  overdueOnly = !overdueOnly;
+  render();
+}
+function toggleExemptFilter() {
+  exemptOnly = !exemptOnly;
+  render();
+}
+function toggleBookletFilter(mode) {
+  bookletFilter = bookletFilter === mode ? null : mode;
+  render();
+}
+function toggleNoParentFilter() {
+  noParentOnly = !noParentOnly;
+  render();
+}
+function toggleStudentCount() {
+  showStudentCount = !showStudentCount;
+  render();
+}
+function toggleStageCounts() {
+  showStageCounts = !showStageCounts;
+  render();
+  renderTorail();
+}
+
+function switchTab(tab) {
+  document.getElementById("viewStudents").style.display = tab === "students" ? "block" : "none";
+  document.getElementById("viewExams").style.display = tab === "exams" ? "block" : "none";
+  document.getElementById("viewStats").style.display = tab === "stats" ? "block" : "none";
+  document.getElementById("viewTorail").style.display = tab === "torail" ? "block" : "none";
+  document.getElementById("tabStudentsBtn").classList.toggle("active", tab === "students");
+  document.getElementById("tabExamsBtn").classList.toggle("active", tab === "exams");
+  document.getElementById("tabStatsBtn").classList.toggle("active", tab === "stats");
+  document.getElementById("tabTorailBtn").classList.toggle("active", tab === "torail");
+  if (tab === "exams") {
+    try { localStorage.setItem("examsLastSeen", Date.now().toString()); } catch (e) {}
+    updateExamsBadge();
+  }
+  if (tab === "stats") {
+    renderStatsDashboard();
+  }
+  if (tab === "torail") {
+    renderTorail();
+  }
+}
+
+function updateExamsBadge() {
+  let lastSeen = 0;
+  try { lastSeen = parseInt(localStorage.getItem("examsLastSeen") || "0", 10); } catch (e) {}
+  const unseen = examResults.filter(r => r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > lastSeen).length;
+  const badge = document.getElementById("examsBadge");
+  if (unseen > 0) {
+    badge.textContent = unseen;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+function renderBarChart(containerId, rows, colorClass) {
+  const container = document.getElementById(containerId);
+  if (!rows.length) {
+    container.innerHTML = `<div class="chart-empty">مفيش بيانات كفاية لعرضها لسه</div>`;
+    return;
+  }
+  const maxVal = Math.max(...rows.map(r => r.value), 1);
+  container.innerHTML = rows.map(r => `
+    <div class="bar-row">
+      <div class="bar-row-label"><span>${escapeHtml(r.label)}</span><span class="val">${escapeHtml(r.display)}</span></div>
+      <div class="bar-track"><div class="bar-fill ${colorClass || ''}" style="width:${Math.max(4, Math.round((r.value / maxVal) * 100))}%;"></div></div>
+    </div>
+  `).join("");
+}
+
+function renderStatsDashboard() {
+  initNotifUi();
+  document.getElementById("dashTotalStudents").textContent = students.length;
+  document.getElementById("dashTotalExams").textContent = exams.length;
+  document.getElementById("dashTotalSubmissions").textContent = examResults.length;
+
+  const overallTotal = examResults.reduce((sum, r) => sum + (r.total || 0), 0);
+  const overallScore = examResults.reduce((sum, r) => sum + (r.score || 0), 0);
+  document.getElementById("dashAvgScore").textContent = overallTotal > 0
+    ? Math.round((overallScore / overallTotal) * 100) + "%"
+    : "—";
+
+  // متوسط الدرجات حسب المرحلة
+  const stageScoreRows = STAGE_ORDER.map(stage => {
+    const results = examResults.filter(r => r.stage === stage);
+    const total = results.reduce((sum, r) => sum + (r.total || 0), 0);
+    const score = results.reduce((sum, r) => sum + (r.score || 0), 0);
+    const pct = total > 0 ? Math.round((score / total) * 100) : null;
+    return pct === null ? null : { label: stage, value: pct, display: pct + "%" };
+  }).filter(Boolean);
+  renderBarChart("chartScoreByStage", stageScoreRows, "green");
+
+  // عدد الطلاب حسب المرحلة
+  const stageCountRows = STAGE_ORDER.map(stage => {
+    const count = students.filter(s => s.stage === stage).length;
+    return count > 0 ? { label: stage, value: count, display: count + " طالب" } : null;
+  }).filter(Boolean);
+  renderBarChart("chartStudentsByStage", stageCountRows, "blue");
+
+  // المدفوعات آخر 6 شهور
+  const now = new Date();
+  const monthKeys = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    monthKeys.push({ key: d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0"), label: d.toLocaleDateString('ar-EG', { month: 'short', year: 'numeric' }) });
+  }
+  const monthTotals = {};
+  monthKeys.forEach(m => monthTotals[m.key] = 0);
+  students.forEach(s => {
+    getPayments(s).forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      if (monthTotals.hasOwnProperty((p.date||"").slice(0,7))) {
+        monthTotals[(p.date||"").slice(0,7)] += amt;
+      }
+    });
+  });
+  const paymentRows = monthKeys.map(m => ({ label: m.label, value: monthTotals[m.key], display: monthTotals[m.key].toLocaleString() + " جنيه" }));
+  renderBarChart("chartPaymentsByMonth", paymentRows, "");
+
+  // نسبة المشاركة في كل امتحان
+  const participationRows = exams.map(ex => {
+    const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
+    if (stageStudentCount === 0) return null;
+    const submittedCount = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId || r.studentName)).size;
+    const pct = Math.round((submittedCount / stageStudentCount) * 100);
+    return { label: ex.title, value: pct, display: submittedCount + "/" + stageStudentCount };
+  }).filter(Boolean);
+  renderBarChart("chartExamParticipation", participationRows, "blue");
+}
+
+function initNotifUi() {
+  const card = document.getElementById("notifPermCard");
+  if (typeof Notification === "undefined") { card.style.display = "none"; return; }
+  card.style.display = Notification.permission === "default" ? "block" : "none";
+}
+
+async function createAutoBackupNow() {
+  if (students.length === 0) return false;
+  await db.collection("autoBackups").add({
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    studentsCount: students.length,
+    students: students,
+    exams: exams,
+  });
+  try { localStorage.setItem("lastAutoBackup", Date.now().toString()); } catch (e) {}
+  const old = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
+  if (old.docs.length > 8) {
+    const batch = db.batch();
+    old.docs.slice(8).forEach(d => batch.delete(d.ref));
+    await batch.commit();
+  }
+  return true;
+}
+
+async function maybeRunAutoBackup() {
+  let last = 0;
+  try { last = parseInt(localStorage.getItem("lastAutoBackup") || "0", 10); } catch (e) {}
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  if (Date.now() - last < weekMs) return;
+  try {
+    await createAutoBackupNow();
+  } catch (err) {
+    // فشل صامت — مش حرج، هيحاول تاني الأسبوع الجاي
+  }
+}
+
+async function takeManualBackupNow() {
+  const btn = document.getElementById("manualBackupNowBtn");
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = "جاري أخذ النسخة...";
+  try {
+    const created = await createAutoBackupNow();
+    if (!created) {
+      showError("مفيش طلاب مسجلين لسه، مفيش حاجة تتحفظ.");
+    } else {
+      showSuccess("تم أخذ نسخة احتياطية الآن بنجاح.");
+      const box = document.getElementById("autoBackupsList");
+      if (box.style.display === "block") await loadAutoBackupsList();
+    }
+  } catch (err) {
+    showError("تعذر أخذ نسخة احتياطية. تأكد من اتصالك بالإنترنت.");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+function toggleToolsSection() {
+  const section = document.getElementById("toolsSection");
+  const btn = document.getElementById("toolsToggleBtn");
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+}
+
+function toggleFilterPillsSection() {
+  const section = document.getElementById("filterPillsSection");
+  const btn = document.getElementById("filterPillsToggleBtn");
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+}
+
+async function toggleAutoBackupsList() {
+  const box = document.getElementById("autoBackupsList");
+  if (box.style.display === "block") {
+    box.style.display = "none";
+    return;
+  }
+  box.style.display = "block";
+  await loadAutoBackupsList();
+}
+
+async function loadAutoBackupsList() {
+  const box = document.getElementById("autoBackupsList");
+  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  try {
+    const snap = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
+    if (snap.empty) {
+      box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p>`;
+      return;
+    }
+    box.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      const dateStr = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString('ar-EG') : "";
+      return `
+        <div class="result-row">
+          <div>
+            <div class="result-row-name">${dateStr}</div>
+            <div class="result-row-date">${data.studentsCount || 0} طالب</div>
+          </div>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem;" onclick="restoreAutoBackup('${d.id}')">استرجاع</button>
+        </div>`;
+    }).join("");
+  } catch (err) {
+    box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل النسخ الاحتياطية.</p>`;
+  }
+}
+
+async function restoreAutoBackup(backupId) {
+  if (!confirm("هيتم استبدال بيانات الطلاب والامتحانات الحالية بالنسخة دي. متأكد؟")) return;
+  try {
+    const doc = await db.collection("autoBackups").doc(backupId).get();
+    if (!doc.exists) { showError("النسخة دي مش موجودة."); return; }
+    const data = doc.data();
+    const batch = db.batch();
+    (data.students || []).forEach(s => {
+      const { id, ...rest } = s;
+      batch.set(studentsCol.doc(id), rest, { merge: false });
+    });
+    (data.exams || []).forEach(ex => {
+      const { id, ...rest } = ex;
+      batch.set(examsCol.doc(id), rest, { merge: false });
+    });
+    await batch.commit();
+    showSuccess("تم استرجاع النسخة الاحتياطية بنجاح.");
+    document.getElementById("autoBackupsList").style.display = "none";
+  } catch (err) {
+    showError("تعذر استرجاع النسخة. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function renderExamsList() {
+  const container = document.getElementById("examsByStage");
+  if (exams.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:2rem 0; font-size:0.9rem;">لسه مفيش امتحانات. دوس "+ امتحان جديد" عشان تبدأ.</p>`;
+    return;
+  }
+  const grouped = {};
+  exams.forEach(ex => {
+    const key = ex.stage || "بدون مرحلة";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(ex);
+  });
+  const stageKeys = Object.keys(grouped).sort((a,b) => {
+    const ai = STAGE_ORDER.indexOf(a); const bi = STAGE_ORDER.indexOf(b);
+    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+  });
+  container.innerHTML = stageKeys.map(stage => `
+    <div class="stage-group-title">${escapeHtml(stage)}</div>
+    ${grouped[stage].map(ex => {
+      const resultCount = examResults.filter(r => r.examId === ex.id).length;
+      const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
+      const submittedIdsForCard = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId));
+      const missingCount = students.filter(s => s.stage === ex.stage && !submittedIdsForCard.has(s.id)).length;
+      const link = window.location.origin + window.location.pathname.replace(/index\\.html$/, "") + "exam.html?examId=" + ex.id;
+      const examLastSeen = getExamLastSeen(ex.id);
+      const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
+      const newBadgeHtml = newCount > 0 ? `<span class="exam-new-badge">🔔 ${newCount} جديد</span>` : "";
+      return `
+      <div class="exam-card">
+        <div class="exam-card-title">${escapeHtml(ex.title)}${newBadgeHtml}</div>
+        <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${resultCount} إجابة مسجلة${ex.timeLimitMinutes ? ' — ⏱ ' + ex.timeLimitMinutes + ' دقيقة' : ''}</div>
+        <div class="exam-card-actions">
+          <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
+          <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
+          <button style="background:#EAEAE4; color:#1B2420;" onclick="viewExamResults('${ex.id}')">النتائج</button>
+          <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش (${missingCount}/${stageStudentCount})</button>
+          <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamPdf('${ex.id}')">طباعة PDF</button>
+          <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
+        </div>
+      </div>`;
+    }).join("")}
+  `).join("");
+}
+
+function copyExamLink(examId) {
+  const link = window.location.origin + window.location.pathname.replace(/index\.html$/, "") + "exam.html?examId=" + examId;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(link).then(() => {
+      showSuccess("تم نسخ رابط الامتحان. الصقه في جروب الواتساب.");
+    }).catch(() => {
+      prompt("انسخ الرابط ده يدويًا:", link);
+    });
+  } else {
+    prompt("انسخ الرابط ده يدويًا:", link);
+  }
+}
+
+async function deleteExam(examId) {
+  if (!confirm("متأكد إنك عايز تمسح الامتحان ده؟ النتائج المسجلة هتفضل موجودة.")) return;
+  try {
+    await examsCol.doc(examId).delete();
+    showSuccess("تم حذف الامتحان.");
+  } catch (err) {
+    showError("تعذر حذف الامتحان. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function printExamPdf(examId) {
+  const ex = exams.find(e => e.id === examId);
+  if (!ex) return;
+  const questions = ex.questions || [];
+  const questionsHtml = questions.map((q, i) => {
+    const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+    let bodyHtml = "";
+    if (q.type === "mcq") {
+      bodyHtml = `<ol type="a" class="options-list">${(q.options||[]).map(opt => `<li>${escapeHtml(opt)}</li>`).join("")}</ol>`;
+    } else {
+      bodyHtml = `<div class="answer-line">.......................................................</div>`;
+    }
+    return `<div class="q-block"><div class="q-prompt">${i+1}. ${escapeHtml(q.prompt)}</div>${passageHtml}${bodyHtml}</div>`;
+  }).join("");
+
+  const answerKeyHtml = questions.map((q, i) => {
+    let ans = "";
+    if (q.type === "mcq") {
+      const opts = q.options || [];
+      const letter = String.fromCharCode(97 + (q.correctIndex || 0));
+      ans = `${letter}) ${escapeHtml(opts[q.correctIndex] || "")}`;
+    } else {
+      ans = escapeHtml((q.correctAnswers && q.correctAnswers[0]) || "");
+    }
+    return `<div class="answer-key-row"><strong>${i+1}.</strong> ${ans}</div>`;
+  }).join("");
+
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>${escapeHtml(ex.title)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; direction: rtl; color: #1B2420; }
+      h1 { font-size: 19px; margin-bottom: 2px; }
+      p.sub { color: #555; margin-top: 0; margin-bottom: 20px; font-size: 13px; }
+      .q-block { margin-bottom: 16px; page-break-inside: avoid; }
+      .q-prompt { font-weight: bold; font-size: 14px; margin-bottom: 6px; unicode-bidi: plaintext; text-align: start; }
+      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; }
+      .options-list { margin: 0; padding-right: 20px; font-size: 13px; }
+      .options-list li { margin-bottom: 4px; unicode-bidi: plaintext; text-align: start; }
+      .answer-line { font-size: 13px; margin-top: 4px; }
+      .answer-key { margin-top: 30px; border-top: 2px dashed #999; padding-top: 16px; }
+      .answer-key h2 { font-size: 15px; }
+      .answer-key-row { font-size: 13px; margin-bottom: 4px; }
+      @media print { .answer-key { page-break-before: always; } }
+    </style></head>
+    <body>
+      <h1>${escapeHtml(ex.title)}</h1>
+      <p class="sub">${escapeHtml(ex.stage || "")}${ex.timeLimitMinutes ? " — الزمن: " + ex.timeLimitMinutes + " دقيقة" : ""} — ${TEACHER_NAME} — الاسم: .................................</p>
+      ${questionsHtml}
+      <div class="answer-key">
+        <h2>نموذج الإجابة (للمدرّس)</h2>
+        ${answerKeyHtml}
+      </div>
+    </body></html>`;
+  const win = window.open("", "_blank");
+  if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => win.print();
+}
+
+function openExamBuilder() {
+  editingExamId = null;
+  currentBuilderQuestions = [];
+  document.getElementById("examBuilderTitle").textContent = "امتحان جديد";
+  document.getElementById("saveExamBtnLabel").textContent = "حفظ الامتحان";
+  document.getElementById("examTitleInput").value = "";
+  document.getElementById("examStageInput").value = "";
+  document.getElementById("examTimeLimitInput").value = "";
+  document.getElementById("questionsBuilder").innerHTML = "";
+  document.getElementById("aiImportStatus").style.display = "none";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "block";
+  document.getElementById("examResultsView").style.display = "none";
+  document.getElementById("examMissingView").style.display = "none";
+  addQuestionCard();
+}
+
+function editExam(examId) {
+  const ex = exams.find(e => e.id === examId);
+  if (!ex) return;
+  editingExamId = examId;
+  currentBuilderQuestions = (ex.questions || []).map(q => ({
+    id: "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6),
+    type: q.type,
+    passage: q.passage || "",
+    prompt: q.prompt || "",
+    options: q.type === "mcq" ? (q.options && q.options.length ? [...q.options] : ["","","",""]) : ["","","",""],
+    correctIndex: q.correctIndex || 0,
+    correctAnswers: q.type !== "mcq" ? (q.correctAnswers && q.correctAnswers.length ? [...q.correctAnswers] : [""]) : [""],
+  }));
+  document.getElementById("examBuilderTitle").textContent = "تعديل الامتحان";
+  document.getElementById("saveExamBtnLabel").textContent = "حفظ التعديلات";
+  document.getElementById("examTitleInput").value = ex.title || "";
+  document.getElementById("examStageInput").value = ex.stage || "";
+  document.getElementById("examTimeLimitInput").value = ex.timeLimitMinutes || "";
+  document.getElementById("aiImportStatus").style.display = "none";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "block";
+  document.getElementById("examResultsView").style.display = "none";
+  document.getElementById("examMissingView").style.display = "none";
+  renderQuestionsBuilder();
+}
+
+function closeExamBuilder() {
+  editingExamId = null;
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examBuilderView").style.display = "none";
+}
+
+function resizeImageToBase64(file, maxDim) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result; };
+    reader.onerror = reject;
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round(height * (maxDim / width));
+          width = maxDim;
+        } else {
+          width = Math.round(width * (maxDim / height));
+          height = maxDim;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      resolve(dataUrl.split(",")[1]);
+    };
+    img.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// بيشيل أي ترقيم موجود في أول نص السؤال (زي "1.", "1)", "1-", "Q1.", "١." ...) جاي من تحليل الذكاء الاصطناعي
+function stripLeadingNumbering(text) {
+  return String(text || "")
+    .replace(/^\s*(?:[Qq](?:uestion)?\s*)?[\d١٢٣٤٥٦٧٨٩٠]+\s*[.\-)\u06D4:]\s*/u, "")
+    .trim();
+}
+
+async function handleAiImage(file) {
+  const statusEl = document.getElementById("aiImportStatus");
+  const btn = document.getElementById("aiImportBtn");
+  statusEl.style.display = "block";
+  statusEl.style.color = "#6B6B60";
+  statusEl.textContent = "جاري تحليل الصورة، ممكن ياخد نص دقيقة...";
+  btn.disabled = true;
+
+  try {
+    const base64 = await resizeImageToBase64(file, 1600);
+    let res;
+    try {
+      res = await fetch(AI_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageBase64: base64, mimeType: "image/jpeg" }),
+      });
+    } catch (networkErr) {
+      throw new Error("تعذر الوصول للخادم (الرابط أو الاتصال بالنت). التفاصيل: " + networkErr.message);
+    }
+    if (!res.ok) {
+      let details = "";
+      try {
+        const errBody = await res.json();
+        details = errBody.error ? (errBody.error + (errBody.details ? " — " + errBody.details : "")) : JSON.stringify(errBody);
+      } catch (e) {
+        details = await res.text().catch(() => "");
+      }
+      throw new Error(`الخادم رجّع خطأ (${res.status}). ${details}`);
+    }
+    const data = await res.json();
+    const aiQuestions = data.questions || [];
+    if (aiQuestions.length === 0) {
+      statusEl.style.color = "#9C4B32";
+      statusEl.textContent = "معرفش أطلع أي أسئلة من الصورة دي. جرب صورة أوضح.";
+      return;
+    }
+    aiQuestions.forEach(q => {
+      const qId = "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+      currentBuilderQuestions.push({
+        id: qId,
+        type: ["mcq","complete","rewrite","correct"].includes(q.type) ? q.type : "mcq",
+        passage: stripLeadingNumbering(q.passage || ""),
+        prompt: stripLeadingNumbering(q.prompt || ""),
+        options: (q.options && q.options.length >= 2) ? q.options : ["","","",""],
+        correctIndex: typeof q.correctIndex === "number" ? q.correctIndex : 0,
+        correctAnswers: (q.correctAnswers && q.correctAnswers.length) ? q.correctAnswers : [""],
+      });
+    });
+    renderQuestionsBuilder();
+    statusEl.style.color = "#3F6B4A";
+    statusEl.textContent = `تمت إضافة ${aiQuestions.length} سؤال. راجعهم كويس قبل الحفظ (الذكاء الاصطناعي ممكن يغلط).`;
+  } catch (err) {
+    statusEl.style.color = "#9C4B32";
+    statusEl.textContent = "تعذر تحليل الصورة: " + (err.message || err);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function addQuestionCard() {
+  const qId = "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6);
+  currentBuilderQuestions.push({ id: qId, type: "mcq", passage: "", prompt: "", options: ["","","",""], correctIndex: 0, correctAnswers: [""] });
+  renderQuestionsBuilder();
+}
+
+function removeQuestionCard(qId) {
+  currentBuilderQuestions = currentBuilderQuestions.filter(q => q.id !== qId);
+  renderQuestionsBuilder();
+}
+
+function renderQuestionsBuilder() {
+  const container = document.getElementById("questionsBuilder");
+  container.innerHTML = currentBuilderQuestions.map((q, i) => `
+    <div class="question-card">
+      <div class="question-card-head">
+        <strong>سؤال ${i+1}</strong>
+        <button class="remove-q-btn" onclick="removeQuestionCard('${q.id}')">حذف السؤال</button>
+      </div>
+      <div class="field-group">
+        <label>نوع السؤال</label>
+        <select class="reg-input" onchange="updateQuestionType('${q.id}', this.value)">
+          <option value="mcq" ${q.type==='mcq'?'selected':''}>اختيار من متعدد</option>
+          <option value="complete" ${q.type==='complete'?'selected':''}>إكمال الفراغ</option>
+          <option value="rewrite" ${q.type==='rewrite'?'selected':''}>إعادة الصياغة (Rewrite)</option>
+          <option value="correct" ${q.type==='correct'?'selected':''}>تصحيح الخطأ (Correct)</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>نص/حوار (اختياري)</label>
+        <textarea class="reg-textarea" dir="auto" rows="2" placeholder="قطعة أو حوار يقرأه الطالب قبل السؤال (اختياري)" oninput="updateQuestionField('${q.id}','passage',this.value)">${escapeHtml(q.passage)}</textarea>
+      </div>
+      <div class="field-group">
+        <label>نص السؤال</label>
+        <input class="reg-input" dir="auto" placeholder="اكتب السؤال هنا" value="${escapeHtml(q.prompt)}" oninput="updateQuestionField('${q.id}','prompt',this.value)">
+      </div>
+      ${q.type === 'mcq' ? renderMcqOptions(q) : renderTextAnswer(q)}
+    </div>
+  `).join("");
+}
+
+function renderMcqOptions(q) {
+  return `
+    <label>الاختيارات (حدد الصح)</label>
+    ${q.options.map((opt, oi) => `
+      <div class="option-input-row">
+        <input type="radio" name="correct_${q.id}" ${q.correctIndex===oi?'checked':''} onchange="updateQuestionField('${q.id}','correctIndex',${oi})">
+        <input class="reg-input" dir="auto" placeholder="اختيار ${oi+1}" value="${escapeHtml(opt)}" oninput="updateOptionText('${q.id}',${oi},this.value)">
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderTextAnswer(q) {
+  const labels = {
+    complete: "الإجابات المقبولة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    rewrite: "الصياغة المقترحة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    correct: "الإجابة الصحيحة بعد التصحيح (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+  };
+  const placeholders = {
+    complete: "مثال: went, has gone",
+    rewrite: "مثال: She is taller than her sister.",
+    correct: "مثال: He goes to school every day.",
+  };
+  const label = labels[q.type] || labels.complete;
+  const placeholder = placeholders[q.type] || placeholders.complete;
+  return `
+    <div class="field-group">
+      <label>${label}</label>
+      <input class="reg-input" dir="auto" placeholder="${placeholder}" value="${escapeHtml((q.correctAnswers||[]).join(', '))}" oninput="updateCompleteAnswers('${q.id}',this.value)">
+    </div>
+  `;
+}
+
+function updateQuestionType(qId, type) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.type = type;
+  renderQuestionsBuilder();
+}
+function updateQuestionField(qId, field, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q[field] = value;
+}
+function updateOptionText(qId, idx, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.options[idx] = value;
+}
+function updateCompleteAnswers(qId, value) {
+  const q = currentBuilderQuestions.find(x => x.id === qId);
+  if (q) q.correctAnswers = value.split(",").map(s => s.trim()).filter(Boolean);
+}
+
+async function saveExam() {
+  const title = document.getElementById("examTitleInput").value.trim();
+  const stage = document.getElementById("examStageInput").value;
+  const timeLimitRaw = document.getElementById("examTimeLimitInput").value.trim();
+  const timeLimitMinutes = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
+  if (!title) { showError("لازم تكتب عنوان للامتحان."); return; }
+  if (!stage) { showError("لازم تختار المرحلة."); return; }
+  if (timeLimitRaw && (isNaN(timeLimitMinutes) || timeLimitMinutes < 1)) { showError("مدة الامتحان لازم تكون رقم صحيح أكبر من صفر."); return; }
+  if (currentBuilderQuestions.length === 0) { showError("لازم تضيف سؤال واحد على الأقل."); return; }
+  for (const q of currentBuilderQuestions) {
+    if (!q.prompt.trim()) { showError("فيه سؤال من غير نص، اكتب كل الأسئلة."); return; }
+    if (q.type === "mcq" && q.options.filter(o => o.trim()).length < 2) {
+      showError("كل سؤال اختيار من متعدد لازم يكون فيه اختيارين على الأقل."); return;
+    }
+    if (q.type !== "mcq" && (!q.correctAnswers || q.correctAnswers.filter(a => a.trim()).length === 0)) {
+      showError("فيه سؤال من غير إجابة مقبولة، اكتب إجابة لكل سؤال."); return;
+    }
+  }
+  try {
+    const examData = {
+      title, stage, timeLimitMinutes,
+      questions: currentBuilderQuestions.map(q => ({
+        type: q.type, passage: q.passage || "", prompt: q.prompt,
+        options: q.type === "mcq" ? q.options : [],
+        correctIndex: q.type === "mcq" ? q.correctIndex : null,
+        correctAnswers: q.type !== "mcq" ? q.correctAnswers : [],
+        points: 1,
+      })),
+    };
+    if (editingExamId) {
+      await examsCol.doc(editingExamId).update(examData);
+      showSuccess("تم حفظ التعديلات بنجاح.");
+    } else {
+      examData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await examsCol.add(examData);
+      showSuccess("تم حفظ الامتحان بنجاح.");
+    }
+    closeExamBuilder();
+  } catch (err) {
+    showError("تعذر حفظ الامتحان. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function goToStudentProfile(studentId) {
+  const student = students.find(s => s.id === studentId);
+  const isTorail = student && student.group === "torail";
+  if (isTorail) {
+    switchTab("torail");
+    torailExpandedId = studentId;
+    document.getElementById("torailSearchInput").value = "";
+    torailOverdueOnly = false;
+    torailExemptOnly = false;
+    torailBookletFilter = null;
+    torailNoParentOnly = false;
+    renderTorail();
+  } else {
+    switchTab("students");
+    expandedId = studentId;
+    document.getElementById("searchInput").value = "";
+    overdueOnly = false;
+    exemptOnly = false;
+    bookletFilter = null;
+    noParentOnly = false;
+    render();
+  }
+  setTimeout(() => {
+    const card = document.querySelector(`.card-row[data-student-id="${studentId}"]`);
+    if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 50);
+}
+
+function getExamLastSeen(examId) {
+  try { return parseInt(localStorage.getItem("examSeen_" + examId) || "0", 10); } catch (e) { return 0; }
+}
+function markExamSeen(examId) {
+  try { localStorage.setItem("examSeen_" + examId, Date.now().toString()); } catch (e) {}
+}
+function viewExamResults(examId) {
+  viewingExamId = examId;
+  markExamSeen(examId);
+  const ex = exams.find(e => e.id === examId);
+  document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
+  const searchInput = document.getElementById("examResultsSearchInput");
+  if (searchInput) searchInput.value = "";
+  resultsTorailOnly = false;
+  selectedResultIds = new Set();
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "none";
+  document.getElementById("examResultsView").style.display = "block";
+  document.getElementById("examMissingView").style.display = "none";
+  renderExamResultsList();
+  renderExamsList();
+}
+function closeExamResults() {
+  viewingExamId = null;
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examResultsView").style.display = "none";
+}
+let expandedResultId = null;
+function toggleResultExpand(resultId) {
+  expandedResultId = expandedResultId === resultId ? null : resultId;
+  renderExamResultsList();
+}
+let pendingManualEdits = {};
+function toggleManualAnswer(resultId, questionIndex) {
+  const r = examResults.find(x => x.id === resultId);
+  if (!r) return;
+  if (!pendingManualEdits[resultId]) {
+    pendingManualEdits[resultId] = (r.answers || []).map(a => ({ ...a }));
+  }
+  const ad = pendingManualEdits[resultId].find(a => a.questionIndex === questionIndex);
+  if (ad) ad.correct = !ad.correct;
+  renderExamResultsList();
+}
+function cancelManualEdits(resultId) {
+  delete pendingManualEdits[resultId];
+  renderExamResultsList();
+}
+async function saveManualRegrade(resultId) {
+  const edited = pendingManualEdits[resultId];
+  if (!edited) return;
+  const r = examResults.find(x => x.id === resultId);
+  const ex = exams.find(e => e.id === viewingExamId);
+  const questions = ex ? (ex.questions || []) : [];
+  let score = 0, total = 0;
+  edited.forEach(ad => {
+    const q = questions[ad.questionIndex] || {};
+    const points = Number(q.points || 1);
+    total += points;
+    if (ad.correct) score += points;
+  });
+  try {
+    await examResultsCol.doc(resultId).update({
+      answers: edited.map(({ questionIndex, given, correct }) => ({ questionIndex, given: given ?? null, correct })),
+      score,
+      total,
+    });
+    delete pendingManualEdits[resultId];
+  } catch (err) {
+    showError("تعذر حفظ التصحيح اليدوي: " + (err.message || err));
+  }
+}
+async function aiRegrade(resultId, examId, studentId) {
+  const btn = document.getElementById(`aiRegradeBtn_${resultId}`);
+  if (btn) { btn.disabled = true; btn.textContent = "جاري إعادة التصحيح..."; }
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/regrade`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ examId, studentId }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data || !data.ok) {
+      alert("فشل الطلب: " + res.status + " - " + JSON.stringify(data).slice(0, 300));
+      showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. حاول تاني. (" + (data?.error || res.status) + ")");
+      return;
+    }
+    delete pendingManualEdits[resultId];
+    alert("نجح الطلب!\naiStatus: " + data.aiStatus + "\nscore: " + data.score + "/" + data.total);
+    if (data.aiStatus && data.aiStatus.startsWith("fallback")) {
+      showError("تم التصحيح، لكن الذكاء الاصطناعي مكنش متاح فرجع للمطابقة النصية القديمة مؤقتًا. السبب: " + data.aiStatus.replace("fallback: ", ""));
+    } else if (data.aiStatus === "success") {
+      showSuccess("تم التصحيح بالذكاء الاصطناعي بنجاح.");
+    }
+  } catch (err) {
+    alert("خطأ في الجافاسكريبت قبل ما الطلب يخلص:\n" + (err && err.message ? err.message : String(err)));
+    showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. تأكد من الاتصال بالإنترنت.");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🔄 إعادة تصحيح بالذكاء الاصطناعي"; }
+  }
+}
+let resultsTorailOnly = false;
+function setResultsTorailFilter(isTorail) {
+  resultsTorailOnly = !!isTorail;
+  renderExamResultsList();
+}
+function toggleResultsTorailFilter() {
+  setResultsTorailFilter(!resultsTorailOnly);
+}
+let selectedResultIds = new Set();
+function toggleResultSelect(resultId, checked) {
+  if (checked) selectedResultIds.add(resultId); else selectedResultIds.delete(resultId);
+  updateResultsSelectionUI();
+}
+function toggleSelectAllResults(checked) {
+  const list = getVisibleExamResultsList();
+  selectedResultIds = checked ? new Set(list.map(r => r.id)) : new Set();
+  renderExamResultsList();
+}
+function updateResultsSelectionUI() {
+  const countEl = document.getElementById("selectedResultsCount");
+  const btn = document.getElementById("deleteSelectedResultsBtn");
+  if (!countEl || !btn) return;
+  countEl.textContent = selectedResultIds.size;
+  btn.disabled = selectedResultIds.size === 0;
+  btn.style.opacity = selectedResultIds.size === 0 ? "0.5" : "1";
+  const selectAllBox = document.getElementById("resultsSelectAllBox");
+  const visible = getVisibleExamResultsList();
+  if (selectAllBox) selectAllBox.checked = visible.length > 0 && visible.every(r => selectedResultIds.has(r.id));
+}
+async function deleteSelectedResults() {
+  if (selectedResultIds.size === 0) return;
+  if (!confirm(`متأكد إنك عايز تمسح ${selectedResultIds.size} نتيجة؟ الخطوة دي مش هترجع تاني.`)) return;
+  const ids = Array.from(selectedResultIds);
+  try {
+    await Promise.all(ids.map(id => examResultsCol.doc(id).delete()));
+    selectedResultIds.clear();
+  } catch (err) {
+    showError("حصل خطأ أثناء الحذف: " + (err.message || err));
+  }
+}
+async function deleteAllResultsForExam() {
+  const list = examResults.filter(r => r.examId === viewingExamId);
+  if (list.length === 0) { showError("مفيش نتائج لحذفها."); return; }
+  if (!confirm(`متأكد إنك عايز تمسح كل نتائج هذا الامتحان (${list.length} نتيجة)؟ الخطوة دي مش هترجع تاني.`)) return;
+  try {
+    await Promise.all(list.map(r => examResultsCol.doc(r.id).delete()));
+    selectedResultIds.clear();
+  } catch (err) {
+    showError("حصل خطأ أثناء الحذف: " + (err.message || err));
+  }
+}
+function getVisibleExamResultsList() {
+  const searchInput = document.getElementById("examResultsSearchInput");
+  const rawQuery = searchInput ? searchInput.value.trim() : "";
+  const normQuery = normalizeArabic(rawQuery);
+  let list = examResults.filter(r => r.examId === viewingExamId);
+  if (rawQuery) list = list.filter(r => normalizeArabic(r.studentName).includes(normQuery));
+  if (resultsTorailOnly) {
+    list = list.filter(r => {
+      if (r.group === "torail") return true;
+      const st = students.find(s => s.id === r.studentId);
+      return st && st.group === "torail";
+    });
+  }
+  return list;
+}
+function renderExamResultsList() {
+  const rawQuery = document.getElementById("examResultsSearchInput") ? document.getElementById("examResultsSearchInput").value.trim() : "";
+  const list = getVisibleExamResultsList();
+  const allPill = document.getElementById("resultsAllPill");
+  const torailPill = document.getElementById("resultsTorailPill");
+  if (allPill) {
+    allPill.classList.toggle("active", !resultsTorailOnly);
+    allPill.style.borderColor = !resultsTorailOnly ? "#7FA98D" : "transparent";
+  }
+  if (torailPill) {
+    torailPill.classList.toggle("active", resultsTorailOnly);
+    torailPill.style.borderColor = resultsTorailOnly ? "#D4A93B" : "transparent";
+  }
+  const container = document.getElementById("examResultsList");
+  if (list.length === 0) {
+    const msg = resultsTorailOnly ? "لسه محدش من طلاب توريل سلّم الامتحان ده." : (rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.");
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
+    updateResultsSelectionUI();
+    return;
+  }
+  const ex = exams.find(e => e.id === viewingExamId);
+  const questions = ex ? (ex.questions || []) : [];
+  container.innerHTML = list.map(r => {
+    const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+    const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString('ar-EG') : "";
+    const isOpen = expandedResultId === r.id;
+    const workingAnswers = pendingManualEdits[r.id] || r.answers || [];
+    const hasEdits = !!pendingManualEdits[r.id];
+    const answersHtml = workingAnswers.map(ad => {
+      const q = questions[ad.questionIndex];
+      if (!q) return "";
+      let givenText = "", correctText = "";
+      if (q.type === "mcq") {
+        const opts = q.options || [];
+        givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
+        correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
+      } else {
+        givenText = ad.given ? ad.given : "(لم يُجب)";
+        correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
+      }
+      return `
+        <div class="answer-detail-row ${ad.correct ? 'ok' : 'bad'}">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:0.5rem;">
+            <div style="flex:1;">
+              <div class="answer-detail-q">${ad.questionIndex + 1}. ${escapeHtml(q.prompt)}</div>
+              <div class="answer-detail-given">${ad.correct ? '✓' : '✗'} إجابته: ${escapeHtml(givenText)}</div>
+              ${!ad.correct ? `<div class="answer-detail-correct">الصح: ${escapeHtml(correctText)}</div>` : ""}
+            </div>
+            <button type="button" class="manual-toggle-btn ${ad.correct ? 'is-correct' : 'is-wrong'}"
+              onclick="event.stopPropagation(); toggleManualAnswer('${r.id}', ${ad.questionIndex})">
+              ${ad.correct ? 'اعتبرها غلط' : 'اعتبرها صح'}
+            </button>
+          </div>
+        </div>`;
+    }).join("");
+    const regradeBarHtml = isOpen ? `
+      <div class="regrade-bar">
+        <button type="button" class="explain-btn" id="aiRegradeBtn_${r.id}" onclick="event.stopPropagation(); aiRegrade('${r.id}', '${r.examId}', '${r.studentId}')">🔄 إعادة تصحيح بالذكاء الاصطناعي</button>
+        ${hasEdits ? `
+          <button type="button" class="save-regrade-btn" onclick="event.stopPropagation(); saveManualRegrade('${r.id}')">💾 حفظ التصحيح</button>
+          <button type="button" class="explain-btn" onclick="event.stopPropagation(); cancelManualEdits('${r.id}')">إلغاء التعديل</button>
+        ` : ""}
+      </div>` : "";
+    return `
+      <div class="result-row-wrap">
+        <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
+            <div>
+              <div class="result-row-name">${escapeHtml(r.studentName)}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
+              <div class="result-row-date">${dateStr}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+            ${r.studentId ? `<button class="wa-send-btn" style="background:#5B8FC4;" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
+            ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
+          </div>
+        </div>
+        ${isOpen ? `<div class="answer-detail-box">${regradeBarHtml}${hasEdits ? `<div class="pending-score-note">درجة مؤقتة بعد التعديل: ${workingAnswers.reduce((sum,a)=>sum+(a.correct?Number((questions[a.questionIndex]||{}).points||1):0),0)}/${r.total} (لسه محفوظتش)</div>` : ""}${answersHtml}</div>` : ""}
+      </div>`;
+  }).join("");
+  updateResultsSelectionUI();
+}
+
+function sendExamResultWhatsapp(r) {
+  const waNumber = formatPhoneForWhatsapp(r.parentPhone);
+  if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
+
+let viewingMissingExamId = null;
+function viewMissingStudents(examId) {
+  viewingMissingExamId = examId;
+  const ex = exams.find(e => e.id === examId);
+  document.getElementById("examMissingTitle").textContent = ex ? ex.title : "";
+  document.getElementById("examsListView").style.display = "none";
+  document.getElementById("examBuilderView").style.display = "none";
+  document.getElementById("examResultsView").style.display = "none";
+  document.getElementById("examMissingView").style.display = "block";
+  renderMissingStudentsList();
+}
+function closeExamMissing() {
+  viewingMissingExamId = null;
+  document.getElementById("examsListView").style.display = "block";
+  document.getElementById("examMissingView").style.display = "none";
+}
+function renderMissingStudentsList() {
+  const ex = exams.find(e => e.id === viewingMissingExamId);
+  const container = document.getElementById("examMissingList");
+  if (!ex) { container.innerHTML = ""; return; }
+  const submittedIds = new Set(examResults.filter(r => r.examId === viewingMissingExamId).map(r => r.studentId));
+  const stageStudents = students.filter(s => s.stage === ex.stage);
+  const missing = stageStudents.filter(s => !submittedIds.has(s.id)).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+
+  if (stageStudents.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p>`;
+    return;
+  }
+  if (missing.length === 0) {
+    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">كل الطلاب دخلوا الامتحان ✓</p>`;
+    return;
+  }
+  container.innerHTML = missing.map(s => `
+    <div class="result-row">
+      <div class="result-row-name">${escapeHtml(s.name)}</div>
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+        ${s.studentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "student")'>تذكير للطالب</button>` : ""}
+        ${s.parentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "parent")'>تذكير لولي الأمر</button>` : ""}
+      </div>
+    </div>
+  `).join("");
+}
+function sendExamReminderWhatsapp(s, examTitle, target) {
+  const phone = target === "parent" ? s.parentPhone : s.studentPhone;
+  const waNumber = formatPhoneForWhatsapp(phone);
+  if (!waNumber) {
+    showError(target === "parent" ? "مفيش رقم ولي أمر مسجل لهذا الطالب." : "مفيش رقم هاتف مسجل لهذا الطالب.");
+    return;
+  }
+  const message = target === "parent"
+    ? `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${examTitle}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`
+    : `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
+
+let overdueOnly = false;
+let exemptOnly = false;
+let bookletFilter = null;
+let noParentOnly = false;
+let showStudentCount = false;
+let showStageCounts = false;
+let torailExpandedId = null;
+let torailOverdueOnly = false;
+let torailExemptOnly = false;
+let torailBookletFilter = null;
+let torailNoParentOnly = false;
+
+function render() {
+  const mainStudents = students.filter(s => s.group !== "torail");
+  const rawQuery = document.getElementById("searchInput").value.trim().toLowerCase();
+  const normQuery = normalizeArabic(rawQuery);
+  let filtered = !rawQuery ? mainStudents : mainStudents.filter(s =>
+    normalizeArabic(s.name).includes(normQuery) ||
+    (s.studentPhone||"").includes(rawQuery) ||
+    (s.parentPhone||"").includes(rawQuery) ||
+    (s.stage||"").toLowerCase().includes(rawQuery)
+  );
+  if (overdueOnly) {
+    filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
+  }
+  if (exemptOnly) {
+    filtered = filtered.filter(s => s.exempt);
+  }
+  if (bookletFilter === "term1_received") {
+    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1));
+  } else if (bookletFilter === "term1_missing") {
+    filtered = filtered.filter(s => !(s.term1Received ?? s.term1));
+  } else if (bookletFilter === "term2_received") {
+    filtered = filtered.filter(s => !!(s.term2Received ?? s.term2));
+  } else if (bookletFilter === "term2_missing") {
+    filtered = filtered.filter(s => !(s.term2Received ?? s.term2));
+  }
+  if (noParentOnly) {
+    filtered = filtered.filter(s => !s.parentPhone);
+  }
+
+  document.getElementById("studentCount").textContent = showStudentCount
+    ? (mainStudents.length + (mainStudents.length === 1 ? " student" : " students"))
+    : "إظهار العدد";
+
+  const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
+  const counts = {};
+  stages.forEach(st => counts[st] = 0);
+  mainStudents.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
+  const stageCountsEl = document.getElementById("stageCounts");
+  stageCountsEl.innerHTML = stages.map(st => {
+    const isActive = rawQuery === st.toLowerCase();
+    const countLabel = showStageCounts ? counts[st] : "؟";
+    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="filterByStage('${st}')">${st} <span class="count" onclick="event.stopPropagation(); toggleStageCounts();">${countLabel}</span></span>`;
+  }).join("");
+
+  const now = new Date();
+  const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, term1ReceivedCount = 0, term1MissingCount = 0, term2ReceivedCount = 0, term2MissingCount = 0, noParentCount = 0;
+  mainStudents.forEach(s => {
+    const payments = getPayments(s);
+    payments.forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      grandTotal += amt;
+      if ((p.date||"").startsWith(curYM)) monthTotal += amt;
+    });
+    if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
+    if (s.exempt) exemptCount++;
+    if (s.term1Received ?? s.term1) term1ReceivedCount++; else term1MissingCount++;
+    if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
+    if (!s.parentPhone) noParentCount++;
+  });
+  setMoneyStat("statMonth", monthTotal.toLocaleString() + " جنيه");
+  setMoneyStat("statTotal", grandTotal.toLocaleString() + " جنيه");
+  document.getElementById("statOverdue").textContent = overdueCount + " طالب";
+  const overdueCard = document.getElementById("overduePill");
+  overdueCard.classList.toggle("active", overdueOnly);
+  document.getElementById("statExempt").textContent = exemptCount + " طالب";
+  const exemptCard = document.getElementById("exemptPill");
+  exemptCard.classList.toggle("active", exemptOnly);
+  document.getElementById("statTerm1Received").textContent = term1ReceivedCount + " طالب";
+  document.getElementById("term1ReceivedPill").classList.toggle("active", bookletFilter === "term1_received");
+  document.getElementById("statTerm1Missing").textContent = term1MissingCount + " طالب";
+  document.getElementById("term1MissingPill").classList.toggle("active", bookletFilter === "term1_missing");
+  document.getElementById("statTerm2Received").textContent = term2ReceivedCount + " طالب";
+  document.getElementById("term2ReceivedPill").classList.toggle("active", bookletFilter === "term2_received");
+  document.getElementById("statTerm2Missing").textContent = term2MissingCount + " طالب";
+  document.getElementById("term2MissingPill").classList.toggle("active", bookletFilter === "term2_missing");
+  document.getElementById("statNoParent").textContent = noParentCount + " طالب";
+  document.getElementById("noParentPill").classList.toggle("active", noParentOnly);
+
+  const listEl = document.getElementById("studentList");
+  const emptyEl = document.getElementById("emptyState");
+  const scrollTopBtn = document.getElementById("scrollTopBtn");
+  if (scrollTopBtn) scrollTopBtn.style.display = filtered.length > 8 ? "flex" : "none";
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = "";
+    document.getElementById("emptyMsg").textContent = mainStudents.length === 0
+      ? "No students yet. Add your first one above."
+      : (overdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
+        : (exemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
+        : (bookletFilter === "term1_received" ? "لسه محدش استلم مذكرة ترم أول."
+        : (bookletFilter === "term1_missing" ? "كل الطلاب استلموا مذكرة ترم أول ✓"
+        : (bookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
+        : (bookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
+        : (noParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
+        : "No matches for that search.")))))));
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  listEl.innerHTML = filtered.map(s => {
+    const payments = getPayments(s);
+    const badge = paymentBadge(payments, s.exempt);
+    const tone = toneStyles[badge.tone];
+    const isOpen = expandedId === s.id;
+    const paymentsHtml = payments.length
+      ? payments.map(p => `
+          <div class="payment-row">
+            <span class="payment-info">${p.amount ? p.amount + ' جنيه' : ''} — ${fmtDate(p.date)}</span>
+            <span class="payment-actions">
+              <button class="pay-icon-btn" title="إرسال إيصال واتساب" onclick='sendWhatsappReceipt(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(p).replace(/'/g,"&apos;")})'>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.16h-.01c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.155 8.155 0 0 1-1.25-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24z"/></svg>
+              </button>
+              <button class="pay-icon-btn" title="حذف الدفعة" onclick="deletePayment('${s.id}','${p.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C4B32" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+              </button>
+            </span>
+          </div>`).join("")
+      : `<p class="no-payments">لسه مفيش مدفوعات مسجلة</p>`;
+    return `
+      <div class="card-row" data-student-id="${s.id}">
+        <div class="card-head" onclick="toggleExpand('${s.id}')">
+          <div style="min-width:0;flex:1;">
+            <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
+            <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
+          </div>
+          <span class="badge" style="background:${tone.bg};color:${tone.fg};">
+            <span class="dot" style="background:${tone.dot};"></span>${badge.label}
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6B60" stroke-width="2">${isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>'}</svg>
+        </div>
+        <div class="card-details" style="display:${isOpen ? 'block' : 'none'};">
+          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم تاني</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term2Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term2Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term2Received ?? s.term2) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          ${s.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${escapeHtml(s.notes)}</span></div>` : ""}
+          <div class="detail-row"><span class="detail-label">رمز الامتحان</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem;">
+            ${s.pin
+              ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
+              : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
+          </span></div>
+
+          <div class="payments-section">
+            <div class="payments-title">سجل المدفوعات</div>
+            ${paymentsHtml}
+            <div class="add-payment-row">
+              <input type="date" class="reg-input" id="newPayDate_${s.id}" style="flex:1;">
+              <input type="number" min="0" step="1" class="reg-input" id="newPayAmount_${s.id}" placeholder="المبلغ" style="flex:1;">
+              <button class="add-pay-btn" onclick="addPayment('${s.id}')">إضافة</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="edit-btn" onclick='openEditForm(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Edit</button>
+            <button class="del-btn" onclick="handleDelete('${s.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderTorail() {
+  const torailStudents = students.filter(s => s.group === "torail");
+  const rawQuery = document.getElementById("torailSearchInput").value.trim().toLowerCase();
+  const normQuery = normalizeArabic(rawQuery);
+  let filtered = !rawQuery ? torailStudents : torailStudents.filter(s =>
+    normalizeArabic(s.name).includes(normQuery) ||
+    (s.studentPhone||"").includes(rawQuery) ||
+    (s.parentPhone||"").includes(rawQuery) ||
+    (s.stage||"").toLowerCase().includes(rawQuery)
+  );
+  if (torailOverdueOnly) {
+    filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
+  }
+  if (torailExemptOnly) {
+    filtered = filtered.filter(s => s.exempt);
+  }
+  if (torailBookletFilter === "term1_received") {
+    filtered = filtered.filter(s => !!(s.term1Received ?? s.term1));
+  } else if (torailBookletFilter === "term1_missing") {
+    filtered = filtered.filter(s => !(s.term1Received ?? s.term1));
+  } else if (torailBookletFilter === "term2_received") {
+    filtered = filtered.filter(s => !!(s.term2Received ?? s.term2));
+  } else if (torailBookletFilter === "term2_missing") {
+    filtered = filtered.filter(s => !(s.term2Received ?? s.term2));
+  }
+  if (torailNoParentOnly) {
+    filtered = filtered.filter(s => !s.parentPhone);
+  }
+
+  const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
+  const counts = {};
+  stages.forEach(st => counts[st] = 0);
+  torailStudents.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
+  const stageCountsEl = document.getElementById("torailStageCounts");
+  stageCountsEl.innerHTML = stages.map(st => {
+    const isActive = rawQuery === st.toLowerCase();
+    const countLabel = showStageCounts ? counts[st] : "؟";
+    return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="torailFilterByStage('${st}')">${st} <span class="count" onclick="event.stopPropagation(); toggleStageCounts();">${countLabel}</span></span>`;
+  }).join("");
+
+  const now = new Date();
+  const curYM = now.getFullYear() + "-" + String(now.getMonth()+1).padStart(2,"0");
+  let monthTotal = 0, grandTotal = 0, overdueCount = 0, exemptCount = 0, term1ReceivedCount = 0, term1MissingCount = 0, term2ReceivedCount = 0, term2MissingCount = 0, noParentCount = 0;
+  torailStudents.forEach(s => {
+    const payments = getPayments(s);
+    payments.forEach(p => {
+      const amt = parseFloat(p.amount) || 0;
+      grandTotal += amt;
+      if ((p.date||"").startsWith(curYM)) monthTotal += amt;
+    });
+    if (paymentBadge(payments, s.exempt).tone === "bad") overdueCount++;
+    if (s.exempt) exemptCount++;
+    if (s.term1Received ?? s.term1) term1ReceivedCount++; else term1MissingCount++;
+    if (s.term2Received ?? s.term2) term2ReceivedCount++; else term2MissingCount++;
+    if (!s.parentPhone) noParentCount++;
+  });
+  setMoneyStat("torailStatMonth", monthTotal.toLocaleString() + " جنيه");
+  setMoneyStat("torailStatTotal", grandTotal.toLocaleString() + " جنيه");
+  document.getElementById("torailStatOverdue").textContent = overdueCount + " طالب";
+  document.getElementById("torailOverduePill").classList.toggle("active", torailOverdueOnly);
+  document.getElementById("torailStatExempt").textContent = exemptCount + " طالب";
+  document.getElementById("torailExemptPill").classList.toggle("active", torailExemptOnly);
+  document.getElementById("torailStatTerm1Received").textContent = term1ReceivedCount + " طالب";
+  document.getElementById("torailTerm1ReceivedPill").classList.toggle("active", torailBookletFilter === "term1_received");
+  document.getElementById("torailStatTerm1Missing").textContent = term1MissingCount + " طالب";
+  document.getElementById("torailTerm1MissingPill").classList.toggle("active", torailBookletFilter === "term1_missing");
+  document.getElementById("torailStatTerm2Received").textContent = term2ReceivedCount + " طالب";
+  document.getElementById("torailTerm2ReceivedPill").classList.toggle("active", torailBookletFilter === "term2_received");
+  document.getElementById("torailStatTerm2Missing").textContent = term2MissingCount + " طالب";
+  document.getElementById("torailTerm2MissingPill").classList.toggle("active", torailBookletFilter === "term2_missing");
+  document.getElementById("torailStatNoParent").textContent = noParentCount + " طالب";
+  document.getElementById("torailNoParentPill").classList.toggle("active", torailNoParentOnly);
+
+  const listEl = document.getElementById("torailStudentList");
+  const emptyEl = document.getElementById("torailEmptyState");
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = "";
+    document.getElementById("torailEmptyMsg").textContent = torailStudents.length === 0
+      ? "لسه مفيش طلاب توريل. دوس Add عشان تضيف أول واحد."
+      : (torailOverdueOnly ? "مفيش طلاب متأخرين في الدفع حاليًا."
+        : (torailExemptOnly ? "مفيش طلاب معفيين من الدفع حاليًا."
+        : (torailBookletFilter === "term1_received" ? "لسه محدش استلم مذكرة ترم أول."
+        : (torailBookletFilter === "term1_missing" ? "كل الطلاب استلموا مذكرة ترم أول ✓"
+        : (torailBookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
+        : (torailBookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
+        : (torailNoParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
+        : "No matches for that search.")))))));
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  listEl.innerHTML = filtered.map(s => {
+    const payments = getPayments(s);
+    const badge = paymentBadge(payments, s.exempt);
+    const tone = toneStyles[badge.tone];
+    const isOpen = torailExpandedId === s.id;
+    const paymentsHtml = payments.length
+      ? payments.map(p => `
+          <div class="payment-row">
+            <span class="payment-info">${p.amount ? p.amount + ' جنيه' : ''} — ${fmtDate(p.date)}</span>
+            <span class="payment-actions">
+              <button class="pay-icon-btn" title="إرسال إيصال واتساب" onclick='sendWhatsappReceipt(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(p).replace(/'/g,"&apos;")})'>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm0 18.16h-.01c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.155 8.155 0 0 1-1.25-4.39c0-4.54 3.7-8.24 8.25-8.24 2.2 0 4.27.86 5.83 2.42a8.19 8.19 0 0 1 2.41 5.83c0 4.55-3.7 8.24-8.24 8.24z"/></svg>
+              </button>
+              <button class="pay-icon-btn" title="حذف الدفعة" onclick="deletePayment('${s.id}','${p.id}')">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C4B32" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z"/></svg>
+              </button>
+            </span>
+          </div>`).join("")
+      : `<p class="no-payments">لسه مفيش مدفوعات مسجلة</p>`;
+    return `
+      <div class="card-row" data-student-id="${s.id}">
+        <div class="card-head" onclick="toggleTorailExpand('${s.id}')">
+          <div style="min-width:0;flex:1;">
+            <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
+            <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
+          </div>
+          <span class="badge" style="background:${tone.bg};color:${tone.fg};">
+            <span class="dot" style="background:${tone.dot};"></span>${badge.label}
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6B60" stroke-width="2">${isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>'}</svg>
+        </div>
+        <div class="card-details" style="display:${isOpen ? 'block' : 'none'};">
+          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          <div class="detail-row"><span class="detail-label">مذكرة ترم تاني</span><span class="detail-value" style="display:flex;gap:0.4rem;">
+            <span class="mini-badge" style="background:${s.term2Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term2Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term2Received ?? s.term2) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
+          </span></div>
+          ${s.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${escapeHtml(s.notes)}</span></div>` : ""}
+          <div class="detail-row"><span class="detail-label">رمز الامتحان</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem;">
+            ${s.pin
+              ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
+              : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
+          </span></div>
+
+          <div class="payments-section">
+            <div class="payments-title">سجل المدفوعات</div>
+            ${paymentsHtml}
+            <div class="add-payment-row">
+              <input type="date" class="reg-input" id="newPayDate_${s.id}" style="flex:1;">
+              <input type="number" min="0" step="1" class="reg-input" id="newPayAmount_${s.id}" placeholder="المبلغ" style="flex:1;">
+              <button class="add-pay-btn" onclick="addPayment('${s.id}')">إضافة</button>
+            </div>
+          </div>
+
+          <div class="card-actions">
+            <button class="edit-btn" onclick='openEditForm(${JSON.stringify(s).replace(/'/g,"&apos;")})'>Edit</button>
+            <button class="del-btn" onclick="handleDelete('${s.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function torailFilterByStage(stage) {
+  const input = document.getElementById("torailSearchInput");
+  if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
+    input.value = "";
+  } else {
+    input.value = stage;
+  }
+  renderTorail();
+}
+function torailToggleOverdueFilter() { torailOverdueOnly = !torailOverdueOnly; renderTorail(); }
+function torailToggleExemptFilter() { torailExemptOnly = !torailExemptOnly; renderTorail(); }
+function torailToggleBookletFilter(mode) { torailBookletFilter = torailBookletFilter === mode ? null : mode; renderTorail(); }
+function torailToggleNoParentFilter() { torailNoParentOnly = !torailNoParentOnly; renderTorail(); }
+
+async function resetStudentPin(studentId) {
+  if (!confirm("هيتم مسح الرمز السري الحالي، وأول طالب يختار الاسم ده هيقدر يحدد رمز جديد. متأكد؟")) return;
+  try {
+    await studentsCol.doc(studentId).update({ pin: firebase.firestore.FieldValue.delete() });
+    showSuccess("تم إعادة تعيين الرمز بنجاح.");
+  } catch (err) {
+    showError("تعذر إعادة تعيين الرمز. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+document.getElementById("addBtn").addEventListener("click", openNewForm);
+document.getElementById("torailAddBtn").addEventListener("click", openNewTorailForm);
+document.getElementById("torailSearchInput").addEventListener("input", renderTorail);
+document.getElementById("torailOverduePill").addEventListener("click", torailToggleOverdueFilter);
+document.getElementById("torailExemptPill").addEventListener("click", torailToggleExemptFilter);
+document.getElementById("torailTerm1ReceivedPill").addEventListener("click", () => torailToggleBookletFilter("term1_received"));
+document.getElementById("torailTerm1MissingPill").addEventListener("click", () => torailToggleBookletFilter("term1_missing"));
+document.getElementById("torailTerm2ReceivedPill").addEventListener("click", () => torailToggleBookletFilter("term2_received"));
+document.getElementById("torailTerm2MissingPill").addEventListener("click", () => torailToggleBookletFilter("term2_missing"));
+document.getElementById("torailNoParentPill").addEventListener("click", torailToggleNoParentFilter);
+document.getElementById("torailExportExcelBtn").addEventListener("click", () => exportExcel(students.filter(s => s.group === "torail"), "طلاب توريل", "torail-students"));
+document.getElementById("torailExportPdfBtn").addEventListener("click", () => exportPdf(students.filter(s => s.group === "torail"), "كشف طلاب توريل"));
+document.getElementById("fName").addEventListener("input", checkDuplicateName);
+document.getElementById("newExamBtn").addEventListener("click", openExamBuilder);
+document.getElementById("aiImportBtn").addEventListener("click", () => document.getElementById("aiImageInput").click());
+document.getElementById("aiImageInput").addEventListener("change", (e) => {
+  if (e.target.files && e.target.files[0]) {
+    handleAiImage(e.target.files[0]);
+    e.target.value = "";
+  }
+});
+document.getElementById("overduePill").addEventListener("click", toggleOverdueFilter);
+document.getElementById("exemptPill").addEventListener("click", toggleExemptFilter);
+document.getElementById("term1ReceivedPill").addEventListener("click", () => toggleBookletFilter("term1_received"));
+document.getElementById("term1MissingPill").addEventListener("click", () => toggleBookletFilter("term1_missing"));
+document.getElementById("term2ReceivedPill").addEventListener("click", () => toggleBookletFilter("term2_received"));
+document.getElementById("term2MissingPill").addEventListener("click", () => toggleBookletFilter("term2_missing"));
+document.getElementById("noParentPill").addEventListener("click", toggleNoParentFilter);
+document.getElementById("exportExcelBtn").addEventListener("click", () => exportExcel());
+document.getElementById("exportPdfBtn").addEventListener("click", () => exportPdf());
+document.getElementById("fixPhonesBtn").addEventListener("click", fixAllPhoneNumbers);
+document.getElementById("enableNotifBtn").addEventListener("click", async () => {
+  if (typeof Notification === "undefined") { showError("المتصفح ده مش بيدعم الإشعارات."); return; }
+  try {
+    const perm = await Notification.requestPermission();
+    initNotifUi();
+    if (perm === "granted") showSuccess("تم تفعيل الإشعارات بنجاح.");
+  } catch (e) {}
+});
+document.getElementById("exportBtn").addEventListener("click", exportBackup);
+document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change", (e) => {
+  if (e.target.files && e.target.files[0]) {
+    importBackup(e.target.files[0]);
+    e.target.value = "";
+  }
+});
+document.getElementById("closeFormBtn").addEventListener("click", closeForm);
+document.getElementById("cancelBtn").addEventListener("click", closeForm);
+document.getElementById("formCard").addEventListener("submit", handleSubmit);
+document.getElementById("searchInput").addEventListener("input", render);
+
+["fStudentPhone","fParentPhone"].forEach(id => {
+  document.getElementById(id).addEventListener("input", function() {
+    const converted = toEnglishDigits(this.value);
+    if (converted !== this.value) {
+      const pos = this.selectionStart;
+      this.value = converted;
+      this.setSelectionRange(pos, pos);
+    }
+  });
+});
+
+function showApp() {
+  document.getElementById("lockScreen").style.display = "none";
+  document.querySelectorAll(".app-content").forEach(el => {
+    el.style.display = el.classList.contains("tab-nav") ? "flex" : "block";
+  });
+  switchTab("students");
+  startSync();
+  startInactivityWatcher();
+}
+
+// قفل تلقائي بعد فترة عدم استخدام (بالميلي ثانية). عدّل الرقم لو حابب مدة مختلفة.
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 دقيقة
+let inactivityTimer = null;
+const inactivityEvents = ["mousemove", "keydown", "click", "touchstart", "scroll"];
+
+function resetInactivityTimer() {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(() => { logoutApp(); }, INACTIVITY_TIMEOUT_MS);
+}
+
+function startInactivityWatcher() {
+  inactivityEvents.forEach(evt => document.addEventListener(evt, resetInactivityTimer));
+  resetInactivityTimer();
+}
+
+function stopInactivityWatcher() {
+  if (inactivityTimer) clearTimeout(inactivityTimer);
+  inactivityTimer = null;
+  inactivityEvents.forEach(evt => document.removeEventListener(evt, resetInactivityTimer));
+}
+
+function applyTheme(theme) {
+  if (theme === "light") {
+    document.documentElement.setAttribute("data-theme", "light");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+  const btn = document.getElementById("themeToggleBtn");
+  if (btn) btn.textContent = theme === "light" ? "🌙" : "🎨";
+}
+function toggleTheme() {
+  const current = localStorage.getItem("appTheme") || "dark";
+  const next = current === "light" ? "dark" : "light";
+  try { localStorage.setItem("appTheme", next); } catch (e) {}
+  applyTheme(next);
+}
+(function initTheme() {
+  let saved = "dark";
+  try { saved = localStorage.getItem("appTheme") || "dark"; } catch (e) {}
+  applyTheme(saved);
+})();
+
+function logoutApp() {
+  stopInactivityWatcher();
+  auth.signOut().then(() => location.reload()).catch(() => location.reload());
+}
+
+function setLockError(msg) {
+  const el = document.getElementById("lockErrorMsg");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+async function tryUnlock() {
+  const email = document.getElementById("lockEmailInput").value.trim();
+  const password = document.getElementById("lockPasswordInput").value;
+  if (!email || !password) { setLockError("اكتب البريد الإلكتروني وكلمة المرور."); return; }
+  const btn = document.getElementById("lockUnlockBtn");
+  btn.disabled = true;
+  btn.textContent = "جاري تسجيل الدخول...";
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    showApp();
+  } catch (err) {
+    let msg = "تعذر تسجيل الدخول.";
+    if (err && (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found")) msg = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    else if (err && err.code === "auth/too-many-requests") msg = "محاولات كثيرة. انتظر قليلًا ثم حاول مرة أخرى.";
+    else if (err && err.code === "auth/operation-not-allowed") msg = "تسجيل الدخول بالبريد غير مفعّل في Firebase بعد.";
+    setLockError(msg);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "دخول";
+  }
+}
+document.getElementById("lockUnlockBtn").addEventListener("click", tryUnlock);
+["lockEmailInput","lockPasswordInput"].forEach(id => document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); }));
+auth.onAuthStateChanged(user => {
+  if (user && !user.isAnonymous) showApp();
+});
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+
+</script>
+</body>
+</html>
