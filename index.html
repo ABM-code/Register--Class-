@@ -129,6 +129,10 @@
   main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
   .toolbar { display: flex; gap: 0.6rem; margin-bottom: 0.6rem; }
   .backup-row { display: flex; gap: 0.6rem; margin-bottom: 1.25rem; }
+  .app-version-footer {
+    text-align: center; font-size: 0.72rem; color: var(--c-mutedonpage);
+    opacity: 0.55; padding: 1.2rem 0 1.6rem;
+  }
   .scroll-top-btn {
     width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
     background: rgba(var(--c-subtle-rgb),0.06); color: var(--c-mutedonpage); border: 1px solid rgba(var(--c-subtle-rgb),0.16);
@@ -765,7 +769,10 @@
   <div id="torailStudentList"></div>
 </main>
 
+<div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
+
 <script>
+const APP_VERSION = "v13 — 30 أغسطس 2026";
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
@@ -2914,6 +2921,8 @@ function toggleTheme() {
   let saved = "dark";
   try { saved = localStorage.getItem("appTheme") || "dark"; } catch (e) {}
   applyTheme(saved);
+  const versionEl = document.getElementById("appVersionText");
+  if (versionEl) versionEl.textContent = APP_VERSION;
 })();
 
 function logoutApp() {
