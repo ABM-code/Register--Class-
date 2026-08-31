@@ -455,6 +455,11 @@
     <p id="emptyMsg" style="margin:0;font-size:0.95rem;">No students yet. Add your first one above.</p>
   </div>
 
+  <button id="studentsListToggleBtn" class="tools-toggle-btn" onclick="toggleStudentsListVisible()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span id="studentsListToggleLabel">إظهار قائمة الطلاب</span>
+    <svg id="studentsListToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
   <div id="studentList"></div>
   <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})" style="display:none;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
@@ -772,7 +777,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v13 — 30 أغسطس 2026";
+const APP_VERSION = "v14 — 30 أغسطس 2026";
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
@@ -1411,6 +1416,7 @@ function toggleTorailExpand(id) {
   renderTorail();
 }
 function filterByStage(stage) {
+  studentsListVisible = true;
   const input = document.getElementById("searchInput");
   if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
     input.value = "";
@@ -1421,18 +1427,22 @@ function filterByStage(stage) {
 }
 function toggleOverdueFilter() {
   overdueOnly = !overdueOnly;
+  studentsListVisible = true;
   render();
 }
 function toggleExemptFilter() {
   exemptOnly = !exemptOnly;
+  studentsListVisible = true;
   render();
 }
 function toggleBookletFilter(mode) {
   bookletFilter = bookletFilter === mode ? null : mode;
+  studentsListVisible = true;
   render();
 }
 function toggleNoParentFilter() {
   noParentOnly = !noParentOnly;
+  studentsListVisible = true;
   render();
 }
 function toggleStudentCount() {
@@ -2445,6 +2455,15 @@ let exemptOnly = false;
 let bookletFilter = null;
 let noParentOnly = false;
 let showStudentCount = false;
+let studentsListVisible = false;
+function toggleStudentsListVisible() {
+  studentsListVisible = !studentsListVisible;
+  const btn = document.getElementById("studentsListToggleBtn");
+  const label = document.getElementById("studentsListToggleLabel");
+  if (label) label.textContent = studentsListVisible ? "إخفاء قائمة الطلاب" : "إظهار قائمة الطلاب";
+  if (btn) btn.classList.toggle("open", studentsListVisible);
+  render();
+}
 let showStageCounts = false;
 let torailExpandedId = null;
 let torailOverdueOnly = false;
@@ -2534,6 +2553,13 @@ function render() {
   const listEl = document.getElementById("studentList");
   const emptyEl = document.getElementById("emptyState");
   const scrollTopBtn = document.getElementById("scrollTopBtn");
+
+  if (!studentsListVisible) {
+    listEl.innerHTML = "";
+    emptyEl.style.display = "none";
+    if (scrollTopBtn) scrollTopBtn.style.display = "none";
+    return;
+  }
   if (scrollTopBtn) scrollTopBtn.style.display = filtered.length > 8 ? "flex" : "none";
 
   if (filtered.length === 0) {
@@ -2858,7 +2884,10 @@ document.getElementById("importFile").addEventListener("change", (e) => {
 document.getElementById("closeFormBtn").addEventListener("click", closeForm);
 document.getElementById("cancelBtn").addEventListener("click", closeForm);
 document.getElementById("formCard").addEventListener("submit", handleSubmit);
-document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("searchInput").addEventListener("input", () => {
+  studentsListVisible = true;
+  render();
+});
 
 ["fStudentPhone","fParentPhone"].forEach(id => {
   document.getElementById(id).addEventListener("input", function() {
