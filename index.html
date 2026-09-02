@@ -787,7 +787,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v15 — 30 أغسطس 2026";
+const APP_VERSION = "v16 — نظام تعدد المعلمين — 1 سبتمبر 2026";
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
@@ -806,6 +806,8 @@ const auth = firebase.auth();
 const studentsCol = db.collection("students");
 const examsCol = db.collection("exams");
 const examResultsCol = db.collection("examResults");
+const teachersCol = db.collection("teachers");
+let currentTeacherId = null;
 
 let moneyRevealed = {};
 try { moneyRevealed = JSON.parse(localStorage.getItem("moneyRevealed") || "{}"); } catch (e) { moneyRevealed = {}; }
@@ -853,7 +855,7 @@ function maybeNotifyNewResult(r) {
 }
 
 function startSync() {
-  studentsCol.onSnapshot(
+  studentsCol.where("teacherId", "==", currentTeacherId).onSnapshot(
     (snapshot) => {
       students = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       students.sort((a,b) => (a.name||"").localeCompare(b.name||""));
@@ -869,12 +871,12 @@ function startSync() {
       showError("تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
     }
   );
-  examsCol.onSnapshot((snapshot) => {
+  examsCol.where("teacherId", "==", currentTeacherId).onSnapshot((snapshot) => {
     exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderExamsList();
     if (isStatsTabVisible()) renderStatsDashboard();
   });
-  examResultsCol.orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
+  examResultsCol.where("teacherId", "==", currentTeacherId).orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
     examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     if (!firstResultsSnapshot) {
       snapshot.docChanges().forEach(change => {
@@ -1070,7 +1072,7 @@ async function importBackup(file) {
     const replace = confirm("اضغط \"موافق\" لاستبدال كل البيانات الحالية بالكامل، أو \"إلغاء\" للدمج مع البيانات الموجودة.");
     try {
       if (replace) {
-        const existing = await studentsCol.get();
+        const existing = await studentsCol.where("teacherId", "==", currentTeacherId).get();
         const batchDelete = db.batch();
         existing.docs.forEach(d => batchDelete.delete(d.ref));
         await batchDelete.commit();
@@ -1078,6 +1080,7 @@ async function importBackup(file) {
       const batchWrite = db.batch();
       incoming.forEach(s => {
         const { id, ...data } = s;
+        data.teacherId = currentTeacherId;
         const ref = id ? studentsCol.doc(id) : studentsCol.doc();
         batchWrite.set(ref, data, { merge: true });
       });
@@ -1373,6 +1376,7 @@ async function handleSubmit(e) {
   clearError();
   const data = {
     name,
+    teacherId: currentTeacherId,
     group: formGroupContext,
     stage: document.getElementById("fStage").value,
     gender: document.getElementById("fGender").value,
@@ -1583,13 +1587,14 @@ function initNotifUi() {
 async function createAutoBackupNow() {
   if (students.length === 0) return false;
   await db.collection("autoBackups").add({
+    teacherId: currentTeacherId,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     studentsCount: students.length,
     students: students,
     exams: exams,
   });
   try { localStorage.setItem("lastAutoBackup", Date.now().toString()); } catch (e) {}
-  const old = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
+  const old = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).orderBy("createdAt", "desc").get();
   if (old.docs.length > 8) {
     const batch = db.batch();
     old.docs.slice(8).forEach(d => batch.delete(d.ref));
@@ -1662,7 +1667,7 @@ async function loadAutoBackupsList() {
   const box = document.getElementById("autoBackupsList");
   box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
   try {
-    const snap = await db.collection("autoBackups").orderBy("createdAt", "desc").get();
+    const snap = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).orderBy("createdAt", "desc").get();
     if (snap.empty) {
       box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p>`;
       return;
@@ -1693,10 +1698,12 @@ async function restoreAutoBackup(backupId) {
     const batch = db.batch();
     (data.students || []).forEach(s => {
       const { id, ...rest } = s;
+      rest.teacherId = currentTeacherId;
       batch.set(studentsCol.doc(id), rest, { merge: false });
     });
     (data.exams || []).forEach(ex => {
       const { id, ...rest } = ex;
+      rest.teacherId = currentTeacherId;
       batch.set(examsCol.doc(id), rest, { merge: false });
     });
     await batch.commit();
@@ -2093,6 +2100,7 @@ async function saveExam() {
   try {
     const examData = {
       title, stage, timeLimitMinutes,
+      teacherId: currentTeacherId,
       questions: currentBuilderQuestions.map(q => ({
         type: q.type, passage: q.passage || "", prompt: q.prompt,
         options: q.type === "mcq" ? q.options : [],
@@ -2910,12 +2918,52 @@ document.getElementById("searchInput").addEventListener("input", () => {
   });
 });
 
-function showApp() {
+async function ensureTeacherDoc(uid) {
+  const ref = teachersCol.doc(uid);
+  const doc = await ref.get();
+  if (!doc.exists) {
+    await ref.set({
+      name: TEACHER_NAME,
+      email: (auth.currentUser && auth.currentUser.email) || "",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  }
+}
+
+// ترحيل تلقائي لمرة واحدة: أي بيانات قديمة من قبل نظام تعدد المعلمين (من غير teacherId)
+// بتتحط عليها هوية أول معلم يدخل بعد التحديث ده. آمنة تتكرر (بتتجاهل لو خلصت قبل كده).
+async function migrateLegacyDataToTeacher(uid) {
+  const flagKey = "legacyMigrationDone_" + uid;
+  if (localStorage.getItem(flagKey)) return;
+  try {
+    const collections = [studentsCol, examsCol, examResultsCol, db.collection("autoBackups")];
+    for (const ref of collections) {
+      const snap = await ref.get();
+      const untagged = snap.docs.filter(d => !d.data().teacherId);
+      for (let i = 0; i < untagged.length; i += 400) {
+        const chunk = untagged.slice(i, i + 400);
+        const batch = db.batch();
+        chunk.forEach(d => batch.update(d.ref, { teacherId: uid }));
+        await batch.commit();
+      }
+    }
+    localStorage.setItem(flagKey, "1");
+  } catch (e) {
+    console.error("legacy migration failed", e);
+  }
+}
+
+async function showApp() {
+  currentTeacherId = auth.currentUser.uid;
   document.getElementById("lockScreen").style.display = "none";
   document.querySelectorAll(".app-content").forEach(el => {
     el.style.display = el.classList.contains("tab-nav") ? "flex" : "block";
   });
   switchTab("students");
+  try {
+    await ensureTeacherDoc(currentTeacherId);
+    await migrateLegacyDataToTeacher(currentTeacherId);
+  } catch (e) { console.error(e); }
   startSync();
   startInactivityWatcher();
 }
