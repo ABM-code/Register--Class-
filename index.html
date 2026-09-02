@@ -308,10 +308,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         Class Register
       </div>
-      <h1 class="tname">Mr. Abd El Rahman Moneer</h1>
+      <h1 class="tname" id="teacherNameDisplay" onclick="editTeacherName()" title="اضغط لتعديل الاسم" style="cursor:pointer;">Mr. Abd El Rahman Moneer</h1>
       <p class="subline">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9FB8AD" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-        01220524090
+        <span id="teacherPhoneDisplay" onclick="editTeacherPhone()" style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;" title="اضغط لتعديل رقم التليفون">01220524090</span>
         <span style="margin:0 0.3rem;opacity:0.5;">•</span>
         <span id="studentCount" onclick="toggleStudentCount()" style="cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;" title="اضغط لإظهار العدد">إظهار العدد</span>
       </p>
@@ -787,8 +787,9 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v16 — نظام تعدد المعلمين — 1 سبتمبر 2026";
-const TEACHER_NAME = "أ/ عبد الرحمن منير";
+const APP_VERSION = "v17 — 1 سبتمبر 2026";
+let TEACHER_NAME = "أ/ عبد الرحمن منير";
+let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
 
@@ -871,13 +872,24 @@ function startSync() {
       showError("تعذر الاتصال بقاعدة البيانات. تأكد من اتصالك بالإنترنت.");
     }
   );
-  examsCol.where("teacherId", "==", currentTeacherId).onSnapshot((snapshot) => {
-    exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderExamsList();
-    if (isStatsTabVisible()) renderStatsDashboard();
-  });
-  examResultsCol.where("teacherId", "==", currentTeacherId).orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
+  examsCol.where("teacherId", "==", currentTeacherId).onSnapshot(
+    (snapshot) => {
+      exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderExamsList();
+      if (isStatsTabVisible()) renderStatsDashboard();
+    },
+    (err) => {
+      console.error("exams sync error", err);
+      showError("تعذر تحميل الامتحانات: " + (err.message || err));
+    }
+  );
+  examResultsCol.where("teacherId", "==", currentTeacherId).onSnapshot((snapshot) => {
     examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    examResults.sort((a, b) => {
+      const at = a.submittedAt && a.submittedAt.toMillis ? a.submittedAt.toMillis() : 0;
+      const bt = b.submittedAt && b.submittedAt.toMillis ? b.submittedAt.toMillis() : 0;
+      return bt - at;
+    });
     if (!firstResultsSnapshot) {
       snapshot.docChanges().forEach(change => {
         if (change.type === "added" && !change.doc.metadata.hasPendingWrites) {
@@ -891,6 +903,10 @@ function startSync() {
     if (viewingExamId) renderExamResultsList();
     if (viewingMissingExamId) renderMissingStudentsList();
     if (isStatsTabVisible()) renderStatsDashboard();
+  },
+  (err) => {
+    console.error("examResults sync error", err);
+    showError("تعذر تحميل النتائج: " + (err.message || err));
   });
 }
 function fmtDate(d) {
@@ -2924,9 +2940,46 @@ async function ensureTeacherDoc(uid) {
   if (!doc.exists) {
     await ref.set({
       name: TEACHER_NAME,
+      phone: TEACHER_PHONE,
       email: (auth.currentUser && auth.currentUser.email) || "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+  } else {
+    const d = doc.data();
+    if (d.name) TEACHER_NAME = d.name;
+    if (d.phone) TEACHER_PHONE = d.phone;
+  }
+  renderTeacherHeader();
+}
+
+function renderTeacherHeader() {
+  const nameEl = document.getElementById("teacherNameDisplay");
+  const phoneEl = document.getElementById("teacherPhoneDisplay");
+  if (nameEl) nameEl.textContent = TEACHER_NAME;
+  if (phoneEl) phoneEl.textContent = TEACHER_PHONE;
+}
+
+async function editTeacherName() {
+  const val = prompt("اكتب اسمك الجديد:", TEACHER_NAME);
+  if (val === null || !val.trim()) return;
+  TEACHER_NAME = val.trim();
+  renderTeacherHeader();
+  try {
+    await teachersCol.doc(currentTeacherId).update({ name: TEACHER_NAME });
+  } catch (e) {
+    showError("تعذر حفظ الاسم. تأكد من الاتصال بالإنترنت.");
+  }
+}
+
+async function editTeacherPhone() {
+  const val = prompt("اكتب رقم تليفونك الجديد:", TEACHER_PHONE);
+  if (val === null || !val.trim()) return;
+  TEACHER_PHONE = val.trim();
+  renderTeacherHeader();
+  try {
+    await teachersCol.doc(currentTeacherId).update({ phone: TEACHER_PHONE });
+  } catch (e) {
+    showError("تعذر حفظ رقم التليفون. تأكد من الاتصال بالإنترنت.");
   }
 }
 
