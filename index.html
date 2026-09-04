@@ -787,7 +787,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v17 — 1 سبتمبر 2026";
+const APP_VERSION = "v18 — إصلاح صلاحيات القوائم — 1 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2984,23 +2984,23 @@ async function editTeacherPhone() {
 }
 
 // ترحيل تلقائي لمرة واحدة: أي بيانات قديمة من قبل نظام تعدد المعلمين (من غير teacherId)
-// بتتحط عليها هوية أول معلم يدخل بعد التحديث ده. آمنة تتكرر (بتتجاهل لو خلصت قبل كده).
+// بتتحط عليها هوية أول معلم يدخل بعد التحديث ده. بيحصل عن طريق الـWorker (صلاحيات إدارية
+// كاملة بتتجاوز قيود الأمان)، عشان قوايم القراءة المفتوحة مش مسموح بيها من المتصفح مباشرة.
 async function migrateLegacyDataToTeacher(uid) {
   const flagKey = "legacyMigrationDone_" + uid;
   if (localStorage.getItem(flagKey)) return;
   try {
-    const collections = [studentsCol, examsCol, examResultsCol, db.collection("autoBackups")];
-    for (const ref of collections) {
-      const snap = await ref.get();
-      const untagged = snap.docs.filter(d => !d.data().teacherId);
-      for (let i = 0; i < untagged.length; i += 400) {
-        const chunk = untagged.slice(i, i + 400);
-        const batch = db.batch();
-        chunk.forEach(d => batch.update(d.ref, { teacherId: uid }));
-        await batch.commit();
-      }
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/migrate-legacy`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "authorization": `Bearer ${idToken}` },
+    });
+    const data = await res.json().catch(() => null);
+    if (res.ok && data && data.ok) {
+      localStorage.setItem(flagKey, "1");
+    } else {
+      console.error("legacy migration failed", data);
     }
-    localStorage.setItem(flagKey, "1");
   } catch (e) {
     console.error("legacy migration failed", e);
   }
