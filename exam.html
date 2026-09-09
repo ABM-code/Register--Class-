@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -135,8 +134,16 @@ async function init() {
   }
   try {
     const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-exam?examId=${encodeURIComponent(examId)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok && data.error === "exam_closed") {
+      document.getElementById("examTitle").textContent = data.title || "الامتحان مقفول";
+      document.getElementById("content").innerHTML = `<div class="card" style="text-align:center;">
+        <p style="font-size:1rem; margin:0;">🔒 الامتحان ده مقفول دلوقتي ومحدش يقدر يفتحه.</p>
+        <p style="font-size:0.85rem; color:#6B6B60; margin-top:0.5rem;">كلّم المعلم لو محتاج تفتحه تاني.</p>
+      </div>`;
+      return;
+    }
     if (!res.ok) throw new Error("exam_lookup_failed");
-    const data = await res.json();
     if (!data.ok) throw new Error(data.error || "exam_lookup_failed");
     exam = { id: examId, title: data.title || "امتحان", stage: data.stage || "" };
     document.getElementById("examTitle").textContent = exam.title;
@@ -253,6 +260,28 @@ function renderStudentPicker() {
       }
       if (snapDoc) {
         const prev = snapDoc.data();
+        let canRetake = false;
+        try {
+          const examDocForRetake = await db.collection("exams").doc(exam.id).get();
+          if (examDocForRetake.exists) {
+            const examData = examDocForRetake.data();
+            if (examData.allowRetake && selectedStudent.id && examData.allowRetake[selectedStudent.id]) {
+              canRetake = true;
+              exam = { id: examDocForRetake.id, ...examData };
+            }
+          }
+        } catch (e) { /* تجاهل، هيتعامل كأنه مش مسموح بالإعادة */ }
+
+        if (canRetake) {
+          msgBox.innerHTML = `<div class="card" style="border-right:4px solid #3F6B4A;">
+            <strong>🔄 المعلم سمحلك بإعادة الامتحان</strong>
+            <p style="margin:0.4rem 0 0; color:#6B6B60; font-size:0.88rem;">نتيجتك الجديدة هتستبدل نتيجتك القديمة.</p>
+          </div>`;
+          startBtn.disabled = false;
+          startBtn.textContent = "ابدأ الامتحان";
+          return;
+        }
+
         const pct = prev.total > 0 ? Math.round((prev.score / prev.total) * 100) : 0;
         msgBox.innerHTML = `<div class="card" style="border-right:4px solid #C15B3C;">
           <strong>لقد قدّمت هذا الامتحان من قبل</strong>

@@ -608,6 +608,11 @@
         <label>مدة الامتحان بالدقائق (اختياري)</label>
         <input class="reg-input" type="number" min="1" step="1" id="examTimeLimitInput" placeholder="مثلاً: 30 — سيبها فاضية لو مفيش وقت محدد">
       </div>
+      <div class="field-group">
+        <label>آخر موعد لفتح الامتحان (اختياري)</label>
+        <input class="reg-input" type="datetime-local" id="examDeadlineInput">
+        <p style="font-size:0.78rem; color:#9FB8AD; margin:0.3rem 0 0;">بعد الموعد ده، الامتحان يقفل تلقائي ومحدش يقدر يفتحه. سيبه فاضي لو مش عايز موعد نهائي.</p>
+      </div>
       <div class="ai-import-box" id="aiImportBox">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/></svg>
@@ -794,7 +799,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v19 — تغيير/استرجاع كلمة المرور — 1 سبتمبر 2026";
+const APP_VERSION = "v20 — موعد نهائي للامتحان + إعادة محاولة — 1 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1764,21 +1769,39 @@ function renderExamsList() {
       const examLastSeen = getExamLastSeen(ex.id);
       const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
       const newBadgeHtml = newCount > 0 ? `<span class="exam-new-badge">🔔 ${newCount} جديد</span>` : "";
+      const now = new Date();
+      const deadlinePassed = !!(ex.deadline && new Date(ex.deadline) < now);
+      const isClosed = !!ex.closedManually || deadlinePassed;
+      const deadlineText = ex.deadline ? new Date(ex.deadline).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "";
+      const statusBadge = isClosed
+        ? `<span class="mini-badge" style="background:#F6E7E2;color:#9C4B32;">🔒 مقفول${deadlinePassed && !ex.closedManually ? ' (انتهى الموعد)' : ''}</span>`
+        : (ex.deadline ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">🔓 مفتوح — يقفل ${deadlineText}</span>` : "");
       return `
       <div class="exam-card">
         <div class="exam-card-title">${escapeHtml(ex.title)}${newBadgeHtml}</div>
         <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${resultCount} إجابة مسجلة${ex.timeLimitMinutes ? ' — ⏱ ' + ex.timeLimitMinutes + ' دقيقة' : ''}</div>
+        ${statusBadge ? `<div style="margin-bottom:0.6rem;">${statusBadge}</div>` : ""}
         <div class="exam-card-actions">
           <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="viewExamResults('${ex.id}')">النتائج</button>
           <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش (${missingCount}/${stageStudentCount})</button>
           <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamPdf('${ex.id}')">طباعة PDF</button>
+          <button style="background:${isClosed ? '#EAF2E7' : '#F6E7E2'}; color:${isClosed ? '#3F6B4A' : '#9C4B32'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '🔓 فتح الامتحان تاني' : '🔒 قفل الامتحان الآن'}</button>
           <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
       </div>`;
     }).join("")}
   `).join("");
+}
+
+async function toggleExamManualClose(examId, shouldClose) {
+  try {
+    await examsCol.doc(examId).update({ closedManually: shouldClose });
+    showSuccess(shouldClose ? "تم قفل الامتحان." : "تم فتح الامتحان تاني.");
+  } catch (e) {
+    showError("تعذر تحديث حالة الامتحان. تأكد من الاتصال بالإنترنت.");
+  }
 }
 
 function copyExamLink(examId) {
@@ -1872,6 +1895,7 @@ function openExamBuilder() {
   document.getElementById("examTitleInput").value = "";
   document.getElementById("examStageInput").value = "";
   document.getElementById("examTimeLimitInput").value = "";
+  document.getElementById("examDeadlineInput").value = "";
   document.getElementById("questionsBuilder").innerHTML = "";
   document.getElementById("aiImportStatus").style.display = "none";
   document.getElementById("examsListView").style.display = "none";
@@ -1899,6 +1923,7 @@ function editExam(examId) {
   document.getElementById("examTitleInput").value = ex.title || "";
   document.getElementById("examStageInput").value = ex.stage || "";
   document.getElementById("examTimeLimitInput").value = ex.timeLimitMinutes || "";
+  document.getElementById("examDeadlineInput").value = ex.deadline ? isoToLocalInputValue(ex.deadline) : "";
   document.getElementById("aiImportStatus").style.display = "none";
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "block";
@@ -2102,11 +2127,21 @@ function updateCompleteAnswers(qId, value) {
   if (q) q.correctAnswers = value.split(",").map(s => s.trim()).filter(Boolean);
 }
 
+function isoToLocalInputValue(iso) {
+  try {
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  } catch (e) { return ""; }
+}
+
 async function saveExam() {
   const title = document.getElementById("examTitleInput").value.trim();
   const stage = document.getElementById("examStageInput").value;
   const timeLimitRaw = document.getElementById("examTimeLimitInput").value.trim();
   const timeLimitMinutes = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
+  const deadlineRaw = document.getElementById("examDeadlineInput").value;
+  const deadline = deadlineRaw ? new Date(deadlineRaw).toISOString() : null;
   if (!title) { showError("لازم تكتب عنوان للامتحان."); return; }
   if (!stage) { showError("لازم تختار المرحلة."); return; }
   if (timeLimitRaw && (isNaN(timeLimitMinutes) || timeLimitMinutes < 1)) { showError("مدة الامتحان لازم تكون رقم صحيح أكبر من صفر."); return; }
@@ -2122,7 +2157,7 @@ async function saveExam() {
   }
   try {
     const examData = {
-      title, stage, timeLimitMinutes,
+      title, stage, timeLimitMinutes, deadline,
       teacherId: currentTeacherId,
       questions: currentBuilderQuestions.map(q => ({
         type: q.type, passage: q.passage || "", prompt: q.prompt,
@@ -2146,7 +2181,17 @@ async function saveExam() {
   }
 }
 
-function goToStudentProfile(studentId) {
+async function allowStudentRetake(examId, studentId, studentName) {
+  if (!confirm(`تأكيد: السماح لـ"${studentName}" بإعادة الامتحان مرة كمان؟ لما يسلّم تاني، النتيجة الجديدة هتستبدل القديمة.`)) return;
+  try {
+    await examsCol.doc(examId).update({ [`allowRetake.${studentId}`]: true });
+    showSuccess("تم السماح للطالب بإعادة المحاولة. هيقدر يفتح نفس رابط الامتحان تاني.");
+  } catch (e) {
+    showError("تعذر حفظ الإذن. تأكد من الاتصال بالإنترنت.");
+  }
+}
+
+async function goToStudentProfile(studentId) {
   const student = students.find(s => s.id === studentId);
   const isTorail = student && student.group === "torail";
   if (isTorail) {
@@ -2418,6 +2463,7 @@ function renderExamResultsList() {
             <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
             ${r.studentId ? `<button class="wa-send-btn" style="background:#5B8FC4;" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
             ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
+            ${r.studentId ? `<button class="wa-send-btn" style="background:#946A26;" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">🔄 سماح بإعادة المحاولة</button>` : ""}
           </div>
         </div>
         ${isOpen ? `<div class="answer-detail-box">${regradeBarHtml}${hasEdits ? `<div class="pending-score-note">درجة مؤقتة بعد التعديل: ${workingAnswers.reduce((sum,a)=>sum+(a.correct?Number((questions[a.questionIndex]||{}).points||1):0),0)}/${r.total} (لسه محفوظتش)</div>` : ""}${answersHtml}</div>` : ""}
@@ -2993,9 +3039,9 @@ async function editTeacherPhone() {
 async function openChangePassword() {
   const user = auth.currentUser;
   if (!user || !user.email) return;
-  const currentPassword = prompt("لتأكيد هويتك، اكتبي كلمة المرور الحالية:");
+  const currentPassword = prompt("لتأكيد هويتك، اكتب كلمة المرور الحالية:");
   if (!currentPassword) return;
-  const newPassword = prompt("اكتبي كلمة المرور الجديدة (6 حروف على الأقل):");
+  const newPassword = prompt("اكتب كلمة المرور الجديدة (6 حروف على الأقل):");
   if (newPassword === null) return;
   if (newPassword.length < 6) {
     showError("كلمة المرور الجديدة لازم تكون 6 حروف على الأقل.");
@@ -3003,7 +3049,7 @@ async function openChangePassword() {
   }
   const confirmPassword = prompt("أكدي كلمة المرور الجديدة تاني:");
   if (confirmPassword !== newPassword) {
-    showError("كلمتا المرور مش متطابقتين. حاولي تاني من الأول.");
+    showError("كلمتا المرور مش متطابقتين. حاول تاني من الأول.");
     return;
   }
   try {
@@ -3015,26 +3061,26 @@ async function openChangePassword() {
     if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential") {
       showError("كلمة المرور الحالية غلط.");
     } else if (e.code === "auth/weak-password") {
-      showError("كلمة المرور الجديدة ضعيفة، جربي كلمة أطول.");
+      showError("كلمة المرور الجديدة ضعيفة، جرب كلمة أطول.");
     } else {
-      showError("تعذر تغيير كلمة المرور. تأكدي من الاتصال بالإنترنت وحاولي تاني.");
+      showError("تعذر تغيير كلمة المرور. تأكد من الاتصال بالإنترنت وحاول تاني.");
     }
   }
 }
 
 async function handleForgotPassword() {
   const prefill = (document.getElementById("lockEmailInput").value || "").trim();
-  const email = prefill || prompt("اكتبي بريدك الإلكتروني المسجل في التطبيق:");
+  const email = prefill || prompt("اكتب بريدك الإلكتروني المسجل في التطبيق:");
   if (!email) return;
   const msgEl = document.getElementById("lockErrorMsg");
   try {
     await auth.sendPasswordResetEmail(email.trim());
     msgEl.style.color = "#3F6B4A";
-    msgEl.textContent = "تم إرسال رابط إعادة تعيين كلمة المرور لبريدك الإلكتروني. افتحي الإيميل واتبعي الرابط.";
+    msgEl.textContent = "تم إرسال رابط إعادة تعيين كلمة المرور لبريدك الإلكتروني. افتح الإيميل واتبع الرابط.";
     msgEl.style.display = "block";
   } catch (e) {
     msgEl.style.color = "#C15B3C";
-    msgEl.textContent = "تعذر إرسال الرابط. تأكدي إن البريد الإلكتروني مسجّل صح في التطبيق.";
+    msgEl.textContent = "تعذر إرسال الرابط. تأكد إن البريد الإلكتروني مسجّل صح في التطبيق.";
     msgEl.style.display = "block";
   }
 }
@@ -3138,7 +3184,7 @@ function handleAvatarChange(file) {
       ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       try { localStorage.setItem("customAvatar", dataUrl); } catch (e) {
-        showError("الصورة كبيرة جدًا، جربي صورة تانية أصغر.");
+        showError("الصورة كبيرة جدًا، جرب صورة تانية أصغر.");
         return;
       }
       document.getElementById("teacherAvatarImg").src = dataUrl;
