@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -279,7 +278,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -501,8 +499,8 @@
         <input type="text" id="matVideoUrl" class="reg-input" placeholder="https://youtu.be/...">
       </div>
       <div id="matFileWrap" style="display:none; margin-bottom:0.7rem;">
-        <label style="display:block; font-size:0.82rem; color:#6B6B60; margin-bottom:0.3rem; font-weight:500;">اختر الملف</label>
-        <input type="file" id="matFile" accept="image/*,application/pdf">
+        <label style="display:block; font-size:0.82rem; color:#6B6B60; margin-bottom:0.3rem; font-weight:500;">رابط الملف (من Google Drive مثلاً، لازم يكون "Anyone with the link")</label>
+        <input type="text" id="matFileUrl" class="reg-input" placeholder="https://drive.google.com/...">
       </div>
       <button id="matSubmitBtn" class="backup-btn" onclick="submitAddMaterial()">إضافة المحتوى</button>
       <p id="matStatusMsg" style="font-size:0.82rem; margin:0.6rem 0 0; display:none;"></p>
@@ -863,7 +861,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const storage = firebase.storage();
 const studentsCol = db.collection("students");
 const examsCol = db.collection("exams");
 const examResultsCol = db.collection("examResults");
@@ -1791,21 +1788,14 @@ async function submitAddMaterial() {
 
   try {
     let url = "";
-    let storagePath = "";
     if (type === "video") {
       const videoUrl = document.getElementById("matVideoUrl").value.trim();
       const videoId = extractYoutubeId(videoUrl);
       if (!videoId) throw new Error("رابط اليوتيوب غير صالح. تأكد إنه رابط فيديو حقيقي.");
       url = "https://www.youtube.com/embed/" + videoId;
     } else {
-      const fileInput = document.getElementById("matFile");
-      const file = fileInput.files[0];
-      if (!file) throw new Error("اختر ملف أولاً.");
-      if (file.size > 20 * 1024 * 1024) throw new Error("الملف أكبر من 20 ميجا، اختر ملف أصغر.");
-      storagePath = `materials/${currentTeacherId}/${stage}/${Date.now()}_${file.name}`;
-      const ref = storage.ref(storagePath);
-      await ref.put(file);
-      url = await ref.getDownloadURL();
+      url = document.getElementById("matFileUrl").value.trim();
+      if (!url) throw new Error("حط رابط الملف أولاً.");
     }
 
     await materialsCol.add({
@@ -1815,14 +1805,13 @@ async function submitAddMaterial() {
       title,
       type,
       url,
-      storagePath,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
     document.getElementById("matCategory").value = "";
     document.getElementById("matTitle").value = "";
     document.getElementById("matVideoUrl").value = "";
-    document.getElementById("matFile").value = "";
+    document.getElementById("matFileUrl").value = "";
     statusMsg.textContent = "✓ تمت الإضافة بنجاح.";
     statusMsg.style.color = "#3F6B4A";
     statusMsg.style.display = "block";
@@ -1834,13 +1823,10 @@ async function submitAddMaterial() {
   }
 }
 
-async function deleteMaterial(materialId, storagePath) {
+async function deleteMaterial(materialId) {
   if (!confirm("متأكد إنك عايز تمسح المحتوى ده؟")) return;
   try {
     await materialsCol.doc(materialId).delete();
-    if (storagePath) {
-      try { await storage.ref(storagePath).delete(); } catch (e) { /* الملف ممكن يكون اتمسح قبل كده */ }
-    }
   } catch (err) {
     showError("تعذر حذف المحتوى. تأكد من اتصالك بالإنترنت.");
   }
@@ -1860,7 +1846,7 @@ function renderMaterialsList() {
         <div class="result-row-name">${escapeHtml(m.title || "")}</div>
         <div class="result-row-date">${escapeHtml(m.stage || "")} — ${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}</div>
       </div>
-      <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem; background:#F6E7E2; color:#9C4B32;" onclick="deleteMaterial('${m.id}', ${JSON.stringify(m.storagePath || "")})">حذف</button>
+      <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem; background:#F6E7E2; color:#9C4B32;" onclick="deleteMaterial('${m.id}')">حذف</button>
     </div>`).join("");
 }
 
