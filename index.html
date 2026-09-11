@@ -1622,10 +1622,15 @@ async function createAutoBackupNow() {
     exams: exams,
   });
   try { localStorage.setItem("lastAutoBackup", Date.now().toString()); } catch (e) {}
-  const old = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).orderBy("createdAt", "desc").get();
-  if (old.docs.length > 8) {
+  const old = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).get();
+  const oldSorted = old.docs.slice().sort((a, b) => {
+    const at = a.data().createdAt && a.data().createdAt.toMillis ? a.data().createdAt.toMillis() : 0;
+    const bt = b.data().createdAt && b.data().createdAt.toMillis ? b.data().createdAt.toMillis() : 0;
+    return bt - at;
+  });
+  if (oldSorted.length > 8) {
     const batch = db.batch();
-    old.docs.slice(8).forEach(d => batch.delete(d.ref));
+    oldSorted.slice(8).forEach(d => batch.delete(d.ref));
     await batch.commit();
   }
   return true;
@@ -1695,12 +1700,17 @@ async function loadAutoBackupsList() {
   const box = document.getElementById("autoBackupsList");
   box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
   try {
-    const snap = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).orderBy("createdAt", "desc").get();
+    const snap = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).get();
     if (snap.empty) {
       box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p>`;
       return;
     }
-    box.innerHTML = snap.docs.map(d => {
+    const sortedDocs = snap.docs.slice().sort((a, b) => {
+      const at = a.data().createdAt && a.data().createdAt.toMillis ? a.data().createdAt.toMillis() : 0;
+      const bt = b.data().createdAt && b.data().createdAt.toMillis ? b.data().createdAt.toMillis() : 0;
+      return bt - at;
+    });
+    box.innerHTML = sortedDocs.map(d => {
       const data = d.data();
       const dateStr = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().toLocaleString('ar-EG') : "";
       return `
