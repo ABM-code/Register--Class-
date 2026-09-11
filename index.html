@@ -502,6 +502,10 @@
         <label style="display:block; font-size:0.82rem; color:#6B6B60; margin-bottom:0.3rem; font-weight:500;">رابط الملف (من Google Drive مثلاً، لازم يكون "Anyone with the link")</label>
         <input type="text" id="matFileUrl" class="reg-input" placeholder="https://drive.google.com/...">
       </div>
+      <label style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.7rem; font-weight:500; font-size:0.9rem;">
+        <input type="checkbox" id="matSubscriberOnly" style="width:18px; height:18px;">
+        للمشتركين بس (مدفوع)
+      </label>
       <button id="matSubmitBtn" class="backup-btn" onclick="submitAddMaterial()">إضافة المحتوى</button>
       <p id="matStatusMsg" style="font-size:0.82rem; margin:0.6rem 0 0; display:none;"></p>
     </div>
@@ -561,6 +565,10 @@
         <option value="female">بنت</option>
         <option value="male">ولد</option>
       </select>
+    </div>
+    <div class="field-group">
+      <label>تاريخ انتهاء اشتراك المحتوى المدفوع (اختياري)</label>
+      <input type="date" class="reg-input" id="fSubscriptionExpiry">
     </div>
     <div class="field-row">
       <div class="field-group">
@@ -1418,6 +1426,7 @@ function openNewForm() {
   ["fName","fStudentPhone","fParentPhone","fEntryDate","fNotes"].forEach(id => document.getElementById(id).value = "");
   document.getElementById("fStage").value = "";
   document.getElementById("fGender").value = "";
+  document.getElementById("fSubscriptionExpiry").value = "";
   document.getElementById("dupNameWarning").style.display = "none";
   ["fTerm1Paid","fTerm1Received","fTerm2Paid","fTerm2Received"].forEach(id => document.getElementById(id).checked = false);
   document.getElementById("fExempt").checked = false;
@@ -1439,6 +1448,7 @@ function openEditForm(s) {
   document.getElementById("dupNameWarning").style.display = "none";
   document.getElementById("fStage").value = s.stage || "";
   document.getElementById("fGender").value = s.gender || "";
+  document.getElementById("fSubscriptionExpiry").value = s.subscriptionExpiry || "";
   document.getElementById("fStudentPhone").value = s.studentPhone || "";
   document.getElementById("fParentPhone").value = s.parentPhone || "";
   document.getElementById("fEntryDate").value = s.entryDate || "";
@@ -1469,6 +1479,7 @@ async function handleSubmit(e) {
     group: formGroupContext,
     stage: document.getElementById("fStage").value,
     gender: document.getElementById("fGender").value,
+    subscriptionExpiry: document.getElementById("fSubscriptionExpiry").value,
     studentPhone: toEnglishDigits(document.getElementById("fStudentPhone").value.trim()),
     parentPhone: toEnglishDigits(document.getElementById("fParentPhone").value.trim()),
     entryDate: document.getElementById("fEntryDate").value,
@@ -1805,6 +1816,7 @@ async function submitAddMaterial() {
       title,
       type,
       url,
+      subscriberOnly: document.getElementById("matSubscriberOnly").checked,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
 
@@ -1812,6 +1824,7 @@ async function submitAddMaterial() {
     document.getElementById("matTitle").value = "";
     document.getElementById("matVideoUrl").value = "";
     document.getElementById("matFileUrl").value = "";
+    document.getElementById("matSubscriberOnly").checked = false;
     statusMsg.textContent = "✓ تمت الإضافة بنجاح.";
     statusMsg.style.color = "#3F6B4A";
     statusMsg.style.display = "block";
@@ -1844,7 +1857,7 @@ function renderMaterialsList() {
     <div class="result-row">
       <div>
         <div class="result-row-name">${escapeHtml(m.title || "")}</div>
-        <div class="result-row-date">${escapeHtml(m.stage || "")} — ${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}</div>
+        <div class="result-row-date">${escapeHtml(m.stage || "")} — ${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — 💰 مدفوع" : ""}</div>
       </div>
       <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem; background:#F6E7E2; color:#9C4B32;" onclick="deleteMaterial('${m.id}')">حذف</button>
     </div>`).join("");

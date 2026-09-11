@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -64,7 +63,6 @@
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
@@ -78,7 +76,6 @@ const firebaseConfig = {
   appId: "1:230991294181:web:167cb0a370c68b6a6f6e0c"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
 const auth = firebase.auth();
 
 const STAGES = ["Prep 1", "Prep 2", "Prep 3", "Sec 1", "Sec 2", "Sec 3"];
@@ -110,6 +107,9 @@ let selectedStudent = null;
 let studentClaims = null;
 let allMaterials = [];
 let activeCategory = "الكل";
+let lockedCount = 0;
+let isSubscribed = false;
+let subscriptionExpiry = null;
 
 function init() {
   renderStagePicker();
@@ -251,14 +251,19 @@ async function loadMaterials() {
   const content = document.getElementById("content");
   content.innerHTML = `<div class="loading">جاري تحميل المحتوى...</div>`;
   try {
-    const snap = await db.collection("materials")
-      .where("stage", "==", studentClaims.stage)
-      .where("teacherId", "==", studentClaims.teacherId)
-      .get();
-    allMaterials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-list`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error("load_failed");
+    allMaterials = data.materials || [];
+    lockedCount = data.lockedCount || 0;
+    isSubscribed = !!data.isSubscribed;
+    subscriptionExpiry = data.subscriptionExpiry || null;
     allMaterials.sort((a, b) => {
-      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      const at = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bt = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return bt - at;
     });
     activeCategory = "الكل";
@@ -278,11 +283,24 @@ function renderMaterialsBrowser() {
 
   const pillsHtml = categories.map(c => `<div class="category-pill ${c === activeCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join("");
 
+  let bannerHtml = "";
+  if (isSubscribed && subscriptionExpiry) {
+    bannerHtml = `<div class="card" style="text-align:center; padding:0.7rem; margin-bottom:0.8rem;">
+      <span style="color:#3F6B4A; font-weight:600; font-size:0.85rem;">✓ اشتراكك ساري لحد ${escapeHtml(subscriptionExpiry)}</span>
+    </div>`;
+  } else if (lockedCount > 0) {
+    bannerHtml = `<div class="card" style="text-align:center; padding:0.7rem; margin-bottom:0.8rem;">
+      <span style="color:#9C4B32; font-weight:600; font-size:0.85rem;">🔒 فيه ${lockedCount} محتوى إضافي للمشتركين بس</span>
+      <p style="margin:0.3rem 0 0; font-size:0.78rem; color:#6B6B60;">كلّم المعلم عشان تشترك</p>
+    </div>`;
+  }
+
   const itemsHtml = filtered.length === 0
     ? `<div class="card" style="text-align:center; color:#6B6B60;">لسه مفيش محتوى في التصنيف ده.</div>`
     : filtered.map(m => renderMaterialCard(m)).join("");
 
   content.innerHTML = `
+    ${bannerHtml}
     <div class="category-pills">${pillsHtml}</div>
     ${itemsHtml}
   `;
