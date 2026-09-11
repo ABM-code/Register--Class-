@@ -440,6 +440,9 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         خد نسخة دلوقتي
       </button>
+      <button id="tempCheckMigrationBtn" class="backup-btn" onclick="tempCheckMigration()">
+        🔍 فحص مؤقت
+      </button>
     </div>
     <div id="autoBackupsList" style="display:none; margin-bottom:1rem;"></div>
 
@@ -3098,6 +3101,21 @@ async function handleForgotPassword() {
 // ترحيل تلقائي لمرة واحدة: أي بيانات قديمة من قبل نظام تعدد المعلمين (من غير teacherId)
 // بتتحط عليها هوية أول معلم يدخل بعد التحديث ده. بيحصل عن طريق الـWorker (صلاحيات إدارية
 // كاملة بتتجاوز قيود الأمان)، عشان قوايم القراءة المفتوحة مش مسموح بيها من المتصفح مباشرة.
+// ⚠️ مؤقت - للفحص بس، لازم يتشال بعد التأكد من نتيجة الترحيل
+async function tempCheckMigration() {
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/migrate-legacy`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "authorization": `Bearer ${idToken}` },
+    });
+    const data = await res.json();
+    alert(JSON.stringify(data, null, 2));
+  } catch (e) {
+    alert("خطأ: " + e.message);
+  }
+}
+
 async function migrateLegacyDataToTeacher(uid) {
   const flagKey = "legacyMigrationDone_" + uid;
   if (localStorage.getItem(flagKey)) return;
