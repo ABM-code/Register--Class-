@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#16302B">
+<title>المكتبة التعليمية</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+  h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
+  p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
+  .card { background: #F5F1E6; border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+  label { display: block; font-size: 0.82rem; color: #6B6B60; margin-bottom: 0.4rem; font-weight: 500; }
+  select, input[type=text] {
+    width: 100%; padding: 0.65rem 0.8rem; border-radius: 9px; border: 1px solid rgba(0,0,0,0.15);
+    background: #FFFDF8; font-size: 0.95rem; color: #1B2420; font-family: inherit;
+  }
+  select:focus, input:focus { outline: none; border-color: #D4A93B; box-shadow: 0 0 0 3px rgba(212,169,59,0.18); }
+  button {
+    font-family: inherit; background: #D4A93B; color: #1B2420; border: none; border-radius: 10px;
+    padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button:active:not(:disabled) { transform: scale(0.98); }
+  #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
+  .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
+  .student-suggestions { margin-top: 0.4rem; border-radius: 9px; overflow: hidden; display: none; }
+  .student-suggestion-item {
+    display: block; width: 100%; text-align: right; background: #FFFDF8; color: #1B2420;
+    border: 1px solid rgba(0,0,0,0.12); border-top: none; padding: 0.65rem 0.8rem;
+    font-size: 0.92rem; font-weight: 500; cursor: pointer; border-radius: 0;
+  }
+  .student-suggestion-item:first-child { border-top: 1px solid rgba(0,0,0,0.12); border-radius: 9px 9px 0 0; }
+  .student-suggestion-item:last-child { border-radius: 0 0 9px 9px; }
+  .student-suggestion-item:active { background: #FBF3DF; }
+  .student-suggestion-empty { padding: 0.65rem 0.8rem; font-size: 0.85rem; color: #9C4B32; background: #F6E7E2; border-radius: 9px; }
+  .category-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+  .category-pill {
+    background: rgba(245,241,230,0.12); color: #F5F1E6; border: 1px solid rgba(245,241,230,0.25);
+    border-radius: 999px; padding: 0.35rem 0.85rem; font-size: 0.82rem; cursor: pointer;
+  }
+  .category-pill.active { background: #D4A93B; color: #1B2420; border-color: #D4A93B; font-weight: 600; }
+  .mat-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.5rem; }
+  .mat-category { font-size: 0.78rem; color: #6B6B60; margin-bottom: 0.7rem; }
+  .mat-video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 9px; overflow: hidden; margin-bottom: 0.3rem; }
+  .mat-video-wrap iframe { position: absolute; top: 0; right: 0; width: 100%; height: 100%; border: none; }
+  .mat-image { width: 100%; border-radius: 9px; display: block; }
+  .mat-pdf-link {
+    display: block; text-align: center; background: #3F6B4A; color: #F5F1E6 !important;
+    text-decoration: none; padding: 0.7rem; border-radius: 9px; font-weight: 600; font-size: 0.9rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="pageTitle">المكتبة التعليمية</h1>
+  <p class="sub" id="pageSub">اختر مرحلتك وادخل عشان تشوف المحتوى</p>
+  <div id="errorBox"></div>
+  <div id="content"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+const TEACHER_NAME = "أ/ عبد الرحمن منير";
+const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
+const firebaseConfig = {
+  apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
+  authDomain: "register-class-302e6.firebaseapp.com",
+  projectId: "register-class-302e6",
+  storageBucket: "register-class-302e6.firebasestorage.app",
+  messagingSenderId: "230991294181",
+  appId: "1:230991294181:web:167cb0a370c68b6a6f6e0c"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+const STAGES = ["Prep 1", "Prep 2", "Prep 3", "Sec 1", "Sec 2", "Sec 3"];
+
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function normalizeArabic(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+}
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.textContent = msg;
+  box.style.display = "block";
+}
+function clearError() {
+  document.getElementById("errorBox").style.display = "none";
+}
+
+let selectedStage = "";
+let studentsInStage = [];
+let selectedStudent = null;
+let studentClaims = null;
+let allMaterials = [];
+let activeCategory = "الكل";
+
+function init() {
+  renderStagePicker();
+}
+
+function renderStagePicker() {
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <div class="card">
+      <label>اختر مرحلتك</label>
+      <select id="stageSelect">
+        <option value="">— اختر المرحلة —</option>
+        ${STAGES.map(s => `<option value="${s}">${s}</option>`).join("")}
+      </select>
+    </div>
+    <button id="stageNextBtn" disabled>التالي</button>
+  `;
+  const select = document.getElementById("stageSelect");
+  const nextBtn = document.getElementById("stageNextBtn");
+  select.addEventListener("change", () => {
+    nextBtn.disabled = !select.value;
+  });
+  nextBtn.addEventListener("click", async () => {
+    clearError();
+    selectedStage = select.value;
+    if (!selectedStage) return;
+    nextBtn.disabled = true;
+    nextBtn.textContent = "جاري التحميل...";
+    try {
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-students?stage=${encodeURIComponent(selectedStage)}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error("load_failed");
+      studentsInStage = (data.students || []).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+      renderStudentPicker();
+    } catch (err) {
+      nextBtn.disabled = false;
+      nextBtn.textContent = "التالي";
+      showError("تعذر تحميل بيانات المرحلة. تأكد من اتصالك بالإنترنت وحاول تاني.");
+    }
+  });
+}
+
+function renderStudentPicker() {
+  document.getElementById("pageSub").textContent = selectedStage + " — " + TEACHER_NAME;
+  const content = document.getElementById("content");
+  content.innerHTML = `
+    <div class="card">
+      <label>اكتب اسمك للبحث</label>
+      <input type="text" id="studentSearchInput" placeholder="اكتب أول كام حرف من اسمك" autocomplete="off">
+      <div class="student-suggestions" id="studentSuggestions"></div>
+    </div>
+    <div class="card" id="pinCard" style="display:none;">
+      <label>اكتب الرمز السري بتاعك (4 أرقام)</label>
+      <input type="text" id="pinInput" placeholder="4 أرقام" maxlength="4" inputmode="numeric">
+      <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
+    </div>
+    <button id="enterBtn" disabled>ادخل المكتبة</button>
+  `;
+  const searchInput = document.getElementById("studentSearchInput");
+  const suggestionsBox = document.getElementById("studentSuggestions");
+  const pinCard = document.getElementById("pinCard");
+  const pinInput = document.getElementById("pinInput");
+  const pinMsg = document.getElementById("pinMsg");
+  const enterBtn = document.getElementById("enterBtn");
+
+  function hideSuggestions() {
+    suggestionsBox.style.display = "none";
+    suggestionsBox.innerHTML = "";
+  }
+
+  function resetPin() {
+    pinCard.style.display = "none";
+    pinInput.value = "";
+    pinMsg.style.display = "none";
+    enterBtn.disabled = true;
+  }
+
+  searchInput.addEventListener("input", () => {
+    if (selectedStudent) { selectedStudent = null; resetPin(); }
+    const q = searchInput.value.trim();
+    if (q.length < 2) { hideSuggestions(); return; }
+    const normQ = normalizeArabic(q.toLowerCase());
+    const matches = studentsInStage.filter(s => normalizeArabic((s.name || "").toLowerCase()).includes(normQ)).slice(0, 6);
+    if (matches.length === 0) {
+      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">مفيش اسم متطابق. تأكد من كتابة اسمك صح.</div>`;
+      suggestionsBox.style.display = "block";
+      return;
+    }
+    suggestionsBox.innerHTML = matches.map(s => `<button type="button" class="student-suggestion-item" data-id="${s.id}">${escapeHtml(s.name)}</button>`).join("");
+    suggestionsBox.style.display = "block";
+    suggestionsBox.querySelectorAll(".student-suggestion-item").forEach(btn => {
+      btn.addEventListener("click", () => {
+        selectedStudent = studentsInStage.find(s => s.id === btn.dataset.id) || null;
+        searchInput.value = selectedStudent ? selectedStudent.name : "";
+        hideSuggestions();
+        resetPin();
+        if (selectedStudent) {
+          pinCard.style.display = "block";
+          pinInput.focus();
+        }
+      });
+    });
+  });
+
+  pinInput.addEventListener("input", () => {
+    const typed = pinInput.value.replace(/\D/g, "");
+    pinInput.value = typed;
+    pinMsg.style.display = "none";
+    enterBtn.disabled = typed.length !== 4 || !selectedStudent;
+  });
+
+  enterBtn.addEventListener("click", async () => {
+    if (!selectedStudent) return;
+    enterBtn.disabled = true;
+    enterBtn.textContent = "جاري التحقق...";
+    try {
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId: selectedStudent.id, pin: pinInput.value })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.customToken) throw new Error(data.error || "invalid_pin");
+      await auth.signInWithCustomToken(data.customToken);
+      const idTokenResult = await auth.currentUser.getIdTokenResult();
+      studentClaims = idTokenResult.claims;
+      await loadMaterials();
+    } catch (err) {
+      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
+      pinMsg.style.color = "#C15B3C";
+      pinMsg.style.display = "block";
+      enterBtn.disabled = false;
+      enterBtn.textContent = "ادخل المكتبة";
+    }
+  });
+}
+
+async function loadMaterials() {
+  const content = document.getElementById("content");
+  content.innerHTML = `<div class="loading">جاري تحميل المحتوى...</div>`;
+  try {
+    const snap = await db.collection("materials")
+      .where("stage", "==", studentClaims.stage)
+      .where("teacherId", "==", studentClaims.teacherId)
+      .get();
+    allMaterials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allMaterials.sort((a, b) => {
+      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return bt - at;
+    });
+    activeCategory = "الكل";
+    renderMaterialsBrowser();
+  } catch (err) {
+    content.innerHTML = "";
+    showError("تعذر تحميل المحتوى. تأكد من اتصالك بالإنترنت وحاول تاني.");
+  }
+}
+
+function renderMaterialsBrowser() {
+  clearError();
+  document.getElementById("pageSub").textContent = selectedStudent.name + " — " + selectedStage;
+  const content = document.getElementById("content");
+  const categories = ["الكل", ...Array.from(new Set(allMaterials.map(m => m.category || "عام")))];
+  const filtered = activeCategory === "الكل" ? allMaterials : allMaterials.filter(m => (m.category || "عام") === activeCategory);
+
+  const pillsHtml = categories.map(c => `<div class="category-pill ${c === activeCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join("");
+
+  const itemsHtml = filtered.length === 0
+    ? `<div class="card" style="text-align:center; color:#6B6B60;">لسه مفيش محتوى في التصنيف ده.</div>`
+    : filtered.map(m => renderMaterialCard(m)).join("");
+
+  content.innerHTML = `
+    <div class="category-pills">${pillsHtml}</div>
+    ${itemsHtml}
+  `;
+
+  content.querySelectorAll(".category-pill").forEach(pill => {
+    pill.addEventListener("click", () => {
+      activeCategory = pill.dataset.cat;
+      renderMaterialsBrowser();
+    });
+  });
+}
+
+function renderMaterialCard(m) {
+  let bodyHtml = "";
+  if (m.type === "video") {
+    bodyHtml = `<div class="mat-video-wrap"><iframe src="${escapeHtml(m.url)}" allowfullscreen></iframe></div>`;
+  } else if (m.type === "image") {
+    bodyHtml = `<img class="mat-image" src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}">`;
+  } else if (m.type === "pdf") {
+    bodyHtml = `<a class="mat-pdf-link" href="${escapeHtml(m.url)}" target="_blank" rel="noopener">📄 افتح ملف الـPDF</a>`;
+  }
+  return `
+    <div class="card">
+      <div class="mat-title">${escapeHtml(m.title || "")}</div>
+      <div class="mat-category">${escapeHtml(m.category || "عام")}</div>
+      ${bodyHtml}
+    </div>`;
+}
+
+init();
+</script>
+</body>
+</html>
