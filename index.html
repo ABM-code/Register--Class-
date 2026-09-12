@@ -153,7 +153,12 @@
   }
   .tools-toggle-btn:hover { background: rgba(var(--c-subtle-rgb),0.1); }
   .tools-toggle-btn.open #toolsToggleIcon,
-  .tools-toggle-btn.open #filterPillsToggleIcon { transform: rotate(180deg); }
+  .tools-toggle-btn.open #filterPillsToggleIcon,
+  .tools-toggle-btn.open #materialsToggleIcon,
+  .tools-toggle-btn.open #studentsListToggleIcon,
+  .tools-toggle-btn.open #torailFilterPillsToggleIcon,
+  .tools-toggle-btn.open #torailToolsToggleIcon,
+  .tools-toggle-btn.open #torailStudentsListToggleIcon { transform: rotate(180deg); }
   .tools-group-title { color: var(--c-mutedonpage); font-size: 0.78rem; font-weight: 700; margin: 0 0 0.5rem; letter-spacing: 0.03em; }
   .stage-counts { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; }
   .stage-pill {
@@ -822,51 +827,93 @@
     </div>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-card exempt-card" id="torailExemptPill">
-      <div class="stat-label">معفيين من الدفع</div>
-      <div class="stat-value" id="torailStatExempt">0 طالب</div>
+  <button id="torailFilterPillsToggleBtn" class="tools-toggle-btn" onclick="toggleTorailFilterPillsSection()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+    فلاتر إضافية (إعفاء، مذكرات، بيانات ولي الأمر)
+    <svg id="torailFilterPillsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+
+  <div id="torailFilterPillsSection" style="display:none;">
+    <div class="stats-row">
+      <div class="stat-card exempt-card" id="torailExemptPill">
+        <div class="stat-label">معفيين من الدفع</div>
+        <div class="stat-value" id="torailStatExempt">0 طالب</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card good-card" id="torailTerm1ReceivedPill">
+        <div class="stat-label">استلموا مذكرة ترم أول</div>
+        <div class="stat-value" id="torailStatTerm1Received">0 طالب</div>
+      </div>
+      <div class="stat-card overdue-card" id="torailTerm1MissingPill">
+        <div class="stat-label">لسه مستلموش ترم أول</div>
+        <div class="stat-value" id="torailStatTerm1Missing">0 طالب</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card good-card" id="torailTerm2ReceivedPill">
+        <div class="stat-label">استلموا مذكرة ترم تاني</div>
+        <div class="stat-value" id="torailStatTerm2Received">0 طالب</div>
+      </div>
+      <div class="stat-card overdue-card" id="torailTerm2MissingPill">
+        <div class="stat-label">لسه مستلموش ترم تاني</div>
+        <div class="stat-value" id="torailStatTerm2Missing">0 طالب</div>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card overdue-card" id="torailNoParentPill">
+        <div class="stat-label">بدون رقم ولي الأمر</div>
+        <div class="stat-value" id="torailStatNoParent">0 طالب</div>
+      </div>
     </div>
   </div>
 
-  <div class="stats-row">
-    <div class="stat-card good-card" id="torailTerm1ReceivedPill">
-      <div class="stat-label">استلموا مذكرة ترم أول</div>
-      <div class="stat-value" id="torailStatTerm1Received">0 طالب</div>
-    </div>
-    <div class="stat-card overdue-card" id="torailTerm1MissingPill">
-      <div class="stat-label">لسه مستلموش ترم أول</div>
-      <div class="stat-value" id="torailStatTerm1Missing">0 طالب</div>
-    </div>
-  </div>
+  <button id="torailToolsToggleBtn" class="tools-toggle-btn" onclick="toggleTorailToolsSection()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    أدوات إضافية
+    <svg id="torailToolsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
 
-  <div class="stats-row">
-    <div class="stat-card good-card" id="torailTerm2ReceivedPill">
-      <div class="stat-label">استلموا مذكرة ترم تاني</div>
-      <div class="stat-value" id="torailStatTerm2Received">0 طالب</div>
+  <div id="torailToolsSection" style="display:none;">
+    <div class="tools-group-title">النسخ الاحتياطي</div>
+    <div class="backup-row">
+      <button id="torailManualBackupNowBtn" class="backup-btn" onclick="takeManualBackupNow('torailManualBackupNowBtn', 'torailAutoBackupsList')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        خد نسخة دلوقتي
+      </button>
+      <button id="torailToggleAutoBackupsBtn" class="backup-btn" onclick="toggleAutoBackupsList('torailAutoBackupsList')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        النسخ التلقائية
+      </button>
     </div>
-    <div class="stat-card overdue-card" id="torailTerm2MissingPill">
-      <div class="stat-label">لسه مستلموش ترم تاني</div>
-      <div class="stat-value" id="torailStatTerm2Missing">0 طالب</div>
-    </div>
-  </div>
+    <div id="torailAutoBackupsList" style="display:none; margin-bottom:1rem;"></div>
 
-  <div class="stats-row">
-    <div class="stat-card overdue-card" id="torailNoParentPill">
-      <div class="stat-label">بدون رقم ولي الأمر</div>
-      <div class="stat-value" id="torailStatNoParent">0 طالب</div>
+    <div class="tools-group-title">التصدير</div>
+    <div class="backup-row">
+      <button id="torailExportExcelBtn" class="backup-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18M3 9h18M3 15h18"/></svg>
+        تصدير Excel
+      </button>
+      <button id="torailExportPdfBtn" class="backup-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h9l5 5v15H6v-4"/><path d="M6 14H2v6h4z"/></svg>
+        طباعة / PDF
+      </button>
     </div>
-  </div>
 
-  <div class="backup-row">
-    <button id="torailExportExcelBtn" class="backup-btn">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 3v18M3 9h18M3 15h18"/></svg>
-      تصدير Excel
-    </button>
-    <button id="torailExportPdfBtn" class="backup-btn">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h9l5 5v15H6v-4"/><path d="M6 14H2v6h4z"/></svg>
-      طباعة / PDF
-    </button>
+    <div class="tools-group-title">أدوات تصحيح البيانات</div>
+    <div class="backup-row">
+      <button class="backup-btn" onclick="fixAllPhoneNumbers()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12a10 10 0 1 1-4-8"/><path d="M22 4v6h-6"/></svg>
+        تصحيح أرقام الهواتف (عربي → إنجليزي)
+      </button>
+      <button class="backup-btn" onclick="resetAllStudentPins()" style="background:#F6E7E2; color:#9C4B32;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        إعادة تعيين رمز الدخول لكل الطلاب
+      </button>
+    </div>
   </div>
 
   <div id="torailErrorBox"></div>
@@ -876,13 +923,19 @@
     <p id="torailEmptyMsg" style="margin:0;font-size:0.95rem;">لسه مفيش طلاب توريل. دوس Add عشان تضيف أول واحد.</p>
   </div>
 
+  <button id="torailStudentsListToggleBtn" class="tools-toggle-btn" onclick="toggleTorailStudentsListVisible()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+    <span id="torailStudentsListToggleLabel">إظهار قائمة الطلاب</span>
+    <svg id="torailStudentsListToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+
   <div id="torailStudentList"></div>
 </main>
 
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v24 — معاينة المحتوى في نفس الصفحة — 12 سبتمبر 2026";
+const APP_VERSION = "v25 — تبويب توريل: فلاتر وأدوات وإخفاء القائمة — 12 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1779,8 +1832,8 @@ async function maybeRunAutoBackup() {
   }
 }
 
-async function takeManualBackupNow() {
-  const btn = document.getElementById("manualBackupNowBtn");
+async function takeManualBackupNow(btnId = "manualBackupNowBtn", boxId = "autoBackupsList") {
+  const btn = document.getElementById(btnId);
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.textContent = "جاري أخذ النسخة...";
@@ -1790,8 +1843,8 @@ async function takeManualBackupNow() {
       showError("مفيش طلاب مسجلين لسه، مفيش حاجة تتحفظ.");
     } else {
       showSuccess("تم أخذ نسخة احتياطية الآن بنجاح.");
-      const box = document.getElementById("autoBackupsList");
-      if (box.style.display === "block") await loadAutoBackupsList();
+      const box = document.getElementById(boxId);
+      if (box.style.display === "block") await loadAutoBackupsList(boxId);
     }
   } catch (err) {
     showError("تعذر أخذ نسخة احتياطية. تأكد من اتصالك بالإنترنت.");
@@ -2039,18 +2092,34 @@ function toggleFilterPillsSection() {
   btn.classList.toggle("open", !isOpen);
 }
 
-async function toggleAutoBackupsList() {
-  const box = document.getElementById("autoBackupsList");
+function toggleTorailFilterPillsSection() {
+  const section = document.getElementById("torailFilterPillsSection");
+  const btn = document.getElementById("torailFilterPillsToggleBtn");
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+}
+
+function toggleTorailToolsSection() {
+  const section = document.getElementById("torailToolsSection");
+  const btn = document.getElementById("torailToolsToggleBtn");
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+}
+
+async function toggleAutoBackupsList(boxId = "autoBackupsList") {
+  const box = document.getElementById(boxId);
   if (box.style.display === "block") {
     box.style.display = "none";
     return;
   }
   box.style.display = "block";
-  await loadAutoBackupsList();
+  await loadAutoBackupsList(boxId);
 }
 
-async function loadAutoBackupsList() {
-  const box = document.getElementById("autoBackupsList");
+async function loadAutoBackupsList(boxId = "autoBackupsList") {
+  const box = document.getElementById(boxId);
   box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
   try {
     const snap = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).get();
@@ -2072,7 +2141,7 @@ async function loadAutoBackupsList() {
             <div class="result-row-name">${dateStr}</div>
             <div class="result-row-date">${data.studentsCount || 0} طالب</div>
           </div>
-          <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem;" onclick="restoreAutoBackup('${d.id}')">استرجاع</button>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem;" onclick="restoreAutoBackup('${d.id}', '${boxId}')">استرجاع</button>
         </div>`;
     }).join("");
   } catch (err) {
@@ -2080,7 +2149,7 @@ async function loadAutoBackupsList() {
   }
 }
 
-async function restoreAutoBackup(backupId) {
+async function restoreAutoBackup(backupId, boxId = "autoBackupsList") {
   if (!confirm("هيتم استبدال بيانات الطلاب والامتحانات الحالية بالنسخة دي. متأكد؟")) return;
   try {
     const doc = await db.collection("autoBackups").doc(backupId).get();
@@ -2099,7 +2168,7 @@ async function restoreAutoBackup(backupId) {
     });
     await batch.commit();
     showSuccess("تم استرجاع النسخة الاحتياطية بنجاح.");
-    document.getElementById("autoBackupsList").style.display = "none";
+    document.getElementById(boxId).style.display = "none";
   } catch (err) {
     showError("تعذر استرجاع النسخة. تأكد من اتصالك بالإنترنت.");
   }
@@ -2974,6 +3043,15 @@ function toggleStudentsListVisible() {
   if (btn) btn.classList.toggle("open", studentsListVisible);
   render();
 }
+let torailStudentsListVisible = false;
+function toggleTorailStudentsListVisible() {
+  torailStudentsListVisible = !torailStudentsListVisible;
+  const btn = document.getElementById("torailStudentsListToggleBtn");
+  const label = document.getElementById("torailStudentsListToggleLabel");
+  if (label) label.textContent = torailStudentsListVisible ? "إخفاء قائمة الطلاب" : "إظهار قائمة الطلاب";
+  if (btn) btn.classList.toggle("open", torailStudentsListVisible);
+  renderTorail();
+}
 let showStageCounts = false;
 let torailExpandedId = null;
 let torailOverdueOnly = false;
@@ -3233,6 +3311,12 @@ function renderTorail() {
 
   const listEl = document.getElementById("torailStudentList");
   const emptyEl = document.getElementById("torailEmptyState");
+
+  if (!torailStudentsListVisible) {
+    listEl.innerHTML = "";
+    emptyEl.style.display = "none";
+    return;
+  }
 
   if (filtered.length === 0) {
     listEl.innerHTML = "";
