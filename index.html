@@ -528,10 +528,16 @@
         للمشتركين بس (مدفوع)
       </label>
       <button id="matSubmitBtn" class="backup-btn" onclick="submitAddMaterial()">إضافة المحتوى</button>
+      <button id="matCancelEditBtn" class="backup-btn" onclick="cancelEditMaterial()" style="display:none; background:none; border:1px solid rgba(0,0,0,0.15); margin-top:0.5rem;">إلغاء التعديل</button>
       <p id="matStatusMsg" style="font-size:0.82rem; margin:0.6rem 0 0; display:none;"></p>
     </div>
 
+    <button id="copyMaterialsLinkBtn" class="backup-btn" onclick="copyMaterialsPageLink()" style="margin-bottom:1rem;">
+      📋 نسخ رابط المكتبة للطلاب
+    </button>
+
     <div class="tools-group-title">المحتوى الحالي</div>
+    <div id="materialsStageFilter" class="category-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem;"></div>
     <div id="materialsListBox"></div>
   </div>
 
@@ -876,7 +882,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v22 — إرسال واتساب جماعي + تصفير رموز الدخول — 12 سبتمبر 2026";
+const APP_VERSION = "v23 — تعديل المحتوى + نسخ الرابط + فلتر المراحل — 12 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1812,6 +1818,26 @@ function toggleMaterialsSection() {
   if (!isOpen) renderMaterialsList();
 }
 
+const MATERIALS_PAGE_URL = "https://abm-code.github.io/Register--Class-/materials.html";
+let editingMaterialId = null;
+let activeMaterialsStageFilter = "الكل";
+
+function copyMaterialsPageLink() {
+  const btn = document.getElementById("copyMaterialsLinkBtn");
+  const done = () => {
+    const original = btn.textContent;
+    btn.textContent = "✓ اتنسخ الرابط";
+    setTimeout(() => { btn.textContent = original; }, 2000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(MATERIALS_PAGE_URL).then(done).catch(() => {
+      prompt("انسخ الرابط ده يدوي:", MATERIALS_PAGE_URL);
+    });
+  } else {
+    prompt("انسخ الرابط ده يدوي:", MATERIALS_PAGE_URL);
+  }
+}
+
 function onMaterialTypeChange() {
   const type = document.getElementById("matType").value;
   document.getElementById("matVideoUrlWrap").style.display = type === "video" ? "block" : "none";
@@ -1829,6 +1855,42 @@ function extractYoutubeId(url) {
   return null;
 }
 
+function editMaterial(materialId) {
+  const m = materials.find(x => x.id === materialId);
+  if (!m) return;
+  editingMaterialId = materialId;
+  document.getElementById("matStage").value = m.stage || "";
+  document.getElementById("matCategory").value = m.category || "";
+  document.getElementById("matTitle").value = m.title || "";
+  document.getElementById("matType").value = m.type || "video";
+  onMaterialTypeChange();
+  if (m.type === "video") {
+    document.getElementById("matVideoUrl").value = m.url || "";
+  } else {
+    document.getElementById("matFileUrl").value = m.url || "";
+  }
+  document.getElementById("matSubscriberOnly").checked = !!m.subscriberOnly;
+  document.getElementById("matSubmitBtn").textContent = "حفظ التعديلات";
+  document.getElementById("matCancelEditBtn").style.display = "block";
+  document.getElementById("matStatusMsg").style.display = "none";
+  document.getElementById("matStage").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function cancelEditMaterial() {
+  editingMaterialId = null;
+  document.getElementById("matStage").value = "";
+  document.getElementById("matCategory").value = "";
+  document.getElementById("matTitle").value = "";
+  document.getElementById("matType").value = "video";
+  onMaterialTypeChange();
+  document.getElementById("matVideoUrl").value = "";
+  document.getElementById("matFileUrl").value = "";
+  document.getElementById("matSubscriberOnly").checked = false;
+  document.getElementById("matSubmitBtn").textContent = "إضافة المحتوى";
+  document.getElementById("matCancelEditBtn").style.display = "none";
+  document.getElementById("matStatusMsg").style.display = "none";
+}
+
 async function submitAddMaterial() {
   const stage = document.getElementById("matStage").value;
   const category = document.getElementById("matCategory").value.trim();
@@ -1836,6 +1898,7 @@ async function submitAddMaterial() {
   const type = document.getElementById("matType").value;
   const statusMsg = document.getElementById("matStatusMsg");
   const btn = document.getElementById("matSubmitBtn");
+  const isEditing = !!editingMaterialId;
 
   function fail(msg) {
     statusMsg.textContent = msg;
@@ -1847,7 +1910,7 @@ async function submitAddMaterial() {
   if (!title) return fail("اكتب عنوان للمحتوى.");
 
   btn.disabled = true;
-  btn.textContent = "جاري الإضافة...";
+  btn.textContent = isEditing ? "جاري الحفظ..." : "جاري الإضافة...";
   statusMsg.style.display = "none";
 
   try {
@@ -1862,30 +1925,32 @@ async function submitAddMaterial() {
       if (!url) throw new Error("حط رابط الملف أولاً.");
     }
 
-    await materialsCol.add({
-      teacherId: currentTeacherId,
+    const data = {
       stage,
       category: category || "عام",
       title,
       type,
       url,
       subscriberOnly: document.getElementById("matSubscriberOnly").checked,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    });
+    };
 
-    document.getElementById("matCategory").value = "";
-    document.getElementById("matTitle").value = "";
-    document.getElementById("matVideoUrl").value = "";
-    document.getElementById("matFileUrl").value = "";
-    document.getElementById("matSubscriberOnly").checked = false;
-    statusMsg.textContent = "✓ تمت الإضافة بنجاح.";
+    if (isEditing) {
+      await materialsCol.doc(editingMaterialId).update(data);
+    } else {
+      data.teacherId = currentTeacherId;
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await materialsCol.add(data);
+    }
+
+    cancelEditMaterial();
+    statusMsg.textContent = isEditing ? "✓ تم حفظ التعديلات." : "✓ تمت الإضافة بنجاح.";
     statusMsg.style.color = "#3F6B4A";
     statusMsg.style.display = "block";
   } catch (err) {
-    fail("تعذرت الإضافة: " + (err.message || err));
+    fail((isEditing ? "تعذر الحفظ: " : "تعذرت الإضافة: ") + (err.message || err));
   } finally {
     btn.disabled = false;
-    btn.textContent = "إضافة المحتوى";
+    btn.textContent = editingMaterialId ? "حفظ التعديلات" : "إضافة المحتوى";
   }
 }
 
@@ -1900,20 +1965,45 @@ async function deleteMaterial(materialId) {
 
 function renderMaterialsList() {
   const box = document.getElementById("materialsListBox");
+  const filterBox = document.getElementById("materialsStageFilter");
   if (!box) return;
-  if (materials.length === 0) {
+
+  if (filterBox) {
+    const stagesPresent = ["الكل", ...Array.from(new Set(materials.map(m => m.stage || "")))];
+    if (!stagesPresent.includes(activeMaterialsStageFilter)) activeMaterialsStageFilter = "الكل";
+    filterBox.innerHTML = stagesPresent.map(s => `
+      <div onclick="setMaterialsStageFilter('${s}')" style="cursor:pointer; padding:0.35rem 0.85rem; border-radius:999px; font-size:0.8rem; font-weight:600;
+        background:${s === activeMaterialsStageFilter ? '#D4A93B' : 'rgba(0,0,0,0.06)'};
+        color:${s === activeMaterialsStageFilter ? '#1B2420' : '#4A5A50'};">${escapeHtml(s)}</div>
+    `).join("");
+  }
+
+  const list = activeMaterialsStageFilter === "الكل" ? materials : materials.filter(m => (m.stage || "") === activeMaterialsStageFilter);
+
+  if (list.length === 0) {
     box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش محتوى مُضاف.</p>`;
     return;
   }
   const typeLabels = { video: "🎬 فيديو", image: "🖼 صورة", pdf: "📄 PDF" };
-  box.innerHTML = materials.map(m => `
+  box.innerHTML = list.map(m => `
     <div class="result-row">
       <div>
-        <div class="result-row-name">${escapeHtml(m.title || "")}</div>
-        <div class="result-row-date">${escapeHtml(m.stage || "")} — ${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — 💰 مدفوع" : ""}</div>
+        <div class="result-row-name">
+          <span style="background:#3F6B4A; color:#F5F1E6; border-radius:6px; padding:0.1rem 0.5rem; font-size:0.75rem; margin-left:0.4rem;">${escapeHtml(m.stage || "")}</span>
+          ${escapeHtml(m.title || "")}
+        </div>
+        <div class="result-row-date">${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — 💰 مدفوع" : ""}</div>
       </div>
-      <button class="backup-btn" style="flex:none; padding:0.4rem 0.8rem; background:#F6E7E2; color:#9C4B32;" onclick="deleteMaterial('${m.id}')">حذف</button>
+      <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+        <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="editMaterial('${m.id}')">تعديل</button>
+        <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="deleteMaterial('${m.id}')">حذف</button>
+      </div>
     </div>`).join("");
+}
+
+function setMaterialsStageFilter(stage) {
+  activeMaterialsStageFilter = stage;
+  renderMaterialsList();
 }
 
 function toggleFilterPillsSection() {
