@@ -282,6 +282,23 @@
 </head>
 <body>
 
+<div id="waQueueModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9998; align-items:center; justify-content:center; padding:1.25rem;">
+  <div style="background:#F5F1E6; border-radius:14px; padding:1.5rem; max-width:400px; width:100%; text-align:center;">
+    <div id="waQueueProgress" style="color:#6B6B60; font-size:0.85rem; margin-bottom:0.5rem;"></div>
+    <div id="waQueueName" style="font-family:'Fraunces',serif; font-weight:700; font-size:1.15rem; margin-bottom:0.3rem;"></div>
+    <div id="waQueuePhone" style="color:#6B6B60; font-size:0.85rem; margin-bottom:1rem;"></div>
+    <button id="waQueueOpenBtn" onclick="waQueueOpenCurrent()" style="background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.75rem 1rem; font-weight:700; font-size:0.95rem; cursor:pointer; width:100%; margin-bottom:0.6rem;">
+      📤 افتح واتساب وابعت
+    </button>
+    <button onclick="waQueueNext()" style="background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.7rem 1rem; font-weight:700; font-size:0.9rem; cursor:pointer; width:100%; margin-bottom:0.5rem;">
+      التالي ⬅️
+    </button>
+    <button onclick="waQueueClose()" style="background:none; color:#9C4B32; border:1px solid #C15B3C; border-radius:10px; padding:0.6rem 1rem; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%;">
+      إغلاق
+    </button>
+  </div>
+</div>
+
 <div id="lockScreen" style="position:fixed;inset:0;background:#16302B;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.9rem;padding:1.5rem;text-align:center;">
   <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
   <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">دخول المدرس</h2>
@@ -460,6 +477,10 @@
       <button id="fixPhonesBtn" class="backup-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12a10 10 0 1 1-4-8"/><path d="M22 4v6h-6"/></svg>
         تصحيح أرقام الهواتف (عربي → إنجليزي)
+      </button>
+      <button id="resetAllPinsBtn" class="backup-btn" onclick="resetAllStudentPins()" style="background:#F6E7E2; color:#9C4B32;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        إعادة تعيين رمز الدخول لكل الطلاب
       </button>
     </div>
 
@@ -705,6 +726,9 @@
       <button id="deleteSelectedResultsBtn" onclick="deleteSelectedResults()" disabled style="background:#C15B3C; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
         حذف المحدد (<span id="selectedResultsCount">0</span>)
       </button>
+      <button id="sendSelectedWhatsappBtn" onclick="startWhatsappQueue()" disabled style="background:#3F6B4A; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+        📤 إرسال واتساب للمحدد
+      </button>
       <button onclick="deleteAllResultsForExam()" style="background:none; color:#C15B3C; border:1px solid #C15B3C; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; margin-right:auto;">
         حذف كل النتائج
       </button>
@@ -852,7 +876,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v21 — المحتوى التعليمي (فيديو/صور/PDF) — 11 سبتمبر 2026";
+const APP_VERSION = "v22 — إرسال واتساب جماعي + تصفير رموز الدخول — 12 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1213,6 +1237,35 @@ async function fixAllPhoneNumbers() {
     showSuccess(`تم تصحيح أرقام ${toFix.length} طالب بنجاح.`);
   } catch (err) {
     showError("تعذر تصحيح الأرقام. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+async function resetAllStudentPins() {
+  const withPin = students.filter(s => s.pin);
+  if (withPin.length === 0) {
+    showSuccess("مفيش أي طالب عنده رمز دخول مسجل أصلاً.");
+    return;
+  }
+  const confirmed = confirm(
+    `هيتم مسح رمز الدخول (PIN) بتاع ${withPin.length} طالب نهائيًا.\n` +
+    `بعد كده، أول رقم من 4 أرقام يكتبه كل طالب في أول محاولة دخول هيبقى رمزه الجديد تلقائيًا (زي أول مرة يستخدم فيها التطبيق).\n` +
+    `⚠️ ده معناه إن أي حد يجرب قبل الطالب الحقيقي ممكن ياخد الرمز الجديد بدل منه — قول لكل الطلاب يدخلوا بسرعة بعد التصفير.\n` +
+    `متأكد إنك عايز تكمل؟`
+  );
+  if (!confirmed) return;
+  try {
+    const chunkSize = 400;
+    for (let i = 0; i < withPin.length; i += chunkSize) {
+      const chunk = withPin.slice(i, i + chunkSize);
+      const batch = db.batch();
+      chunk.forEach(s => {
+        batch.update(studentsCol.doc(s.id), { pin: "" });
+      });
+      await batch.commit();
+    }
+    showSuccess(`تم مسح رمز الدخول لـ ${withPin.length} طالب. أول محاولة دخول لكل طالب هتسجل رمزه الجديد تلقائيًا.`);
+  } catch (err) {
+    showError("تعذر إعادة تعيين الرموز. تأكد من اتصالك بالإنترنت.");
   }
 }
 
@@ -2536,10 +2589,15 @@ function toggleSelectAllResults(checked) {
 function updateResultsSelectionUI() {
   const countEl = document.getElementById("selectedResultsCount");
   const btn = document.getElementById("deleteSelectedResultsBtn");
+  const waBtn = document.getElementById("sendSelectedWhatsappBtn");
   if (!countEl || !btn) return;
   countEl.textContent = selectedResultIds.size;
   btn.disabled = selectedResultIds.size === 0;
   btn.style.opacity = selectedResultIds.size === 0 ? "0.5" : "1";
+  if (waBtn) {
+    waBtn.disabled = selectedResultIds.size === 0;
+    waBtn.style.opacity = selectedResultIds.size === 0 ? "0.5" : "1";
+  }
   const selectAllBox = document.getElementById("resultsSelectAllBox");
   const visible = getVisibleExamResultsList();
   if (selectAllBox) selectAllBox.checked = visible.length > 0 && visible.every(r => selectedResultIds.has(r.id));
@@ -2674,6 +2732,61 @@ function sendExamResultWhatsapp(r) {
   const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
+}
+
+let waQueue = [];
+let waQueueIndex = 0;
+
+function startWhatsappQueue() {
+  const list = getVisibleExamResultsList().filter(r => selectedResultIds.has(r.id));
+  if (list.length === 0) return;
+  waQueue = list.map(r => {
+    const waNumber = formatPhoneForWhatsapp(r.parentPhone);
+    const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+    const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+    return { name: r.studentName, phone: r.parentPhone || "", waNumber, message };
+  });
+  waQueueIndex = 0;
+  document.getElementById("waQueueModal").style.display = "flex";
+  renderWaQueueStep();
+}
+
+function renderWaQueueStep() {
+  if (waQueueIndex >= waQueue.length) {
+    document.getElementById("waQueueProgress").textContent = "خلصت كل الطلاب المحددين ✓";
+    document.getElementById("waQueueName").textContent = "";
+    document.getElementById("waQueuePhone").textContent = "";
+    document.getElementById("waQueueOpenBtn").style.display = "none";
+    return;
+  }
+  const item = waQueue[waQueueIndex];
+  document.getElementById("waQueueOpenBtn").style.display = "block";
+  document.getElementById("waQueueProgress").textContent = `طالب ${waQueueIndex + 1} من ${waQueue.length}`;
+  document.getElementById("waQueueName").textContent = item.name;
+  if (!item.waNumber) {
+    document.getElementById("waQueuePhone").textContent = "⚠️ مفيش رقم ولي أمر مسجل — تم التخطي تلقائيًا";
+    document.getElementById("waQueueOpenBtn").style.display = "none";
+  } else {
+    document.getElementById("waQueuePhone").textContent = item.phone;
+  }
+}
+
+function waQueueOpenCurrent() {
+  const item = waQueue[waQueueIndex];
+  if (!item || !item.waNumber) return;
+  const url = "https://wa.me/" + item.waNumber + "?text=" + encodeURIComponent(item.message);
+  window.open(url, "_blank");
+}
+
+function waQueueNext() {
+  waQueueIndex++;
+  renderWaQueueStep();
+}
+
+function waQueueClose() {
+  document.getElementById("waQueueModal").style.display = "none";
+  waQueue = [];
+  waQueueIndex = 0;
 }
 
 let viewingMissingExamId = null;
