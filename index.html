@@ -558,6 +558,17 @@
     <span id="studentsListToggleLabel">إظهار قائمة الطلاب</span>
     <svg id="studentsListToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
+
+  <div class="backup-row" style="align-items:center; margin-bottom:0.7rem;">
+    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#4A5A50;">
+      <input type="checkbox" id="studentsSelectAllBox" onchange="toggleSelectAllStudents(this.checked)">
+      تحديد الكل
+    </label>
+    <button id="deleteSelectedStudentsBtn" onclick="deleteSelectedStudents()" disabled style="background:#C15B3C; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+      حذف المحدد (<span id="selectedStudentsCount">0</span>)
+    </button>
+  </div>
+
   <div id="studentList"></div>
   <button id="scrollTopBtn" class="scroll-top-btn" onclick="window.scrollTo({top:0, behavior:'smooth'})" style="display:none;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg>
@@ -929,13 +940,23 @@
     <svg id="torailStudentsListToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
 
+  <div class="backup-row" style="align-items:center; margin-bottom:0.7rem;">
+    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#4A5A50;">
+      <input type="checkbox" id="torailStudentsSelectAllBox" onchange="toggleSelectAllTorailStudents(this.checked)">
+      تحديد الكل
+    </label>
+    <button id="deleteSelectedTorailStudentsBtn" onclick="deleteSelectedTorailStudents()" disabled style="background:#C15B3C; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+      حذف المحدد (<span id="selectedTorailStudentsCount">0</span>)
+    </button>
+  </div>
+
   <div id="torailStudentList"></div>
 </main>
 
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v25 — تبويب توريل: فلاتر وأدوات وإخفاء القائمة — 12 سبتمبر 2026";
+const APP_VERSION = "v26 — تحديد وحذف جماعي للطلاب — 12 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2808,6 +2829,72 @@ async function deleteAllResultsForExam() {
     showError("حصل خطأ أثناء الحذف: " + (err.message || err));
   }
 }
+
+let selectedStudentIds = new Set();
+function toggleStudentSelect(studentId, checked) {
+  if (checked) selectedStudentIds.add(studentId); else selectedStudentIds.delete(studentId);
+  updateStudentsSelectionUI();
+}
+function toggleSelectAllStudents(checked) {
+  const mainStudents = students.filter(s => s.group !== "torail");
+  selectedStudentIds = checked ? new Set(mainStudents.map(s => s.id)) : new Set();
+  render();
+}
+function updateStudentsSelectionUI() {
+  const countEl = document.getElementById("selectedStudentsCount");
+  const btn = document.getElementById("deleteSelectedStudentsBtn");
+  if (!countEl || !btn) return;
+  countEl.textContent = selectedStudentIds.size;
+  btn.disabled = selectedStudentIds.size === 0;
+  btn.style.opacity = selectedStudentIds.size === 0 ? "0.5" : "1";
+  const selectAllBox = document.getElementById("studentsSelectAllBox");
+  const mainStudents = students.filter(s => s.group !== "torail");
+  if (selectAllBox) selectAllBox.checked = mainStudents.length > 0 && mainStudents.every(s => selectedStudentIds.has(s.id));
+}
+async function deleteSelectedStudents() {
+  if (selectedStudentIds.size === 0) return;
+  if (!confirm(`متأكد إنك عايز تمسح ${selectedStudentIds.size} طالب نهائيًا؟ الخطوة دي مش هترجع تاني.`)) return;
+  const ids = Array.from(selectedStudentIds);
+  try {
+    await Promise.all(ids.map(id => studentsCol.doc(id).delete()));
+    selectedStudentIds.clear();
+  } catch (err) {
+    showError("حصل خطأ أثناء الحذف: " + (err.message || err));
+  }
+}
+
+let selectedTorailStudentIds = new Set();
+function toggleTorailStudentSelect(studentId, checked) {
+  if (checked) selectedTorailStudentIds.add(studentId); else selectedTorailStudentIds.delete(studentId);
+  updateTorailStudentsSelectionUI();
+}
+function toggleSelectAllTorailStudents(checked) {
+  const torailStudents = students.filter(s => s.group === "torail");
+  selectedTorailStudentIds = checked ? new Set(torailStudents.map(s => s.id)) : new Set();
+  renderTorail();
+}
+function updateTorailStudentsSelectionUI() {
+  const countEl = document.getElementById("selectedTorailStudentsCount");
+  const btn = document.getElementById("deleteSelectedTorailStudentsBtn");
+  if (!countEl || !btn) return;
+  countEl.textContent = selectedTorailStudentIds.size;
+  btn.disabled = selectedTorailStudentIds.size === 0;
+  btn.style.opacity = selectedTorailStudentIds.size === 0 ? "0.5" : "1";
+  const selectAllBox = document.getElementById("torailStudentsSelectAllBox");
+  const torailStudents = students.filter(s => s.group === "torail");
+  if (selectAllBox) selectAllBox.checked = torailStudents.length > 0 && torailStudents.every(s => selectedTorailStudentIds.has(s.id));
+}
+async function deleteSelectedTorailStudents() {
+  if (selectedTorailStudentIds.size === 0) return;
+  if (!confirm(`متأكد إنك عايز تمسح ${selectedTorailStudentIds.size} طالب نهائيًا؟ الخطوة دي مش هترجع تاني.`)) return;
+  const ids = Array.from(selectedTorailStudentIds);
+  try {
+    await Promise.all(ids.map(id => studentsCol.doc(id).delete()));
+    selectedTorailStudentIds.clear();
+  } catch (err) {
+    showError("حصل خطأ أثناء الحذف: " + (err.message || err));
+  }
+}
 function getVisibleExamResultsList() {
   const searchInput = document.getElementById("examResultsSearchInput");
   const rawQuery = searchInput ? searchInput.value.trim() : "";
@@ -3146,6 +3233,7 @@ function render() {
     listEl.innerHTML = "";
     emptyEl.style.display = "none";
     if (scrollTopBtn) scrollTopBtn.style.display = "none";
+    updateStudentsSelectionUI();
     return;
   }
   if (scrollTopBtn) scrollTopBtn.style.display = filtered.length > 8 ? "flex" : "none";
@@ -3163,6 +3251,7 @@ function render() {
         : (noParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
         : "No matches for that search.")))))));
     emptyEl.style.display = "block";
+    updateStudentsSelectionUI();
     return;
   }
   emptyEl.style.display = "none";
@@ -3189,6 +3278,7 @@ function render() {
     return `
       <div class="card-row" data-student-id="${s.id}">
         <div class="card-head" onclick="toggleExpand('${s.id}')">
+          <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleStudentSelect('${s.id}', this.checked)" ${selectedStudentIds.has(s.id) ? "checked" : ""} style="width:18px; height:18px; flex-shrink:0; accent-color:#3F6B4A;">
           <div style="min-width:0;flex:1;">
             <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
             <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
@@ -3234,6 +3324,10 @@ function render() {
       </div>
     `;
   }).join("");
+
+  const mainIds = new Set(mainStudents.map(s => s.id));
+  selectedStudentIds.forEach(id => { if (!mainIds.has(id)) selectedStudentIds.delete(id); });
+  updateStudentsSelectionUI();
 }
 
 function renderTorail() {
@@ -3315,6 +3409,7 @@ function renderTorail() {
   if (!torailStudentsListVisible) {
     listEl.innerHTML = "";
     emptyEl.style.display = "none";
+    updateTorailStudentsSelectionUI();
     return;
   }
 
@@ -3331,6 +3426,7 @@ function renderTorail() {
         : (torailNoParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
         : "No matches for that search.")))))));
     emptyEl.style.display = "block";
+    updateTorailStudentsSelectionUI();
     return;
   }
   emptyEl.style.display = "none";
@@ -3357,6 +3453,7 @@ function renderTorail() {
     return `
       <div class="card-row" data-student-id="${s.id}">
         <div class="card-head" onclick="toggleTorailExpand('${s.id}')">
+          <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleTorailStudentSelect('${s.id}', this.checked)" ${selectedTorailStudentIds.has(s.id) ? "checked" : ""} style="width:18px; height:18px; flex-shrink:0; accent-color:#3F6B4A;">
           <div style="min-width:0;flex:1;">
             <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
             <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
@@ -3402,6 +3499,10 @@ function renderTorail() {
       </div>
     `;
   }).join("");
+
+  const torailIds = new Set(torailStudents.map(s => s.id));
+  selectedTorailStudentIds.forEach(id => { if (!torailIds.has(id)) selectedTorailStudentIds.delete(id); });
+  updateTorailStudentsSelectionUI();
 }
 
 function torailFilterByStage(stage) {
