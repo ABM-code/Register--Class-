@@ -70,7 +70,7 @@
   .card-row:hover { background: #F3EFE2 !important; }
   @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
 
-  header { padding: 2.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(var(--c-subtle-rgb),0.12); position: relative; }
+  header { padding: 1.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(var(--c-subtle-rgb),0.12); position: relative; }
   .logout-btn { position: absolute; top: 1rem; left: 1.25rem; background: rgba(var(--c-subtle-rgb),0.08); border: 1px solid rgba(var(--c-subtle-rgb),0.2); color: var(--c-textonpage); border-radius: 8px; padding: 0.4rem 0.7rem; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
   .logout-btn:active { background: rgba(var(--c-subtle-rgb),0.16); }
   .tab-nav { display: flex; flex-direction: row-reverse; flex-wrap: wrap; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
@@ -315,7 +315,7 @@
 </div>
 
 <header class="app-content">
-  <div style="position:absolute; top:1rem; left:1.25rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end; max-width:70%;">
+  <div style="max-width:640px; margin:0 auto 1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
     <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="تبديل الألوان" style="position:static;">🎨</button>
     <button class="logout-btn" id="changePasswordBtn" onclick="openChangePassword()" title="تغيير كلمة المرور" style="position:static;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -956,7 +956,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v26 — تحديد وحذف جماعي للطلاب — 12 سبتمبر 2026";
+const APP_VERSION = "v27 — ترتيب أزرار الهيدر (خروج/كلمة السر/الألوان) — 12 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
