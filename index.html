@@ -882,7 +882,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v23 — تعديل المحتوى + نسخ الرابط + فلتر المراحل — 12 سبتمبر 2026";
+const APP_VERSION = "v24 — معاينة المحتوى في نفس الصفحة — 12 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1963,6 +1963,28 @@ async function deleteMaterial(materialId) {
   }
 }
 
+let expandedMaterialId = null;
+
+function toggleMaterialPreview(materialId) {
+  expandedMaterialId = expandedMaterialId === materialId ? null : materialId;
+  renderMaterialsList();
+}
+
+function renderMaterialPreview(m) {
+  if (m.type === "video") {
+    return `<div style="position:relative; width:100%; padding-top:56.25%; border-radius:9px; overflow:hidden; margin-top:0.6rem;">
+      <iframe src="${escapeHtml(m.url)}" style="position:absolute; top:0; right:0; width:100%; height:100%; border:none;" allowfullscreen></iframe>
+    </div>`;
+  }
+  if (m.type === "image") {
+    return `<img src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}" style="width:100%; border-radius:9px; margin-top:0.6rem; display:block;">`;
+  }
+  if (m.type === "pdf") {
+    return `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener" style="display:block; text-align:center; background:#3F6B4A; color:#F5F1E6; text-decoration:none; padding:0.65rem; border-radius:9px; font-weight:600; font-size:0.85rem; margin-top:0.6rem;">📄 افتح ملف الـPDF</a>`;
+  }
+  return "";
+}
+
 function renderMaterialsList() {
   const box = document.getElementById("materialsListBox");
   const filterBox = document.getElementById("materialsStageFilter");
@@ -1986,18 +2008,21 @@ function renderMaterialsList() {
   }
   const typeLabels = { video: "🎬 فيديو", image: "🖼 صورة", pdf: "📄 PDF" };
   box.innerHTML = list.map(m => `
-    <div class="result-row">
-      <div>
-        <div class="result-row-name">
-          <span style="background:#3F6B4A; color:#F5F1E6; border-radius:6px; padding:0.1rem 0.5rem; font-size:0.75rem; margin-left:0.4rem;">${escapeHtml(m.stage || "")}</span>
-          ${escapeHtml(m.title || "")}
+    <div class="result-row-wrap">
+      <div class="result-row" style="cursor:pointer;" onclick="toggleMaterialPreview('${m.id}')">
+        <div>
+          <div class="result-row-name">
+            <span style="background:#3F6B4A; color:#F5F1E6; border-radius:6px; padding:0.1rem 0.5rem; font-size:0.75rem; margin-left:0.4rem;">${escapeHtml(m.stage || "")}</span>
+            ${escapeHtml(m.title || "")}
+          </div>
+          <div class="result-row-date">${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — 💰 مدفوع" : ""}</div>
         </div>
-        <div class="result-row-date">${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — 💰 مدفوع" : ""}</div>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="event.stopPropagation(); editMaterial('${m.id}')">تعديل</button>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="event.stopPropagation(); deleteMaterial('${m.id}')">حذف</button>
+        </div>
       </div>
-      <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-        <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="editMaterial('${m.id}')">تعديل</button>
-        <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="deleteMaterial('${m.id}')">حذف</button>
-      </div>
+      ${expandedMaterialId === m.id ? `<div style="padding:0 0.2rem 0.8rem;">${renderMaterialPreview(m)}</div>` : ""}
     </div>`).join("");
 }
 
