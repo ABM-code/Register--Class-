@@ -1004,7 +1004,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v36 — إصلاح محاذاة PDF واتجاه الاختيارات والفوتر — 13 سبتمبر 2026";
+const APP_VERSION = "v37 — إصلاح تكرار حرف الاختيار في PDF — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2329,6 +2329,10 @@ async function deleteExam(examId) {
   }
 }
 
+function stripOptionLabel(text) {
+  return String(text || "").replace(/^\s*[a-zA-Z]\s*[.\)]\s*/, "");
+}
+
 function textDir(text) {
   return /[\u0600-\u06FF]/.test(text || "") ? "rtl" : "ltr";
 }
@@ -2380,7 +2384,7 @@ function buildQuestionBlockHtml(q, i) {
   let bodyHtml = "";
   if (q.type === "mcq" || q.type === "translation_mcq") {
     const letters = ["a","b","c","d","e","f"];
-    bodyHtml = `<div class="options-grid">${(q.options||[]).map((opt, oi) => `<div style="grid-row:1; grid-column:${oi+1};" ${dirAttrs(opt)}>${letters[oi]}) ${escapeHtml(opt)}</div>`).join("")}</div>`;
+    bodyHtml = `<div class="options-grid">${(q.options||[]).map((opt, oi) => `<div style="grid-row:1; grid-column:${oi+1};" ${dirAttrs(opt)}>${letters[oi]}) ${escapeHtml(stripOptionLabel(opt))}</div>`).join("")}</div>`;
   } else {
     bodyHtml = `<div class="answer-line">.......................................................</div>`;
   }
@@ -2416,7 +2420,7 @@ function printExamAnswersPdf(examId) {
     if (q.type === "mcq" || q.type === "translation_mcq") {
       const opts = q.options || [];
       const letter = String.fromCharCode(97 + (q.correctIndex || 0));
-      ans = `${letter}) ${escapeHtml(opts[q.correctIndex] || "")}`;
+      ans = `${letter}) ${escapeHtml(stripOptionLabel(opts[q.correctIndex] || ""))}`;
     } else {
       ans = escapeHtml((q.correctAnswers && q.correctAnswers[0]) || "");
     }
