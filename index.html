@@ -1004,7 +1004,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v35 — PDF الامتحان: ملفين منفصلين + محاذاة الاختيارات + فوتر — 13 سبتمبر 2026";
+const APP_VERSION = "v36 — إصلاح محاذاة PDF واتجاه الاختيارات والفوتر — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2329,55 +2329,62 @@ async function deleteExam(examId) {
   }
 }
 
+function textDir(text) {
+  return /[\u0600-\u06FF]/.test(text || "") ? "rtl" : "ltr";
+}
+function dirAttrs(text) {
+  const dir = textDir(text);
+  return `dir="${dir}" style="text-align:${dir === "rtl" ? "right" : "left"};"`;
+}
+
 function buildPrintDocument(title, bodyHtml) {
   return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
     <title>${escapeHtml(title)}</title>
     <style>
       * { box-sizing: border-box; }
-      body { font-family: Arial, sans-serif; font-size: 12pt; direction: rtl; color: #1B2420; margin: 0; padding: 14mm 10mm 22mm; position: relative; }
+      body { font-family: Arial, sans-serif; font-size: 12pt; direction: rtl; color: #1B2420; margin: 0; padding: 14mm 10mm 26mm; position: relative; }
       .page-frame {
-        border: 3px solid #0a1f44; border-radius: 4px; padding: 16px 20px; position: relative; min-height: calc(100vh - 36mm);
+        border: 3px solid #0a1f44; border-radius: 4px; padding: 16px 20px; position: relative; min-height: calc(100vh - 40mm);
         box-decoration-break: clone; -webkit-box-decoration-break: clone;
       }
       .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 46pt; color: rgba(10,31,68,0.08); white-space: nowrap; z-index: -1; font-weight: bold; pointer-events: none; }
       h1 { font-size: 19px; margin-bottom: 2px; color: #0a1f44; }
       p.sub { color: #555; margin-top: 0; margin-bottom: 20px; font-size: 12pt; }
       .q-block { margin-bottom: 16px; page-break-inside: avoid; }
-      .q-prompt { font-weight: bold; font-size: 12pt; margin-bottom: 6px; unicode-bidi: plaintext; text-align: start; color: #0a1f44; }
-      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12pt; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; color: #1B2420; }
-      .options-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px 10px; margin-top: 4px; }
-      .options-grid div { font-size: 12pt; unicode-bidi: plaintext; text-align: start; color: #1450c9; }
+      .q-prompt { font-weight: bold; font-size: 12pt; margin-bottom: 6px; color: #0a1f44; }
+      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12pt; white-space: pre-wrap; color: #1B2420; }
+      .options-grid { display: grid; direction: ltr; grid-template-columns: repeat(6, 1fr); gap: 4px 10px; margin-top: 4px; }
+      .options-grid div { font-size: 12pt; color: #1450c9; white-space: nowrap; overflow: visible; }
       .answer-line { font-size: 12pt; margin-top: 4px; color: #1450c9; }
-      .answer-key-row { font-size: 12pt; margin-bottom: 4px; color: #1450c9; }
-      .print-footer {
-        position: fixed; bottom: 6mm; left: 10mm; right: 10mm; height: 11mm;
-        border: 1.5px solid #0a1f44; border-radius: 4px; background: #fff;
+      .answer-key-row { font-size: 12pt; margin-bottom: 6px; color: #1450c9; }
+      .footer-name-box, .footer-phone-box {
+        position: fixed; bottom: 6mm; border: 1.5px solid #0a1f44; border-radius: 4px;
+        background: #ffffff; padding: 4px 14px; font-size: 10pt; font-weight: bold; color: #0a1f44;
+        z-index: 5; white-space: nowrap;
       }
-      .print-footer .footer-name { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); font-size: 10pt; font-weight: bold; color: #0a1f44; }
-      .print-footer .footer-phone { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); font-size: 10pt; font-weight: bold; color: #0a1f44; direction: ltr; }
+      .footer-name-box { left: 10mm; }
+      .footer-phone-box { right: 10mm; direction: ltr; }
     </style></head>
     <body>
       <div class="watermark">Mr. Abd El Rahman Moneer</div>
       <div class="page-frame">
         ${bodyHtml}
       </div>
-      <div class="print-footer">
-        <span class="footer-name">Mr. Abd El Rahman Moneer</span>
-        <span class="footer-phone">01220524090</span>
-      </div>
+      <div class="footer-name-box">Mr. Abd El Rahman Moneer</div>
+      <div class="footer-phone-box">01220524090</div>
     </body></html>`;
 }
 
 function buildQuestionBlockHtml(q, i) {
-  const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+  const passageHtml = q.passage ? `<div class="passage" ${dirAttrs(q.passage)}>${escapeHtml(q.passage)}</div>` : "";
   let bodyHtml = "";
   if (q.type === "mcq" || q.type === "translation_mcq") {
     const letters = ["a","b","c","d","e","f"];
-    bodyHtml = `<div class="options-grid">${(q.options||[]).map((opt, oi) => `<div style="grid-column:${oi+1};">${letters[oi]}) ${escapeHtml(opt)}</div>`).join("")}</div>`;
+    bodyHtml = `<div class="options-grid">${(q.options||[]).map((opt, oi) => `<div style="grid-row:1; grid-column:${oi+1};" ${dirAttrs(opt)}>${letters[oi]}) ${escapeHtml(opt)}</div>`).join("")}</div>`;
   } else {
     bodyHtml = `<div class="answer-line">.......................................................</div>`;
   }
-  return `<div class="q-block"><div class="q-prompt">${i+1}. ${escapeHtml(q.prompt)}</div>${passageHtml}${bodyHtml}</div>`;
+  return `<div class="q-block"><div class="q-prompt" ${dirAttrs(q.prompt)}>${i+1}. ${escapeHtml(q.prompt)}</div>${passageHtml}${bodyHtml}</div>`;
 }
 
 function openPrintWindow(html) {
@@ -2413,7 +2420,7 @@ function printExamAnswersPdf(examId) {
     } else {
       ans = escapeHtml((q.correctAnswers && q.correctAnswers[0]) || "");
     }
-    return `<div class="answer-key-row"><strong>${i+1}.</strong> ${ans}</div>`;
+    return `<div class="answer-key-row" ${dirAttrs(ans)}><strong>${i+1}.</strong> ${escapeHtml(ans)}</div>`;
   }).join("");
   const bodyHtml = `
     <h1>${escapeHtml(ex.title)} — نموذج الإجابة</h1>
