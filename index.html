@@ -956,7 +956,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v27 — ترتيب أزرار الهيدر (خروج/كلمة السر/الألوان) — 12 سبتمبر 2026";
+const APP_VERSION = "v28 — أنواع أسئلة جديدة: محادثة/ترجمة/مقالي — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2287,7 +2287,7 @@ function printExamPdf(examId) {
   const questionsHtml = questions.map((q, i) => {
     const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
     let bodyHtml = "";
-    if (q.type === "mcq") {
+    if (q.type === "mcq" || q.type === "translation_mcq") {
       bodyHtml = `<ol type="a" class="options-list">${(q.options||[]).map(opt => `<li>${escapeHtml(opt)}</li>`).join("")}</ol>`;
     } else {
       bodyHtml = `<div class="answer-line">.......................................................</div>`;
@@ -2297,7 +2297,7 @@ function printExamPdf(examId) {
 
   const answerKeyHtml = questions.map((q, i) => {
     let ans = "";
-    if (q.type === "mcq") {
+    if (q.type === "mcq" || q.type === "translation_mcq") {
       const opts = q.options || [];
       const letter = String.fromCharCode(97 + (q.correctIndex || 0));
       ans = `${letter}) ${escapeHtml(opts[q.correctIndex] || "")}`;
@@ -2367,9 +2367,9 @@ function editExam(examId) {
     type: q.type,
     passage: q.passage || "",
     prompt: q.prompt || "",
-    options: q.type === "mcq" ? (q.options && q.options.length ? [...q.options] : ["","","",""]) : ["","","",""],
+    options: (q.type === "mcq" || q.type === "translation_mcq") ? (q.options && q.options.length ? [...q.options] : ["","","",""]) : ["","","",""],
     correctIndex: q.correctIndex || 0,
-    correctAnswers: q.type !== "mcq" ? (q.correctAnswers && q.correctAnswers.length ? [...q.correctAnswers] : [""]) : [""],
+    correctAnswers: (q.type !== "mcq" && q.type !== "translation_mcq") ? (q.correctAnswers && q.correctAnswers.length ? [...q.correctAnswers] : [""]) : [""],
   }));
   document.getElementById("examBuilderTitle").textContent = "تعديل الامتحان";
   document.getElementById("saveExamBtnLabel").textContent = "حفظ التعديلات";
@@ -2511,20 +2511,23 @@ function renderQuestionsBuilder() {
         <label>نوع السؤال</label>
         <select class="reg-input" onchange="updateQuestionType('${q.id}', this.value)">
           <option value="mcq" ${q.type==='mcq'?'selected':''}>اختيار من متعدد</option>
+          <option value="translation_mcq" ${q.type==='translation_mcq'?'selected':''}>ترجمة (اختيار من متعدد)</option>
           <option value="complete" ${q.type==='complete'?'selected':''}>إكمال الفراغ</option>
           <option value="rewrite" ${q.type==='rewrite'?'selected':''}>إعادة الصياغة (Rewrite)</option>
           <option value="correct" ${q.type==='correct'?'selected':''}>تصحيح الخطأ (Correct)</option>
+          <option value="dialogue" ${q.type==='dialogue'?'selected':''}>إكمال محادثة (Dialogue)</option>
+          <option value="essay" ${q.type==='essay'?'selected':''}>سؤال مقالي (Essay)</option>
         </select>
       </div>
       <div class="field-group">
-        <label>نص/حوار (اختياري)</label>
-        <textarea class="reg-textarea" dir="auto" rows="2" placeholder="قطعة أو حوار يقرأه الطالب قبل السؤال (اختياري)" oninput="updateQuestionField('${q.id}','passage',this.value)">${escapeHtml(q.passage)}</textarea>
+        <label>نص/قطعة/حوار (اختياري) — لو أكتر من سؤال بنفس النص بالظبط هيتجمعوا تحت بعض للطالب</label>
+        <textarea class="reg-textarea" dir="auto" rows="3" placeholder="قطعة قراءة أو حوار يقرأه الطالب قبل السؤال (اختياري)" oninput="updateQuestionField('${q.id}','passage',this.value)">${escapeHtml(q.passage)}</textarea>
       </div>
       <div class="field-group">
         <label>نص السؤال</label>
         <input class="reg-input" dir="auto" placeholder="اكتب السؤال هنا" value="${escapeHtml(q.prompt)}" oninput="updateQuestionField('${q.id}','prompt',this.value)">
       </div>
-      ${q.type === 'mcq' ? renderMcqOptions(q) : renderTextAnswer(q)}
+      ${(q.type === 'mcq' || q.type === 'translation_mcq') ? renderMcqOptions(q) : renderTextAnswer(q)}
     </div>
   `).join("");
 }
@@ -2546,11 +2549,15 @@ function renderTextAnswer(q) {
     complete: "الإجابات المقبولة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
     rewrite: "الصياغة المقترحة (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
     correct: "الإجابة الصحيحة بعد التصحيح (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    dialogue: "السطر الناقص المتوقع (افصل بينهم بفاصلة لو أكتر من صيغة صح)",
+    essay: "الإجابة النموذجية (افصل بينهم بفاصلة لو أكتر من إجابة مقبولة)",
   };
   const placeholders = {
     complete: "مثال: went, has gone",
     rewrite: "مثال: She is taller than her sister.",
     correct: "مثال: He goes to school every day.",
+    dialogue: "مثال: I'm fine, thank you.",
+    essay: "مثال: أهم نقطة متوقعة في إجابة الطالب",
   };
   const label = labels[q.type] || labels.complete;
   const placeholder = placeholders[q.type] || placeholders.complete;
@@ -2601,10 +2608,10 @@ async function saveExam() {
   if (currentBuilderQuestions.length === 0) { showError("لازم تضيف سؤال واحد على الأقل."); return; }
   for (const q of currentBuilderQuestions) {
     if (!q.prompt.trim()) { showError("فيه سؤال من غير نص، اكتب كل الأسئلة."); return; }
-    if (q.type === "mcq" && q.options.filter(o => o.trim()).length < 2) {
+    if ((q.type === "mcq" || q.type === "translation_mcq") && q.options.filter(o => o.trim()).length < 2) {
       showError("كل سؤال اختيار من متعدد لازم يكون فيه اختيارين على الأقل."); return;
     }
-    if (q.type !== "mcq" && (!q.correctAnswers || q.correctAnswers.filter(a => a.trim()).length === 0)) {
+    if (q.type !== "mcq" && q.type !== "translation_mcq" && (!q.correctAnswers || q.correctAnswers.filter(a => a.trim()).length === 0)) {
       showError("فيه سؤال من غير إجابة مقبولة، اكتب إجابة لكل سؤال."); return;
     }
   }
@@ -2614,9 +2621,9 @@ async function saveExam() {
       teacherId: currentTeacherId,
       questions: currentBuilderQuestions.map(q => ({
         type: q.type, passage: q.passage || "", prompt: q.prompt,
-        options: q.type === "mcq" ? q.options : [],
-        correctIndex: q.type === "mcq" ? q.correctIndex : null,
-        correctAnswers: q.type !== "mcq" ? q.correctAnswers : [],
+        options: (q.type === "mcq" || q.type === "translation_mcq") ? q.options : [],
+        correctIndex: (q.type === "mcq" || q.type === "translation_mcq") ? q.correctIndex : null,
+        correctAnswers: (q.type !== "mcq" && q.type !== "translation_mcq") ? q.correctAnswers : [],
         points: 1,
       })),
     };
@@ -2942,7 +2949,7 @@ function renderExamResultsList() {
       const q = questions[ad.questionIndex];
       if (!q) return "";
       let givenText = "", correctText = "";
-      if (q.type === "mcq") {
+      if (q.type === "mcq" || q.type === "translation_mcq") {
         const opts = q.options || [];
         givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
         correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";

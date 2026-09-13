@@ -389,12 +389,12 @@ async function renderExam() {
     <div class="card" style="margin-bottom:0.5rem;">
       <strong>${escapeHtml(selectedStudent.name)}</strong>
     </div>
-    ${questions.map((q, i) => renderQuestion(q, i)).join("")}
+    ${renderQuestionsHtml(questions)}
     <button id="submitBtn">تسليم الإجابات</button>
   `;
 
   questions.forEach((q, i) => {
-    if (q.type === "mcq") {
+    if (q.type === "mcq" || q.type === "translation_mcq") {
       document.querySelectorAll(`.option-row[data-qidx="${i}"]`).forEach(row => {
         row.addEventListener("click", () => {
           document.querySelectorAll(`.option-row[data-qidx="${i}"]`).forEach(r => r.classList.remove("selected"));
@@ -448,10 +448,31 @@ function startExamTimer() {
   examTimerInterval = setInterval(tick, 1000);
 }
 
-function renderQuestion(q, i) {
-  const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+function groupQuestionsByPassage(questions) {
+  const groups = [];
+  questions.forEach((q, i) => {
+    const last = groups[groups.length - 1];
+    if (last && q.passage && q.passage === last.passage) {
+      last.items.push(i);
+    } else {
+      groups.push({ passage: q.passage || "", items: [i] });
+    }
+  });
+  return groups;
+}
+
+function renderQuestionsHtml(questions) {
+  const groups = groupQuestionsByPassage(questions);
+  return groups.map(g => {
+    const passageHtml = g.passage ? `<div class="passage">${escapeHtml(g.passage)}</div>` : "";
+    const itemsHtml = g.items.map(i => renderQuestionBody(questions[i], i, questions.length)).join("");
+    return passageHtml ? `<div class="card" style="padding-bottom:0.4rem;">${passageHtml}</div>${itemsHtml}` : itemsHtml;
+  }).join("");
+}
+
+function renderQuestionBody(q, i, totalCount) {
   let bodyHtml = "";
-  if (q.type === "mcq") {
+  if (q.type === "mcq" || q.type === "translation_mcq") {
     bodyHtml = (q.options || []).map((opt, oi) => `
       <div class="option-row" data-qidx="${i}" data-opt-idx="${oi}">
         <input type="radio" name="q${i}">
@@ -462,17 +483,23 @@ function renderQuestion(q, i) {
       complete: "اكتب إجابتك هنا",
       rewrite: "أعد كتابة الجملة هنا",
       correct: "اكتب الجملة بعد التصحيح هنا",
+      dialogue: "اكتب السطر الناقص هنا",
+      essay: "اكتب إجابتك هنا",
     };
-    bodyHtml = `<input type="text" id="answer_${i}" dir="auto" placeholder="${placeholders[q.type] || placeholders.complete}">`;
+    const isLong = q.type === "essay";
+    bodyHtml = isLong
+      ? `<textarea id="answer_${i}" dir="auto" rows="4" placeholder="${placeholders.essay}" style="width:100%; padding:0.65rem 0.8rem; border-radius:9px; border:1px solid rgba(0,0,0,0.15); background:#FFFDF8; font-size:0.95rem; color:#1B2420; font-family:inherit; resize:vertical;"></textarea>`
+      : `<input type="text" id="answer_${i}" dir="auto" placeholder="${placeholders[q.type] || placeholders.complete}">`;
   }
   return `
     <div class="card">
-      <div class="q-num">سؤال ${i + 1} من ${(exam.questions||[]).length}</div>
-      ${passageHtml}
+      <div class="q-num">سؤال ${i + 1} من ${totalCount}</div>
       <div class="q-title">${escapeHtml(q.prompt)}</div>
       ${bodyHtml}
     </div>`;
 }
+
+
 
 function normalizeExactText(str) {
   // Rewrite / Correct: exact match after ignoring ONLY case and the requested punctuation.
@@ -500,7 +527,7 @@ function gradeExam() {
     total += points;
     let correct = false;
     const given = answers[i];
-    if (q.type === "mcq") {
+    if (q.type === "mcq" || q.type === "translation_mcq") {
       correct = given === q.correctIndex;
     } else if (q.type === "rewrite" || q.type === "correct") {
       // For Rewrite/Correct, the teacher requested a true 100% match,
@@ -560,52 +587,57 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
   const content = document.getElementById("content");
   const questions = exam.questions || [];
 
-  const reviewHtml = answerDetails.map(ad => {
-    const q = questions[ad.questionIndex];
-    if (!q) return "";
-    const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
-    let givenText = "";
-    let correctText = "";
-    if (q.type === "mcq") {
-      const opts = q.options || [];
-      givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
-      correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
-    } else {
-      givenText = ad.given ? ad.given : "(لم يُجب)";
-      correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
-    }
-    const explainId = `explain_${ad.questionIndex}`;
-    const payload = {
-      type: q.type,
-      passage: q.passage || "",
-      prompt: q.prompt || "",
-      options: q.type === "mcq" ? (q.options || []) : [],
-      correctAnswer: correctText,
-      studentAnswer: givenText === "(لم يُجب)" ? "" : givenText,
-    };
-    const payloadAttr = escapeHtml(JSON.stringify(payload));
-    return `
-      <div class="card review-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
-        <div class="q-num">سؤال ${ad.questionIndex + 1}</div>
-        ${passageHtml}
-        <div class="q-title">${escapeHtml(q.prompt)}</div>
-        <div class="review-row">
-          <span class="review-icon">${ad.correct ? '✓' : '✗'}</span>
-          <span class="review-label">إجابتك:</span>
-          <span class="review-value">${escapeHtml(givenText)}</span>
-        </div>
-        ${!ad.correct ? `
-        <div class="review-row">
-          <span class="review-icon" style="visibility:hidden;">✓</span>
-          <span class="review-label">الإجابة الصحيحة:</span>
-          <span class="review-value review-correct-text">${escapeHtml(correctText)}</span>
-        </div>` : ""}
-        <div class="explain-actions">
-          <button class="explain-btn" id="${explainId}_explainBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'explain', this)">💡 اشرحلي السبب</button>
-          <button class="explain-btn" id="${explainId}_translateBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'translate', this)">🌐 ترجملي السؤال</button>
-        </div>
-        <div class="explain-box" id="${explainId}_box" style="display:none;"></div>
-      </div>`;
+  const groups = groupQuestionsByPassage(questions);
+  const reviewHtml = groups.map(g => {
+    const passageHtml = g.passage ? `<div class="passage">${escapeHtml(g.passage)}</div>` : "";
+    const passageWrapHtml = passageHtml ? `<div class="card" style="padding-bottom:0.4rem;">${passageHtml}</div>` : "";
+    const itemsHtml = g.items.map(qIndex => {
+      const ad = answerDetails.find(a => a.questionIndex === qIndex);
+      const q = questions[qIndex];
+      if (!ad || !q) return "";
+      let givenText = "";
+      let correctText = "";
+      if (q.type === "mcq" || q.type === "translation_mcq") {
+        const opts = q.options || [];
+        givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
+        correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
+      } else {
+        givenText = ad.given ? ad.given : "(لم يُجب)";
+        correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
+      }
+      const explainId = `explain_${qIndex}`;
+      const payload = {
+        type: q.type,
+        passage: q.passage || "",
+        prompt: q.prompt || "",
+        options: (q.type === "mcq" || q.type === "translation_mcq") ? (q.options || []) : [],
+        correctAnswer: correctText,
+        studentAnswer: givenText === "(لم يُجب)" ? "" : givenText,
+      };
+      const payloadAttr = escapeHtml(JSON.stringify(payload));
+      return `
+        <div class="card review-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
+          <div class="q-num">سؤال ${qIndex + 1}</div>
+          <div class="q-title">${escapeHtml(q.prompt)}</div>
+          <div class="review-row">
+            <span class="review-icon">${ad.correct ? '✓' : '✗'}</span>
+            <span class="review-label">إجابتك:</span>
+            <span class="review-value">${escapeHtml(givenText)}</span>
+          </div>
+          ${!ad.correct ? `
+          <div class="review-row">
+            <span class="review-icon" style="visibility:hidden;">✓</span>
+            <span class="review-label">الإجابة الصحيحة:</span>
+            <span class="review-value review-correct-text">${escapeHtml(correctText)}</span>
+          </div>` : ""}
+          <div class="explain-actions">
+            <button class="explain-btn" id="${explainId}_explainBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'explain', this)">💡 اشرحلي السبب</button>
+            <button class="explain-btn" id="${explainId}_translateBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'translate', this)">🌐 ترجملي السؤال</button>
+          </div>
+          <div class="explain-box" id="${explainId}_box" style="display:none;"></div>
+        </div>`;
+    }).join("");
+    return passageWrapHtml + itemsHtml;
   }).join("");
 
   const subMessage = !isFreshSubmission
