@@ -104,28 +104,32 @@
   .tab-btn.active { background: var(--c-accent); color: var(--c-onaccent); box-shadow: 0 3px 10px rgba(212,169,59,0.35); }
   .tab-btn.active:hover { background: var(--c-accent); }
   .badge-dot { background: var(--c-danger); color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.4rem; min-width: 18px; display: inline-block; }
-  .exam-card { background: var(--c-cardbg); border-radius: 12px; padding: 1rem; margin-bottom: 0.7rem; }
+  .exam-card { background: var(--c-cardbg); border-radius: 14px; padding: 1rem; margin-bottom: 0.7rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.15s ease; }
+  .exam-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
   .exam-card-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
   .exam-new-badge { background: var(--c-danger); color: #fff; font-family: inherit; font-size: 0.72rem; font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 20px; }
   .exam-card-stage { font-size: 0.78rem; color: var(--c-mutedoncard); margin-bottom: 0.7rem; }
   .exam-card-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
   .exam-card-actions button {
-    flex: 1; min-width: 90px; border: none; border-radius: 8px; padding: 0.5rem; font-size: 0.8rem;
-    font-weight: 600; cursor: pointer; font-family: inherit;
+    flex: 1; min-width: 90px; border: none; border-radius: 9px; padding: 0.5rem; font-size: 0.8rem;
+    font-weight: 600; cursor: pointer; font-family: inherit; transition: filter 0.15s ease;
   }
+  .exam-card-actions button:hover { filter: brightness(0.95); }
   .stage-group-title { color: var(--c-mutedonpage); font-size: 0.8rem; font-weight: 700; margin: 1rem 0 0.5rem; letter-spacing: 0.05em; }
-  .form-card-exam { background: var(--c-cardbg); border-radius: 14px; padding: 1.25rem; }
-  .ai-import-box { background: #FBF3DF; border: 1px dashed var(--c-accent); border-radius: 10px; padding: 0.9rem; margin-bottom: 1rem; }
-  .question-card { background: var(--c-white); border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 0.9rem; margin-bottom: 0.8rem; }
+  .form-card-exam { background: var(--c-cardbg); border-radius: 16px; padding: 1.25rem; box-shadow: 0 10px 28px rgba(0,0,0,0.14); }
+  .ai-import-box { background: #FBF3DF; border: 1px dashed var(--c-accent); border-radius: 12px; padding: 0.9rem; margin-bottom: 1rem; }
+  .question-card { background: var(--c-white); border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 0.9rem; margin-bottom: 0.8rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .question-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
   .question-card-head strong { font-size: 0.85rem; color: var(--c-textoncard); }
-  .remove-q-btn { background: none; border: none; color: var(--c-danger); cursor: pointer; font-size: 0.8rem; }
+  .remove-q-btn { background: none; border: none; color: var(--c-danger); cursor: pointer; font-size: 0.8rem; border-radius: 6px; padding: 0.2rem 0.4rem; transition: background 0.15s ease; }
+  .remove-q-btn:hover { background: var(--c-dangerbg); }
   .option-input-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
   .option-input-row input[type=radio] { accent-color: var(--c-success); flex-shrink: 0; }
-  .result-row { background: var(--c-cardbg); border-radius: 10px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+  .result-row { background: var(--c-cardbg); border-radius: 12px; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: box-shadow 0.15s ease; }
+  .result-row:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.09); }
   .result-row-wrap { margin-bottom: 0.5rem; }
-  .result-row-wrap .result-row { margin-bottom: 0; border-radius: 10px 10px 0 0; }
-  .answer-detail-box { background: var(--c-white); border: 1px solid rgba(0,0,0,0.08); border-top: none; border-radius: 0 0 10px 10px; padding: 0.7rem 0.9rem; }
+  .result-row-wrap .result-row { margin-bottom: 0; border-radius: 12px 12px 0 0; }
+  .answer-detail-box { background: var(--c-white); border: 1px solid rgba(0,0,0,0.08); border-top: none; border-radius: 0 0 12px 12px; padding: 0.7rem 0.9rem; }
   .answer-detail-row { padding: 0.5rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); font-size: 0.85rem; }
   .answer-detail-row:last-child { border-bottom: none; }
   .answer-detail-q { font-weight: 600; margin-bottom: 0.2rem; color: var(--c-textoncard); }
@@ -133,15 +137,17 @@
   .answer-detail-row.ok .answer-detail-given { color: var(--c-success); }
   .answer-detail-row.bad .answer-detail-given { color: var(--c-danger); }
   .answer-detail-correct { color: var(--c-success); font-weight: 600; margin-top: 0.15rem; }
-  .manual-toggle-btn { flex-shrink: 0; background: none; border: 1px solid rgba(0,0,0,0.15); border-radius: 7px; padding: 0.3rem 0.55rem; font-size: 0.72rem; cursor: pointer; color: #4A5A50; white-space: nowrap; }
-  .manual-toggle-btn:active { background: rgba(0,0,0,0.05); }
+  .manual-toggle-btn { flex-shrink: 0; background: none; border: 1px solid rgba(0,0,0,0.15); border-radius: 8px; padding: 0.3rem 0.55rem; font-size: 0.72rem; cursor: pointer; color: #4A5A50; white-space: nowrap; transition: background 0.15s ease; }
+  .manual-toggle-btn:hover, .manual-toggle-btn:active { background: rgba(0,0,0,0.05); }
   .regrade-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.7rem; padding-bottom: 0.7rem; border-bottom: 1px solid rgba(0,0,0,0.08); }
-  .save-regrade-btn { background: var(--c-success); color: #fff; border: none; border-radius: 7px; padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
-  .pending-score-note { background: #FBF3DF; color: #8A6A1F; font-size: 0.8rem; padding: 0.5rem 0.7rem; border-radius: 8px; margin-bottom: 0.7rem; }
+  .save-regrade-btn { background: var(--c-success); color: #fff; border: none; border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: filter 0.15s ease; }
+  .save-regrade-btn:hover { filter: brightness(1.08); }
+  .pending-score-note { background: #FBF3DF; color: #8A6A1F; font-size: 0.8rem; padding: 0.5rem 0.7rem; border-radius: 9px; margin-bottom: 0.7rem; }
   .result-row-name { font-weight: 600; }
   .result-row-score { font-family: 'Fraunces', serif; font-weight: 700; color: var(--c-success); }
   .result-row-date { font-size: 0.75rem; color: var(--c-mutedoncard); width: 100%; }
-  .wa-send-btn { background: #25D366; color: #fff; border: none; border-radius: 7px; padding: 0.35rem 0.6rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+  .wa-send-btn { background: #25D366; color: #fff; border: none; border-radius: 8px; padding: 0.35rem 0.6rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: filter 0.15s ease; }
+  .wa-send-btn:hover { filter: brightness(1.06); }
   .app-content { display: none; }
   .header-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 1.1rem; }
   .avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--c-accent); flex-shrink: 0; }
@@ -998,7 +1004,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v32 — تحديث الواجهة (مرحلة 3): كروت الطلاب/توريل — 13 سبتمبر 2026";
+const APP_VERSION = "v33 — تحديث الواجهة (مرحلة 4): بناء الامتحان والنتائج — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
