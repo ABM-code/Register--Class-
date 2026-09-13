@@ -12,6 +12,26 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Class Register — Mr. Abd El Rahman Moneer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { DEFAULT: '#D4A93B', dark: '#b8901f', light: '#FBF3DF' },
+          ink: '#16302B',
+          cream: '#F5F1E6',
+          success: '#3F6B4A',
+          danger: '#C15B3C',
+        },
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          body: ['Inter', 'system-ui', 'sans-serif'],
+        },
+      }
+    }
+  }
+</script>
 <style>
 :root {
   --c-pagebg: #16302B;
@@ -71,15 +91,18 @@
   @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
 
   header { padding: 1.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(var(--c-subtle-rgb),0.12); position: relative; }
-  .logout-btn { position: absolute; top: 1rem; left: 1.25rem; background: rgba(var(--c-subtle-rgb),0.08); border: 1px solid rgba(var(--c-subtle-rgb),0.2); color: var(--c-textonpage); border-radius: 8px; padding: 0.4rem 0.7rem; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; }
-  .logout-btn:active { background: rgba(var(--c-subtle-rgb),0.16); }
-  .tab-nav { display: flex; flex-direction: row-reverse; flex-wrap: wrap; gap: 0.5rem; max-width: 640px; margin: 1rem auto 0; padding: 0 1.25rem; }
+  .logout-btn { background: rgba(var(--c-subtle-rgb),0.08); border: 1px solid rgba(var(--c-subtle-rgb),0.18); color: var(--c-textonpage); border-radius: 10px; padding: 0.45rem 0.8rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; transition: background 0.15s ease, transform 0.1s ease; }
+  .logout-btn:hover { background: rgba(var(--c-subtle-rgb),0.14); }
+  .logout-btn:active { transform: scale(0.97); }
+  .tab-nav { display: flex; flex-direction: row-reverse; flex-wrap: wrap; gap: 0.35rem; max-width: 640px; margin: 1rem max(1.25rem, calc((100% - 640px) / 2)) 0; padding: 0.35rem; background: rgba(var(--c-subtle-rgb),0.05); border-radius: 14px; }
   .tab-btn {
-    flex: 1 1 calc(50% - 0.25rem); min-width: 130px; background: rgba(var(--c-subtle-rgb),0.06); color: var(--c-mutedonpage); border: 1px solid rgba(var(--c-subtle-rgb),0.16);
+    flex: 1 1 calc(50% - 0.2rem); min-width: 130px; background: transparent; color: var(--c-mutedonpage); border: none;
     border-radius: 10px; padding: 0.6rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; font-family: inherit;
-    display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
-  .tab-btn.active { background: var(--c-accent); color: var(--c-onaccent); border-color: var(--c-accent); }
+  .tab-btn:hover { background: rgba(var(--c-subtle-rgb),0.08); }
+  .tab-btn.active { background: var(--c-accent); color: var(--c-onaccent); box-shadow: 0 3px 10px rgba(212,169,59,0.35); }
+  .tab-btn.active:hover { background: var(--c-accent); }
   .badge-dot { background: var(--c-danger); color: #fff; border-radius: 999px; font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.4rem; min-width: 18px; display: inline-block; }
   .exam-card { background: var(--c-cardbg); border-radius: 12px; padding: 1rem; margin-bottom: 0.7rem; }
   .exam-card-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
@@ -956,7 +979,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v29 — تنسيق طباعة PDF الامتحان (خط، ألوان، إطار، علامة مائية) — 13 سبتمبر 2026";
+const APP_VERSION = "v30 — تحديث الواجهة (مرحلة 1): تبويبات وأزرار عصرية — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
