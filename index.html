@@ -1004,7 +1004,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v39 — PDF: فوتر بنظام جدول، إطار كامل الصفحة، اختيارات تكيفية — 13 سبتمبر 2026";
+const APP_VERSION = "v40 — PDF: تصحيح مكان الاسم/الرقم + ترقيم الصفحات — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2346,7 +2346,7 @@ function buildPrintDocument(title, bodyHtml) {
     <title>${escapeHtml(title)}</title>
     <style>
       * { box-sizing: border-box; }
-      @page { size: A4; margin: 14mm 12mm 12mm; }
+      @page { size: A4; margin: 14mm 12mm 12mm; @bottom-center { content: counter(page) " / " counter(pages); font-size: 9pt; color: #0a1f44; font-family: Arial, sans-serif; } }
       html, body { margin: 0; }
       body { font-family: Arial, sans-serif; font-size: 12pt; direction: rtl; color: #1B2420; }
       table.page-table { width: 100%; border-collapse: collapse; }
@@ -2367,7 +2367,7 @@ function buildPrintDocument(title, bodyHtml) {
       .opt-letter { color: #0a1f44; font-weight: bold; }
       .answer-line { font-size: 12pt; margin-top: 4px; color: #1450c9; }
       .answer-key-row { font-size: 12pt; margin-bottom: 6px; color: #1450c9; }
-      .footer-row { display: flex; justify-content: space-between; align-items: center; padding: 0 2mm; }
+      .footer-row { display: flex; direction: ltr; justify-content: space-between; align-items: center; padding: 0 2mm; }
       .footer-name-box, .footer-phone-box {
         border-radius: 6px; padding: 5px 16px; font-size: 10pt; font-weight: bold;
         white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
