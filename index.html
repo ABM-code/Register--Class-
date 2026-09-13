@@ -1004,7 +1004,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v34 — تحديث الواجهة (مرحلة 5، أخيرة): صفحة الطالب والمكتبة — 13 سبتمبر 2026";
+const APP_VERSION = "v35 — PDF الامتحان: ملفين منفصلين + محاذاة الاختيارات + فوتر — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2287,7 +2287,8 @@ function renderExamsList() {
           <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="viewExamResults('${ex.id}')">النتائج</button>
           <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش (${missingCount}/${stageStudentCount})</button>
-          <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamPdf('${ex.id}')">طباعة PDF</button>
+          <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamQuestionsPdf('${ex.id}')">طباعة الأسئلة</button>
+          <button style="background:#EAF2E7; color:#3F6B4A;" onclick="printExamAnswersPdf('${ex.id}')">طباعة نموذج الإجابة</button>
           <button style="background:${isClosed ? '#EAF2E7' : '#F6E7E2'}; color:${isClosed ? '#3F6B4A' : '#9C4B32'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '🔓 فتح الامتحان تاني' : '🔒 قفل الامتحان الآن'}</button>
           <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
@@ -2328,22 +2329,81 @@ async function deleteExam(examId) {
   }
 }
 
-function printExamPdf(examId) {
+function buildPrintDocument(title, bodyHtml) {
+  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>${escapeHtml(title)}</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: Arial, sans-serif; font-size: 12pt; direction: rtl; color: #1B2420; margin: 0; padding: 14mm 10mm 22mm; position: relative; }
+      .page-frame {
+        border: 3px solid #0a1f44; border-radius: 4px; padding: 16px 20px; position: relative; min-height: calc(100vh - 36mm);
+        box-decoration-break: clone; -webkit-box-decoration-break: clone;
+      }
+      .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 46pt; color: rgba(10,31,68,0.08); white-space: nowrap; z-index: -1; font-weight: bold; pointer-events: none; }
+      h1 { font-size: 19px; margin-bottom: 2px; color: #0a1f44; }
+      p.sub { color: #555; margin-top: 0; margin-bottom: 20px; font-size: 12pt; }
+      .q-block { margin-bottom: 16px; page-break-inside: avoid; }
+      .q-prompt { font-weight: bold; font-size: 12pt; margin-bottom: 6px; unicode-bidi: plaintext; text-align: start; color: #0a1f44; }
+      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12pt; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; color: #1B2420; }
+      .options-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px 10px; margin-top: 4px; }
+      .options-grid div { font-size: 12pt; unicode-bidi: plaintext; text-align: start; color: #1450c9; }
+      .answer-line { font-size: 12pt; margin-top: 4px; color: #1450c9; }
+      .answer-key-row { font-size: 12pt; margin-bottom: 4px; color: #1450c9; }
+      .print-footer {
+        position: fixed; bottom: 6mm; left: 10mm; right: 10mm; height: 11mm;
+        border: 1.5px solid #0a1f44; border-radius: 4px; background: #fff;
+      }
+      .print-footer .footer-name { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); font-size: 10pt; font-weight: bold; color: #0a1f44; }
+      .print-footer .footer-phone { position: absolute; top: 50%; right: 10px; transform: translateY(-50%); font-size: 10pt; font-weight: bold; color: #0a1f44; direction: ltr; }
+    </style></head>
+    <body>
+      <div class="watermark">Mr. Abd El Rahman Moneer</div>
+      <div class="page-frame">
+        ${bodyHtml}
+      </div>
+      <div class="print-footer">
+        <span class="footer-name">Mr. Abd El Rahman Moneer</span>
+        <span class="footer-phone">01220524090</span>
+      </div>
+    </body></html>`;
+}
+
+function buildQuestionBlockHtml(q, i) {
+  const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+  let bodyHtml = "";
+  if (q.type === "mcq" || q.type === "translation_mcq") {
+    const letters = ["a","b","c","d","e","f"];
+    bodyHtml = `<div class="options-grid">${(q.options||[]).map((opt, oi) => `<div style="grid-column:${oi+1};">${letters[oi]}) ${escapeHtml(opt)}</div>`).join("")}</div>`;
+  } else {
+    bodyHtml = `<div class="answer-line">.......................................................</div>`;
+  }
+  return `<div class="q-block"><div class="q-prompt">${i+1}. ${escapeHtml(q.prompt)}</div>${passageHtml}${bodyHtml}</div>`;
+}
+
+function openPrintWindow(html) {
+  const win = window.open("", "_blank");
+  if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => win.print();
+}
+
+function printExamQuestionsPdf(examId) {
   const ex = exams.find(e => e.id === examId);
   if (!ex) return;
   const questions = ex.questions || [];
-  const questionsHtml = questions.map((q, i) => {
-    const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
-    let bodyHtml = "";
-    if (q.type === "mcq" || q.type === "translation_mcq") {
-      const letters = ["a","b","c","d","e","f"];
-      bodyHtml = `<div class="options-line">${(q.options||[]).map((opt, oi) => `${letters[oi]}) ${escapeHtml(opt)}`).join("&nbsp;&nbsp;&nbsp;&nbsp;")}</div>`;
-    } else {
-      bodyHtml = `<div class="answer-line">.......................................................</div>`;
-    }
-    return `<div class="q-block"><div class="q-prompt">${i+1}. ${escapeHtml(q.prompt)}</div>${passageHtml}${bodyHtml}</div>`;
-  }).join("");
+  const questionsHtml = questions.map((q, i) => buildQuestionBlockHtml(q, i)).join("");
+  const bodyHtml = `
+    <h1>${escapeHtml(ex.title)}</h1>
+    <p class="sub">${escapeHtml(ex.stage || "")}${ex.timeLimitMinutes ? " — الزمن: " + ex.timeLimitMinutes + " دقيقة" : ""} — ${TEACHER_NAME} — الاسم: .................................</p>
+    ${questionsHtml}`;
+  openPrintWindow(buildPrintDocument(ex.title + " — الأسئلة", bodyHtml));
+}
 
+function printExamAnswersPdf(examId) {
+  const ex = exams.find(e => e.id === examId);
+  if (!ex) return;
+  const questions = ex.questions || [];
   const answerKeyHtml = questions.map((q, i) => {
     let ans = "";
     if (q.type === "mcq" || q.type === "translation_mcq") {
@@ -2355,39 +2415,11 @@ function printExamPdf(examId) {
     }
     return `<div class="answer-key-row"><strong>${i+1}.</strong> ${ans}</div>`;
   }).join("");
-
-  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
-    <title>${escapeHtml(ex.title)}</title>
-    <style>
-      body { font-family: Arial, sans-serif; font-size: 12pt; padding: 24px; direction: rtl; color: #1B2420; border: 3px solid #0a1f44; margin: 6mm; position: relative; }
-      .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 46pt; color: rgba(10,31,68,0.08); white-space: nowrap; z-index: -1; font-weight: bold; pointer-events: none; }
-      h1 { font-size: 19px; margin-bottom: 2px; color: #0a1f44; }
-      p.sub { color: #555; margin-top: 0; margin-bottom: 20px; font-size: 12pt; }
-      .q-block { margin-bottom: 16px; page-break-inside: avoid; }
-      .q-prompt { font-weight: bold; font-size: 12pt; margin-bottom: 6px; unicode-bidi: plaintext; text-align: start; color: #0a1f44; }
-      .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12pt; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; color: #1B2420; }
-      .options-line { margin: 0; font-size: 12pt; unicode-bidi: plaintext; text-align: start; color: #1450c9; }
-      .answer-line { font-size: 12pt; margin-top: 4px; color: #1450c9; }
-      .answer-key { margin-top: 30px; border-top: 2px dashed #999; padding-top: 16px; }
-      .answer-key h2 { font-size: 15px; color: #0a1f44; }
-      .answer-key-row { font-size: 12pt; margin-bottom: 4px; color: #1450c9; }
-      @media print { .answer-key { page-break-before: always; } }
-    </style></head>
-    <body>
-      <div class="watermark">Mr. Abd El Rahman Moneer</div>
-      <h1>${escapeHtml(ex.title)}</h1>
-      <p class="sub">${escapeHtml(ex.stage || "")}${ex.timeLimitMinutes ? " — الزمن: " + ex.timeLimitMinutes + " دقيقة" : ""} — ${TEACHER_NAME} — الاسم: .................................</p>
-      ${questionsHtml}
-      <div class="answer-key">
-        <h2>نموذج الإجابة (للمدرّس)</h2>
-        ${answerKeyHtml}
-      </div>
-    </body></html>`;
-  const win = window.open("", "_blank");
-  if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
-  win.document.write(html);
-  win.document.close();
-  win.onload = () => win.print();
+  const bodyHtml = `
+    <h1>${escapeHtml(ex.title)} — نموذج الإجابة</h1>
+    <p class="sub">${escapeHtml(ex.stage || "")} — ${TEACHER_NAME}</p>
+    ${answerKeyHtml}`;
+  openPrintWindow(buildPrintDocument(ex.title + " — نموذج الإجابة", bodyHtml));
 }
 
 function openExamBuilder() {
