@@ -1004,7 +1004,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v37 — إصلاح تكرار حرف الاختيار في PDF — 13 سبتمبر 2026";
+const APP_VERSION = "v38 — PDF: صفحة A4، إصلاح تصادم الفوتر، اختيارات أوسع — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2346,28 +2346,29 @@ function buildPrintDocument(title, bodyHtml) {
     <title>${escapeHtml(title)}</title>
     <style>
       * { box-sizing: border-box; }
-      body { font-family: Arial, sans-serif; font-size: 12pt; direction: rtl; color: #1B2420; margin: 0; padding: 14mm 10mm 26mm; position: relative; }
+      @page { size: A4; margin: 16mm 12mm 24mm; }
+      html, body { margin: 0; }
+      body { font-family: Arial, sans-serif; font-size: 12pt; direction: rtl; color: #1B2420; position: relative; }
       .page-frame {
-        border: 3px solid #0a1f44; border-radius: 4px; padding: 16px 20px; position: relative; min-height: calc(100vh - 40mm);
+        border: 3px solid #0a1f44; border-radius: 4px; padding: 16px 20px; position: relative;
         box-decoration-break: clone; -webkit-box-decoration-break: clone;
       }
       .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 46pt; color: rgba(10,31,68,0.08); white-space: nowrap; z-index: -1; font-weight: bold; pointer-events: none; }
       h1 { font-size: 19px; margin-bottom: 2px; color: #0a1f44; }
       p.sub { color: #555; margin-top: 0; margin-bottom: 20px; font-size: 12pt; }
-      .q-block { margin-bottom: 16px; page-break-inside: avoid; }
+      .q-block { margin-bottom: 18px; page-break-inside: avoid; }
       .q-prompt { font-weight: bold; font-size: 12pt; margin-bottom: 6px; color: #0a1f44; }
       .passage { background: #f3f1ea; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 12pt; white-space: pre-wrap; color: #1B2420; }
-      .options-grid { display: grid; direction: ltr; grid-template-columns: repeat(6, 1fr); gap: 4px 10px; margin-top: 4px; }
-      .options-grid div { font-size: 12pt; color: #1450c9; white-space: nowrap; overflow: visible; }
+      .options-grid { display: grid; direction: ltr; grid-template-columns: repeat(2, 1fr); gap: 10px 30px; margin-top: 8px; }
+      .options-grid div { font-size: 12pt; color: #1450c9; }
       .answer-line { font-size: 12pt; margin-top: 4px; color: #1450c9; }
       .answer-key-row { font-size: 12pt; margin-bottom: 6px; color: #1450c9; }
       .footer-name-box, .footer-phone-box {
-        position: fixed; bottom: 6mm; border: 1.5px solid #0a1f44; border-radius: 4px;
-        background: #ffffff; padding: 4px 14px; font-size: 10pt; font-weight: bold; color: #0a1f44;
-        z-index: 5; white-space: nowrap;
+        position: fixed; bottom: 8mm; border-radius: 6px; padding: 5px 16px; font-size: 10pt; font-weight: bold;
+        z-index: 5; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.25);
       }
-      .footer-name-box { left: 10mm; }
-      .footer-phone-box { right: 10mm; direction: ltr; }
+      .footer-name-box { left: 14mm; background: #0a1f44; color: #ffffff; }
+      .footer-phone-box { right: 14mm; direction: ltr; background: #D4A93B; color: #0a1f44; }
     </style></head>
     <body>
       <div class="watermark">Mr. Abd El Rahman Moneer</div>
@@ -2384,7 +2385,7 @@ function buildQuestionBlockHtml(q, i) {
   let bodyHtml = "";
   if (q.type === "mcq" || q.type === "translation_mcq") {
     const letters = ["a","b","c","d","e","f"];
-    bodyHtml = `<div class="options-grid">${(q.options||[]).map((opt, oi) => `<div style="grid-row:1; grid-column:${oi+1};" ${dirAttrs(opt)}>${letters[oi]}) ${escapeHtml(stripOptionLabel(opt))}</div>`).join("")}</div>`;
+    bodyHtml = `<div class="options-grid">${(q.options||[]).map((opt, oi) => `<div ${dirAttrs(opt)}>${letters[oi]}) ${escapeHtml(stripOptionLabel(opt))}</div>`).join("")}</div>`;
   } else {
     bodyHtml = `<div class="answer-line">.......................................................</div>`;
   }
