@@ -208,50 +208,58 @@
   .bar-fill { background: var(--c-accent); height: 100%; border-radius: 6px; transition: width 0.4s ease; }
   .bar-fill.green { background: #5E9468; }
   .bar-fill.blue { background: #5B8FC4; }
-  .stat-card { flex: 1; background: rgba(var(--c-subtle-rgb),0.06); border: 1px solid rgba(var(--c-subtle-rgb),0.14); border-radius: 10px; padding: 0.6rem 0.7rem; cursor: default; }
+  .stat-card { flex: 1; background: rgba(var(--c-subtle-rgb),0.06); border: 1px solid rgba(var(--c-subtle-rgb),0.14); border-radius: 12px; padding: 0.65rem 0.75rem; cursor: default; box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: transform 0.15s ease, box-shadow 0.15s ease; }
   .money-hide-card { cursor: pointer; }
   .eye-icon { font-size: 0.75rem; opacity: 0.7; }
   .stat-label { font-size: 0.7rem; color: var(--c-mutedonpage); margin-bottom: 0.2rem; }
   .stat-value { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--c-textonpage); }
-  .overdue-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
-  .overdue-card:hover { background: rgba(193,91,60,0.15); }
+  .overdue-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+  .overdue-card:hover { background: rgba(193,91,60,0.15); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(193,91,60,0.18); }
   .overdue-card.active { background: var(--c-danger); border-color: var(--c-danger); }
   .overdue-card.active .stat-label, .overdue-card.active .stat-value { color: #ffffff; }
-  .exempt-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
-  .exempt-card:hover { background: rgba(91,143,196,0.15); }
+  .exempt-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+  .exempt-card:hover { background: rgba(91,143,196,0.15); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(91,143,196,0.18); }
   .exempt-card.active { background: #5B8FC4; border-color: #5B8FC4; }
   .exempt-card.active .stat-label, .exempt-card.active .stat-value { color: #ffffff; }
-  .good-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
-  .good-card:hover { background: rgba(94,148,104,0.15); }
+  .good-card { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease; }
+  .good-card:hover { background: rgba(94,148,104,0.15); transform: translateY(-1px); box-shadow: 0 4px 10px rgba(94,148,104,0.18); }
   .good-card.active { background: #5E9468; border-color: #5E9468; }
   .good-card.active .stat-label, .good-card.active .stat-value { color: #ffffff; }
   .backup-btn {
     flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
     background: rgba(var(--c-subtle-rgb),0.08); color: var(--c-mutedonpage); border: 1px solid rgba(var(--c-subtle-rgb),0.18);
-    border-radius: 9px; padding: 0.55rem; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    border-radius: 10px; padding: 0.55rem; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
   }
+  .backup-btn:hover { background: rgba(var(--c-subtle-rgb),0.14); border-color: rgba(var(--c-subtle-rgb),0.3); }
   .search-wrap { position: relative; flex: 1; }
   .search-wrap svg { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); }
   .search-wrap input, #searchInput, #torailSearchInput, #examResultsSearchInput {
     width: 100%; padding: 0.7rem 0.9rem 0.7rem 2.4rem; border-radius: 10px;
     border: 1px solid rgba(var(--c-subtle-rgb),0.18); background: rgba(var(--c-subtle-rgb),0.06);
-    color: var(--c-textonpage); font-size: 0.95rem;
+    color: var(--c-textonpage); font-size: 0.95rem; transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .search-wrap input:focus, #searchInput:focus, #torailSearchInput:focus, #examResultsSearchInput:focus {
+    outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px rgba(212,169,59,0.2);
   }
   .search-wrap input::placeholder, #searchInput::placeholder, #torailSearchInput::placeholder, #examResultsSearchInput::placeholder { color: rgba(var(--c-subtle-rgb),0.45); }
   #addBtn, #torailAddBtn {
     display: flex; align-items: center; gap: 0.4rem; background: var(--c-accent); color: var(--c-onaccent);
     border: none; border-radius: 10px; padding: 0 1rem; font-weight: 600; font-size: 0.92rem;
-    cursor: pointer; white-space: nowrap;
+    cursor: pointer; white-space: nowrap; transition: filter 0.15s ease, transform 0.1s ease; box-shadow: 0 2px 8px rgba(212,169,59,0.3);
   }
+  #addBtn:hover, #torailAddBtn:hover { filter: brightness(1.06); }
 
   #errorBox { background: var(--c-dangerbg); color: var(--c-dangertext); padding: 0.65rem 0.9rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
 
-  #formCard { background: var(--c-cardbg); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); display: none; }
+  #formCard { background: var(--c-cardbg); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 10px 28px rgba(0,0,0,0.16); display: none; }
   .form-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
   .form-head h2 { font-family: 'Fraunces', serif; font-size: 1.15rem; margin: 0; font-weight: 600; }
-  .close-x { background: none; border: none; cursor: pointer; color: var(--c-mutedoncard); padding: 4px; }
+  .close-x { background: none; border: none; cursor: pointer; color: var(--c-mutedoncard); padding: 4px; border-radius: 6px; transition: background 0.15s ease; }
+  .close-x:hover { background: rgba(0,0,0,0.06); }
   .field-group { margin-bottom: 0.75rem; }
-  .checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); background: var(--c-white); cursor: pointer; }
+  .checkbox-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 9px; border: 1px solid rgba(0,0,0,0.15); background: var(--c-white); cursor: pointer; transition: border-color 0.15s ease; }
+  .checkbox-row:hover { border-color: rgba(0,0,0,0.28); }
   .checkbox-row input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--c-success); cursor: pointer; flex-shrink: 0; }
   .checkbox-row label { margin: 0; cursor: pointer; font-size: 0.9rem; color: var(--c-textoncard); font-weight: 500; }
   .mini-badge { font-size: 0.72rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 999px; white-space: nowrap; }
@@ -259,21 +267,28 @@
   .field-row .field-group { flex: 1; }
   label { display: block; font-size: 0.78rem; color: var(--c-mutedoncard); margin-bottom: 0.3rem; font-weight: 500; }
   input.reg-input, select.reg-input, textarea.reg-textarea {
-    width: 100%; padding: 0.6rem 0.75rem; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15);
+    width: 100%; padding: 0.62rem 0.8rem; border-radius: 9px; border: 1px solid rgba(0,0,0,0.15);
     background: var(--c-white); font-size: 0.92rem; color: var(--c-textoncard); font-family: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  input.reg-input:focus, select.reg-input:focus, textarea.reg-textarea:focus {
+    outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px rgba(212,169,59,0.18);
   }
   textarea.reg-textarea { resize: vertical; }
   .form-actions { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
   #saveBtn {
-    flex: 1; background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 9px; padding: 0.7rem;
+    flex: 1; background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 10px; padding: 0.7rem;
     font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    transition: filter 0.15s ease; box-shadow: 0 2px 8px rgba(63,107,74,0.28);
   }
+  #saveBtn:hover { filter: brightness(1.08); }
   #cancelBtn {
-    background: transparent; color: var(--c-mutedoncard); border: 1px solid rgba(0,0,0,0.15); border-radius: 9px;
-    padding: 0.7rem 1rem; font-weight: 500; cursor: pointer;
+    background: transparent; color: var(--c-mutedoncard); border: 1px solid rgba(0,0,0,0.15); border-radius: 10px;
+    padding: 0.7rem 1rem; font-weight: 500; cursor: pointer; transition: background 0.15s ease;
   }
+  #cancelBtn:hover { background: rgba(0,0,0,0.05); }
 
-  #emptyState { text-align: center; padding: 3rem 1.5rem; color: var(--c-mutedonpage); border: 1px dashed rgba(var(--c-subtle-rgb),0.2); border-radius: 14px; display: none; }
+  #emptyState { text-align: center; padding: 3rem 1.5rem; color: var(--c-mutedonpage); border: 1px dashed rgba(var(--c-subtle-rgb),0.2); border-radius: 16px; display: none; }
 
   #studentList { display: flex; flex-direction: column; gap: 0.6rem; }
   .card-row { background: var(--c-cardbg); border-radius: 12px; overflow: hidden; }
@@ -979,7 +994,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v30 — تحديث الواجهة (مرحلة 1): تبويبات وأزرار عصرية — 13 سبتمبر 2026";
+const APP_VERSION = "v31 — تحديث الواجهة (مرحلة 2): كروت وأزرار وخانات إدخال — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
