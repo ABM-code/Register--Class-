@@ -90,7 +90,7 @@
   .card-row:hover { background: var(--c-cardalt) !important; }
   @media (prefers-reduced-motion: reduce) { button, .card-row { transition: none !important; } }
 
-  header { padding: 1.25rem 1.25rem 2rem; border-bottom: 1px solid rgba(var(--c-subtle-rgb),0.12); position: relative; }
+  header { padding: 1.25rem 1.25rem 1.75rem; position: relative; }
   .logout-btn { background: rgba(var(--c-subtle-rgb),0.08); border: 1px solid rgba(var(--c-subtle-rgb),0.18); color: var(--c-textonpage); border-radius: 10px; padding: 0.45rem 0.8rem; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; transition: background 0.15s ease, transform 0.1s ease; }
   .logout-btn:hover { background: rgba(var(--c-subtle-rgb),0.14); }
   .logout-btn:active { transform: scale(0.97); }
@@ -157,8 +157,16 @@
     background: var(--c-accent); color: var(--c-onaccent); display: flex; align-items: center; justify-content: center;
     font-size: 0.75rem; border: 2px solid var(--c-pagebg);
   }
-  .eyebrow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; color: var(--c-mutedonpage); font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase; }
-  h1.tname { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem; color: var(--c-textonpage); margin: 0; line-height: 1.2; }
+  .eyebrow { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.45rem; }
+  .brand-mark {
+    display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+    background: linear-gradient(135deg, var(--c-accent), #b8901f); color: #1B2420; border-radius: 6px;
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 0.68rem; letter-spacing: -0.03em;
+    box-shadow: 0 2px 6px rgba(212,169,59,0.4); flex-shrink: 0;
+  }
+  .brand-name { color: var(--c-mutedonpage); font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; }
+  header::after { content: ""; display: block; max-width: 640px; margin: 1.5rem auto 0; height: 2px; background: linear-gradient(90deg, var(--c-accent), transparent); border-radius: 2px; }
+  h1.tname { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.55rem; color: var(--c-textonpage); margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
   .subline { color: var(--c-mutedonpage); margin-top: 0.3rem; font-size: 0.86rem; display: flex; align-items: center; gap: 0.35rem; }
 
   main { max-width: 640px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
@@ -382,8 +390,8 @@
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarChange(this.files[0])">
     <div style="min-width:0;">
       <div class="eyebrow">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Class Register
+        <span class="brand-mark">CR</span>
+        <span class="brand-name">Class Register</span>
       </div>
       <h1 class="tname" id="teacherNameDisplay" onclick="editTeacherName()" title="اضغط لتعديل الاسم" style="cursor:pointer;">Mr. Abd El Rahman Moneer</h1>
       <p class="subline">
@@ -1004,7 +1012,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v40 — PDF: تصحيح مكان الاسم/الرقم + ترقيم الصفحات — 13 سبتمبر 2026";
+const APP_VERSION = "v41 — هوية بصرية: علامة Class Register واسم أوضح — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
