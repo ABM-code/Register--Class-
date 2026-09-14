@@ -238,13 +238,19 @@ function renderStudentPicker() {
         body: JSON.stringify({ studentId: selectedStudent.id, pin: pinInput.value })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok || !data.customToken) throw new Error(data.error || "invalid_pin");
+      if (!res.ok || !data.ok || !data.customToken) {
+        const err = new Error(data.error || "invalid_pin");
+        err.remainingMin = data.remainingMin;
+        throw err;
+      }
       await auth.signInWithCustomToken(data.customToken);
       const idTokenResult = await auth.currentUser.getIdTokenResult();
       studentClaims = idTokenResult.claims;
       await loadMaterials();
     } catch (err) {
-      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
+      pinMsg.textContent = err.message === "locked"
+        ? `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. حاول تاني بعد ${err.remainingMin || 5} دقايق.`
+        : (err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.");
       pinMsg.style.color = "#C15B3C";
       pinMsg.style.display = "block";
       enterBtn.disabled = false;

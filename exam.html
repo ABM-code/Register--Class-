@@ -341,7 +341,9 @@ function renderStudentPicker() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.customToken) {
-        throw new Error(data.error || "invalid_pin");
+        const err = new Error(data.error || "invalid_pin");
+        err.remainingMin = data.remainingMin;
+        throw err;
       }
       await auth.signInWithCustomToken(data.customToken);
       selectedStudent = { ...selectedStudent, ...(data.student || {}) };
@@ -350,7 +352,9 @@ function renderStudentPicker() {
       pinMsg.style.display = "block";
       await checkAlreadySubmitted();
     } catch (err) {
-      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
+      pinMsg.textContent = err.message === "locked"
+        ? `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. حاول تاني بعد ${err.remainingMin || 5} دقايق.`
+        : (err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.");
       pinMsg.style.color = "#C15B3C";
       pinMsg.style.display = "block";
       startBtn.disabled = true;
