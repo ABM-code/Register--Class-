@@ -562,6 +562,12 @@
       </button>
     </div>
 
+    <div class="tools-group-title">المحذوفين مؤخرًا (طلاب)</div>
+    <div id="deletedStudentsList"></div>
+
+    <div class="tools-group-title">نتائج محذوفة مؤخرًا</div>
+    <div id="deletedResultsList"></div>
+
   </div>
 
   <button id="materialsToggleBtn" class="tools-toggle-btn" onclick="toggleMaterialsSection()">
@@ -1009,6 +1015,9 @@
         إعادة تعيين رمز الدخول لكل الطلاب
       </button>
     </div>
+
+    <div class="tools-group-title">المحذوفين مؤخرًا (طلاب توريل)</div>
+    <div id="torailDeletedStudentsList"></div>
   </div>
 
   <div id="torailErrorBox"></div>
@@ -1040,7 +1049,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v46 — أمان: تشفير رمز الدخول + قفل بعد محاولات فاشلة — 13 سبتمبر 2026";
+const APP_VERSION = "v47 — أمان: حذف مؤقت + تأكيد بكتابة الرقم + استرجاع — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1082,10 +1091,12 @@ function toggleMoneyReveal(elId) {
 }
 
 let students = [];
+let deletedStudents = [];
 let editingId = null;
 let expandedId = null;
 let exams = [];
 let examResults = [];
+let deletedExamResults = [];
 let materials = [];
 let currentBuilderQuestions = [];
 let viewingExamId = null;
@@ -1113,10 +1124,18 @@ function maybeNotifyNewResult(r) {
 function startSync() {
   studentsCol.where("teacherId", "==", currentTeacherId).onSnapshot(
     (snapshot) => {
-      students = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const allDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      students = allDocs.filter(s => !s.deletedAt);
+      deletedStudents = allDocs.filter(s => !!s.deletedAt);
+      deletedStudents.sort((a, b) => {
+        const at = a.deletedAt && a.deletedAt.toMillis ? a.deletedAt.toMillis() : 0;
+        const bt = b.deletedAt && b.deletedAt.toMillis ? b.deletedAt.toMillis() : 0;
+        return bt - at;
+      });
       students.sort((a,b) => (a.name||"").localeCompare(b.name||""));
       render();
       renderTorail();
+      renderDeletedStudentsList();
       if (isStatsTabVisible()) renderStatsDashboard();
       if (!autoBackupChecked) {
         autoBackupChecked = true;
@@ -1140,7 +1159,14 @@ function startSync() {
     }
   );
   examResultsCol.where("teacherId", "==", currentTeacherId).onSnapshot((snapshot) => {
-    examResults = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const allResultDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    examResults = allResultDocs.filter(r => !r.deletedAt);
+    deletedExamResults = allResultDocs.filter(r => !!r.deletedAt);
+    deletedExamResults.sort((a, b) => {
+      const at = a.deletedAt && a.deletedAt.toMillis ? a.deletedAt.toMillis() : 0;
+      const bt = b.deletedAt && b.deletedAt.toMillis ? b.deletedAt.toMillis() : 0;
+      return bt - at;
+    });
     examResults.sort((a, b) => {
       const at = a.submittedAt && a.submittedAt.toMillis ? a.submittedAt.toMillis() : 0;
       const bt = b.submittedAt && b.submittedAt.toMillis ? b.submittedAt.toMillis() : 0;
@@ -1148,7 +1174,7 @@ function startSync() {
     });
     if (!firstResultsSnapshot) {
       snapshot.docChanges().forEach(change => {
-        if (change.type === "added" && !change.doc.metadata.hasPendingWrites) {
+        if (change.type === "added" && !change.doc.metadata.hasPendingWrites && !change.doc.data().deletedAt) {
           maybeNotifyNewResult(change.doc.data());
         }
       });
@@ -1159,6 +1185,7 @@ function startSync() {
     if (viewingExamId) renderExamResultsList();
     if (viewingMissingExamId) renderMissingStudentsList();
     if (isStatsTabVisible()) renderStatsDashboard();
+    renderDeletedResultsList();
   },
   (err) => {
     console.error("examResults sync error", err);
@@ -2966,13 +2993,27 @@ function updateResultsSelectionUI() {
   const visible = getVisibleExamResultsList();
   if (selectAllBox) selectAllBox.checked = visible.length > 0 && visible.every(r => selectedResultIds.has(r.id));
 }
+function confirmBulkDelete(count, itemLabel) {
+  if (!confirm(`متأكد إنك عايز تمسح ${count} ${itemLabel}؟\nهتقدر تسترجعهم من "المحذوفين مؤخرًا" (في أدوات إضافية) لو غيّرت رأيك.`)) return false;
+  const typed = prompt(`للتأكيد النهائي، اكتب الرقم ${count} بالظبط في الخانة دي:`);
+  if (typed === null) return false;
+  if (typed.trim() !== String(count)) {
+    showError("الرقم اللي كتبته مش مطابق، اتلغت العملية.");
+    return false;
+  }
+  return true;
+}
+
 async function deleteSelectedResults() {
   if (selectedResultIds.size === 0) return;
-  if (!confirm(`متأكد إنك عايز تمسح ${selectedResultIds.size} نتيجة؟ الخطوة دي مش هترجع تاني.`)) return;
+  if (!confirmBulkDelete(selectedResultIds.size, "نتيجة")) return;
   const ids = Array.from(selectedResultIds);
   try {
-    await Promise.all(ids.map(id => examResultsCol.doc(id).delete()));
+    const batch = db.batch();
+    ids.forEach(id => batch.update(examResultsCol.doc(id), { deletedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+    await batch.commit();
     selectedResultIds.clear();
+    showSuccess(`اتنقلوا ${ids.length} نتيجة لـ"المحذوفين مؤخرًا".`);
   } catch (err) {
     showError("حصل خطأ أثناء الحذف: " + (err.message || err));
   }
@@ -2980,10 +3021,13 @@ async function deleteSelectedResults() {
 async function deleteAllResultsForExam() {
   const list = examResults.filter(r => r.examId === viewingExamId);
   if (list.length === 0) { showError("مفيش نتائج لحذفها."); return; }
-  if (!confirm(`متأكد إنك عايز تمسح كل نتائج هذا الامتحان (${list.length} نتيجة)؟ الخطوة دي مش هترجع تاني.`)) return;
+  if (!confirmBulkDelete(list.length, "نتيجة")) return;
   try {
-    await Promise.all(list.map(r => examResultsCol.doc(r.id).delete()));
+    const batch = db.batch();
+    list.forEach(r => batch.update(examResultsCol.doc(r.id), { deletedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+    await batch.commit();
     selectedResultIds.clear();
+    showSuccess(`اتنقلوا ${list.length} نتيجة لـ"المحذوفين مؤخرًا".`);
   } catch (err) {
     showError("حصل خطأ أثناء الحذف: " + (err.message || err));
   }
@@ -3012,11 +3056,17 @@ function updateStudentsSelectionUI() {
 }
 async function deleteSelectedStudents() {
   if (selectedStudentIds.size === 0) return;
-  if (!confirm(`متأكد إنك عايز تمسح ${selectedStudentIds.size} طالب نهائيًا؟ الخطوة دي مش هترجع تاني.`)) return;
+  if (!confirmBulkDelete(selectedStudentIds.size, "طالب")) return;
   const ids = Array.from(selectedStudentIds);
   try {
-    await Promise.all(ids.map(id => studentsCol.doc(id).delete()));
+    const chunkSize = 400;
+    for (let i = 0; i < ids.length; i += chunkSize) {
+      const batch = db.batch();
+      ids.slice(i, i + chunkSize).forEach(id => batch.update(studentsCol.doc(id), { deletedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      await batch.commit();
+    }
     selectedStudentIds.clear();
+    showSuccess(`اتنقلوا ${ids.length} طالب لـ"المحذوفين مؤخرًا".`);
   } catch (err) {
     showError("حصل خطأ أثناء الحذف: " + (err.message || err));
   }
@@ -3045,15 +3095,115 @@ function updateTorailStudentsSelectionUI() {
 }
 async function deleteSelectedTorailStudents() {
   if (selectedTorailStudentIds.size === 0) return;
-  if (!confirm(`متأكد إنك عايز تمسح ${selectedTorailStudentIds.size} طالب نهائيًا؟ الخطوة دي مش هترجع تاني.`)) return;
+  if (!confirmBulkDelete(selectedTorailStudentIds.size, "طالب")) return;
   const ids = Array.from(selectedTorailStudentIds);
   try {
-    await Promise.all(ids.map(id => studentsCol.doc(id).delete()));
+    const chunkSize = 400;
+    for (let i = 0; i < ids.length; i += chunkSize) {
+      const batch = db.batch();
+      ids.slice(i, i + chunkSize).forEach(id => batch.update(studentsCol.doc(id), { deletedAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      await batch.commit();
+    }
     selectedTorailStudentIds.clear();
+    showSuccess(`اتنقلوا ${ids.length} طالب لـ"المحذوفين مؤخرًا".`);
   } catch (err) {
     showError("حصل خطأ أثناء الحذف: " + (err.message || err));
   }
 }
+function renderDeletedStudentsList() {
+  const mainBox = document.getElementById("deletedStudentsList");
+  const torailBox = document.getElementById("torailDeletedStudentsList");
+  const mainList = deletedStudents.filter(s => s.group !== "torail");
+  const torailList = deletedStudents.filter(s => s.group === "torail");
+
+  function rowHtml(s) {
+    const dateStr = s.deletedAt && s.deletedAt.toDate ? s.deletedAt.toDate().toLocaleString('ar-EG') : "";
+    return `
+      <div class="result-row">
+        <div>
+          <div class="result-row-name">${escapeHtml(s.name || "")}</div>
+          <div class="result-row-date">اتمسح: ${dateStr}</div>
+        </div>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="restoreStudent('${s.id}')">استرجاع</button>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="permanentlyDeleteStudent('${s.id}')">حذف نهائي</button>
+        </div>
+      </div>`;
+  }
+
+  if (mainBox) {
+    mainBox.innerHTML = mainList.length
+      ? mainList.map(rowHtml).join("")
+      : `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
+  }
+  if (torailBox) {
+    torailBox.innerHTML = torailList.length
+      ? torailList.map(rowHtml).join("")
+      : `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
+  }
+}
+
+async function restoreStudent(studentId) {
+  try {
+    await studentsCol.doc(studentId).update({ deletedAt: firebase.firestore.FieldValue.delete() });
+    showSuccess("تم استرجاع الطالب بنجاح.");
+  } catch (err) {
+    showError("تعذر الاسترجاع. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+async function permanentlyDeleteStudent(studentId) {
+  if (!confirm("تحذير: الحذف ده نهائي ومفيش رجوع فيه خالص. متأكد؟")) return;
+  try {
+    await studentsCol.doc(studentId).delete();
+    showSuccess("تم الحذف النهائي.");
+  } catch (err) {
+    showError("تعذر الحذف. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function renderDeletedResultsList() {
+  const box = document.getElementById("deletedResultsList");
+  if (!box) return;
+  if (deletedExamResults.length === 0) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش نتائج محذوفة حاليًا.</p>`;
+    return;
+  }
+  box.innerHTML = deletedExamResults.map(r => {
+    const dateStr = r.deletedAt && r.deletedAt.toDate ? r.deletedAt.toDate().toLocaleString('ar-EG') : "";
+    return `
+      <div class="result-row">
+        <div>
+          <div class="result-row-name">${escapeHtml(r.studentName || "")} — ${escapeHtml(r.examTitle || "")}</div>
+          <div class="result-row-date">اتمسح: ${dateStr}</div>
+        </div>
+        <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="restoreResult('${r.id}')">استرجاع</button>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="permanentlyDeleteResult('${r.id}')">حذف نهائي</button>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+async function restoreResult(resultId) {
+  try {
+    await examResultsCol.doc(resultId).update({ deletedAt: firebase.firestore.FieldValue.delete() });
+    showSuccess("تم استرجاع النتيجة بنجاح.");
+  } catch (err) {
+    showError("تعذر الاسترجاع. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+async function permanentlyDeleteResult(resultId) {
+  if (!confirm("تحذير: الحذف ده نهائي ومفيش رجوع فيه خالص. متأكد؟")) return;
+  try {
+    await examResultsCol.doc(resultId).delete();
+    showSuccess("تم الحذف النهائي.");
+  } catch (err) {
+    showError("تعذر الحذف. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
 function getVisibleExamResultsList() {
   const searchInput = document.getElementById("examResultsSearchInput");
   const rawQuery = searchInput ? searchInput.value.trim() : "";
