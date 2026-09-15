@@ -841,7 +841,7 @@
     <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;"></h2>
     <div class="search-wrap" style="margin-bottom:0.9rem;">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input id="examResultsSearchInput" placeholder="ابحث باسم الطالب" oninput="renderExamResultsList()">
+      <input id="examResultsSearchInput" placeholder="ابحث باسم الطالب" oninput="resultsPage=1; renderExamResultsList();">
     </div>
     <div class="stats-row" style="margin-bottom:0.9rem; gap:0.5rem;">
       <button id="resultsAllPill" type="button" class="stat-card good-card" style="flex:1; padding:0.6rem 0.9rem; border:2px solid transparent; cursor:pointer;" onclick="setResultsTorailFilter(false)">
@@ -1081,7 +1081,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v48 — بنك أسئلة قابل لإعادة الاستخدام — 13 سبتمبر 2026";
+const APP_VERSION = "v49 — أداء: ترقيم صفحات لقوائم الطلاب والنتائج — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1824,6 +1824,7 @@ function toggleTorailExpand(id) {
 }
 function filterByStage(stage) {
   studentsListVisible = true;
+  studentsPage = 1;
   const input = document.getElementById("searchInput");
   if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
     input.value = "";
@@ -1835,21 +1836,25 @@ function filterByStage(stage) {
 function toggleOverdueFilter() {
   overdueOnly = !overdueOnly;
   studentsListVisible = true;
+  studentsPage = 1;
   render();
 }
 function toggleExemptFilter() {
   exemptOnly = !exemptOnly;
   studentsListVisible = true;
+  studentsPage = 1;
   render();
 }
 function toggleBookletFilter(mode) {
   bookletFilter = bookletFilter === mode ? null : mode;
   studentsListVisible = true;
+  studentsPage = 1;
   render();
 }
 function toggleNoParentFilter() {
   noParentOnly = !noParentOnly;
   studentsListVisible = true;
+  studentsPage = 1;
   render();
 }
 function toggleStudentCount() {
@@ -3021,6 +3026,7 @@ function viewExamResults(examId) {
   const searchInput = document.getElementById("examResultsSearchInput");
   if (searchInput) searchInput.value = "";
   resultsTorailOnly = false;
+  resultsPage = 1;
   selectedResultIds = new Set();
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "none";
@@ -3111,6 +3117,7 @@ async function aiRegrade(resultId, examId, studentId) {
 let resultsTorailOnly = false;
 function setResultsTorailFilter(isTorail) {
   resultsTorailOnly = !!isTorail;
+  resultsPage = 1;
   renderExamResultsList();
 }
 function toggleResultsTorailFilter() {
@@ -3390,7 +3397,9 @@ function renderExamResultsList() {
   }
   const ex = exams.find(e => e.id === viewingExamId);
   const questions = ex ? (ex.questions || []) : [];
-  container.innerHTML = list.map(r => {
+  const resultsPagination = paginateArray(list, resultsPage, PAGE_SIZE);
+  resultsPage = resultsPagination.page;
+  container.innerHTML = resultsPagination.pageItems.map(r => {
     const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
     const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString('ar-EG') : "";
     const isOpen = expandedResultId === r.id;
@@ -3456,6 +3465,7 @@ function renderExamResultsList() {
         ${isOpen ? `<div class="answer-detail-box">${regradeBarHtml}${hasEdits ? `<div class="pending-score-note">درجة مؤقتة بعد التعديل: ${workingAnswers.reduce((sum,a)=>sum+(a.correct?Number((questions[a.questionIndex]||{}).points||1):0),0)}/${r.total} (لسه محفوظتش)</div>` : ""}${answersHtml}</div>` : ""}
       </div>`;
   }).join("");
+  container.innerHTML += paginationControlsHtml(resultsPagination.page, resultsPagination.totalPages, "gotoResultsPage");
   updateResultsSelectionUI();
 }
 
@@ -3586,6 +3596,31 @@ let noParentOnly = false;
 let showStudentCount = false;
 let showTorailStudentCount = false;
 let studentsListVisible = false;
+const PAGE_SIZE = 25;
+let studentsPage = 1;
+let torailPage = 1;
+let resultsPage = 1;
+
+function paginateArray(array, page, pageSize) {
+  const totalPages = Math.max(1, Math.ceil(array.length / pageSize));
+  const clampedPage = Math.min(Math.max(1, page), totalPages);
+  const start = (clampedPage - 1) * pageSize;
+  return { pageItems: array.slice(start, start + pageSize), totalPages, page: clampedPage };
+}
+
+function paginationControlsHtml(page, totalPages, gotoFnName) {
+  if (totalPages <= 1) return "";
+  return `<div style="display:flex; justify-content:center; align-items:center; gap:0.8rem; margin:1rem 0; font-size:0.85rem;">
+    <button onclick="${gotoFnName}(${page - 1})" ${page <= 1 ? "disabled" : ""} style="width:auto; padding:0.4rem 0.9rem; background:rgba(var(--c-subtle-rgb),0.1); color:inherit; border-radius:8px; border:none; font-weight:600;">‹ السابق</button>
+    <span style="color:var(--c-mutedonpage);">صفحة ${page} من ${totalPages}</span>
+    <button onclick="${gotoFnName}(${page + 1})" ${page >= totalPages ? "disabled" : ""} style="width:auto; padding:0.4rem 0.9rem; background:rgba(var(--c-subtle-rgb),0.1); color:inherit; border-radius:8px; border:none; font-weight:600;">التالي ›</button>
+  </div>`;
+}
+
+function gotoStudentsPage(p) { studentsPage = p; render(); if (document.getElementById("studentList")) document.getElementById("studentList").scrollIntoView({ behavior: "smooth", block: "start" }); }
+function gotoTorailPage(p) { torailPage = p; renderTorail(); if (document.getElementById("torailStudentList")) document.getElementById("torailStudentList").scrollIntoView({ behavior: "smooth", block: "start" }); }
+function gotoResultsPage(p) { resultsPage = p; renderExamResultsList(); }
+
 function toggleStudentsListVisible() {
   studentsListVisible = !studentsListVisible;
   const btn = document.getElementById("studentsListToggleBtn");
@@ -3720,7 +3755,10 @@ function render() {
   }
   emptyEl.style.display = "none";
 
-  listEl.innerHTML = filtered.map(s => {
+  const mainPagination = paginateArray(filtered, studentsPage, PAGE_SIZE);
+  studentsPage = mainPagination.page;
+
+  listEl.innerHTML = mainPagination.pageItems.map(s => {
     const payments = getPayments(s);
     const badge = paymentBadge(payments, s.exempt);
     const tone = toneStyles[badge.tone];
@@ -3788,6 +3826,8 @@ function render() {
       </div>
     `;
   }).join("");
+
+  listEl.innerHTML += paginationControlsHtml(mainPagination.page, mainPagination.totalPages, "gotoStudentsPage");
 
   const mainIds = new Set(mainStudents.map(s => s.id));
   selectedStudentIds.forEach(id => { if (!mainIds.has(id)) selectedStudentIds.delete(id); });
@@ -3900,7 +3940,10 @@ function renderTorail() {
   }
   emptyEl.style.display = "none";
 
-  listEl.innerHTML = filtered.map(s => {
+  const torailPagination = paginateArray(filtered, torailPage, PAGE_SIZE);
+  torailPage = torailPagination.page;
+
+  listEl.innerHTML = torailPagination.pageItems.map(s => {
     const payments = getPayments(s);
     const badge = paymentBadge(payments, s.exempt);
     const tone = toneStyles[badge.tone];
@@ -3969,12 +4012,15 @@ function renderTorail() {
     `;
   }).join("");
 
+  listEl.innerHTML += paginationControlsHtml(torailPagination.page, torailPagination.totalPages, "gotoTorailPage");
+
   const torailIds = new Set(torailStudents.map(s => s.id));
   selectedTorailStudentIds.forEach(id => { if (!torailIds.has(id)) selectedTorailStudentIds.delete(id); });
   updateTorailStudentsSelectionUI();
 }
 
 function torailFilterByStage(stage) {
+  torailPage = 1;
   const input = document.getElementById("torailSearchInput");
   if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
     input.value = "";
@@ -3983,10 +4029,10 @@ function torailFilterByStage(stage) {
   }
   renderTorail();
 }
-function torailToggleOverdueFilter() { torailOverdueOnly = !torailOverdueOnly; renderTorail(); }
-function torailToggleExemptFilter() { torailExemptOnly = !torailExemptOnly; renderTorail(); }
-function torailToggleBookletFilter(mode) { torailBookletFilter = torailBookletFilter === mode ? null : mode; renderTorail(); }
-function torailToggleNoParentFilter() { torailNoParentOnly = !torailNoParentOnly; renderTorail(); }
+function torailToggleOverdueFilter() { torailOverdueOnly = !torailOverdueOnly; torailPage = 1; renderTorail(); }
+function torailToggleExemptFilter() { torailExemptOnly = !torailExemptOnly; torailPage = 1; renderTorail(); }
+function torailToggleBookletFilter(mode) { torailBookletFilter = torailBookletFilter === mode ? null : mode; torailPage = 1; renderTorail(); }
+function torailToggleNoParentFilter() { torailNoParentOnly = !torailNoParentOnly; torailPage = 1; renderTorail(); }
 
 async function resetStudentPin(studentId) {
   if (!confirm("هيتم مسح الرمز السري الحالي، وأول طالب يختار الاسم ده هيقدر يحدد رمز جديد. متأكد؟")) return;
@@ -4000,7 +4046,7 @@ async function resetStudentPin(studentId) {
 
 document.getElementById("addBtn").addEventListener("click", openNewForm);
 document.getElementById("torailAddBtn").addEventListener("click", openNewTorailForm);
-document.getElementById("torailSearchInput").addEventListener("input", renderTorail);
+document.getElementById("torailSearchInput").addEventListener("input", () => { torailPage = 1; renderTorail(); });
 document.getElementById("torailOverduePill").addEventListener("click", torailToggleOverdueFilter);
 document.getElementById("torailExemptPill").addEventListener("click", torailToggleExemptFilter);
 document.getElementById("torailTerm1ReceivedPill").addEventListener("click", () => torailToggleBookletFilter("term1_received"));
@@ -4050,6 +4096,7 @@ document.getElementById("cancelBtn").addEventListener("click", closeForm);
 document.getElementById("formCard").addEventListener("submit", handleSubmit);
 document.getElementById("searchInput").addEventListener("input", () => {
   studentsListVisible = true;
+  studentsPage = 1;
   render();
 });
 
