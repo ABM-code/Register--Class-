@@ -373,6 +373,26 @@ function getTimerStorageKey() {
   return "examTimerStart_" + exam.id + "_" + studentKey;
 }
 
+function getAnswersStorageKey() {
+  const studentKey = selectedStudent.id || normalizeArabic(selectedStudent.name);
+  return "examAnswers_" + exam.id + "_" + studentKey;
+}
+
+function saveAnswersToStorage() {
+  try { localStorage.setItem(getAnswersStorageKey(), JSON.stringify(answers)); } catch (e) { /* تجاهل لو التخزين مش متاح */ }
+}
+
+function loadAnswersFromStorage() {
+  try {
+    const raw = localStorage.getItem(getAnswersStorageKey());
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === "object") ? parsed : {};
+  } catch (e) {
+    return {};
+  }
+}
+
 async function renderExam() {
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error("not_authenticated");
@@ -383,7 +403,8 @@ async function renderExam() {
     showError("تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.");
     return;
   }
-  answers = {};
+  answers = loadAnswersFromStorage();
+  const hasRestoredAnswers = Object.keys(answers).length > 0;
   const content = document.getElementById("content");
   const questions = exam.questions || [];
 
@@ -394,11 +415,18 @@ async function renderExam() {
       </div>`
     : "";
 
+  const restoredNoticeHtml = hasRestoredAnswers
+    ? `<div class="card" style="margin-bottom:0.5rem; background:#EFF5F0; padding:0.6rem 0.9rem;">
+        <span style="font-size:0.85rem; color:#3F6B4A;">↻ رجّعنالك إجاباتك اللي كتبتها قبل كده في نفس الامتحان.</span>
+      </div>`
+    : "";
+
   content.innerHTML = `
     ${timerHtml}
     <div class="card" style="margin-bottom:0.5rem;">
       <strong>${escapeHtml(selectedStudent.name)}</strong>
     </div>
+    ${restoredNoticeHtml}
     ${renderQuestionsHtml(questions)}
     <button id="submitBtn">تسليم الإجابات</button>
   `;
@@ -406,16 +434,24 @@ async function renderExam() {
   questions.forEach((q, i) => {
     if (q.type === "mcq" || q.type === "translation_mcq") {
       document.querySelectorAll(`.option-row[data-qidx="${i}"]`).forEach(row => {
+        if (answers[i] !== undefined && parseInt(row.dataset.optIdx, 10) === answers[i]) {
+          row.classList.add("selected");
+          row.querySelector('input').checked = true;
+        }
         row.addEventListener("click", () => {
           document.querySelectorAll(`.option-row[data-qidx="${i}"]`).forEach(r => r.classList.remove("selected"));
           row.classList.add("selected");
           row.querySelector('input').checked = true;
           answers[i] = parseInt(row.dataset.optIdx, 10);
+          saveAnswersToStorage();
         });
       });
     } else {
       const input = document.getElementById(`answer_${i}`);
-      if (input) input.addEventListener("input", () => { answers[i] = input.value; });
+      if (input) {
+        if (answers[i] !== undefined) input.value = answers[i];
+        input.addEventListener("input", () => { answers[i] = input.value; saveAnswersToStorage(); });
+      }
     }
   });
 
@@ -582,6 +618,7 @@ async function submitExam(isTimeout) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data.error || "submit_failed");
     try { localStorage.removeItem(getTimerStorageKey()); } catch (e) {}
+    try { localStorage.removeItem(getAnswersStorageKey()); } catch (e) {}
     renderResult(data.score, data.total, data.answerDetails || answerDetails, true, isTimeout);
   } catch (err) {
     if (submitBtn) {
