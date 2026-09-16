@@ -840,6 +840,16 @@
   <div id="examResultsView" style="display:none;">
     <button onclick="closeExamResults()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
     <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;"></h2>
+
+    <button id="examQuestionStatsToggleBtn" class="tools-toggle-btn" onclick="toggleExamQuestionStats()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+      تحليل الأسئلة (الأصعب والأسهل)
+      <svg id="examQuestionStatsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div id="examQuestionStatsSection" style="display:none; margin-bottom:0.9rem;">
+      <div class="chart-box" id="chartQuestionDifficulty"></div>
+    </div>
+
     <div class="search-wrap" style="margin-bottom:0.9rem;">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="examResultsSearchInput" placeholder="ابحث باسم الطالب" oninput="resultsPage=1; renderExamResultsList();">
@@ -919,6 +929,14 @@
 
   <div class="stat-section-title">نسبة المشاركة في كل امتحان</div>
   <div class="chart-box" id="chartExamParticipation"></div>
+
+  <div class="stat-section-title">أداء طالب عبر الوقت</div>
+  <div class="chart-box" style="margin-bottom:0.7rem;">
+    <select class="reg-input" id="studentPerfSelect" onchange="renderStudentPerformance()">
+      <option value="">— اختر طالب —</option>
+    </select>
+  </div>
+  <div class="chart-box" id="chartStudentPerformance"></div>
 </main>
 
 <main class="app-content" id="viewTorail" style="display:none;">
@@ -1082,7 +1100,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v50 — حفظ كل أسئلة الامتحان في البنك مرة واحدة — 13 سبتمبر 2026";
+const APP_VERSION = "v51 — تحليلات أعمق للنتائج (أداء الطالب + صعوبة الأسئلة) — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -1979,6 +1997,93 @@ function renderStatsDashboard() {
     return { label: ex.title, value: pct, display: submittedCount + "/" + stageStudentCount };
   }).filter(Boolean);
   renderBarChart("chartExamParticipation", participationRows, "blue");
+
+  // أداء طالب عبر الوقت
+  populateStudentPerfSelect();
+  renderStudentPerformance();
+}
+
+function populateStudentPerfSelect() {
+  const sel = document.getElementById("studentPerfSelect");
+  if (!sel) return;
+  const currentVal = sel.value;
+  const sorted = sortByStageThenName(students);
+  sel.innerHTML = `<option value="">— اختر طالب —</option>` + sorted.map(s =>
+    `<option value="${s.id}">${escapeHtml(s.name)}${s.stage ? " - " + escapeHtml(s.stage) : ""}</option>`
+  ).join("");
+  if (currentVal && sorted.some(s => s.id === currentVal)) sel.value = currentVal;
+}
+
+function renderStudentPerformance() {
+  const sel = document.getElementById("studentPerfSelect");
+  const container = document.getElementById("chartStudentPerformance");
+  if (!sel || !container) return;
+  const studentId = sel.value;
+  if (!studentId) {
+    container.innerHTML = `<div class="chart-empty">اختر طالب من فوق عشان تشوف أداءه عبر الوقت</div>`;
+    return;
+  }
+  const results = examResults
+    .filter(r => r.studentId === studentId)
+    .slice()
+    .sort((a, b) => {
+      const at = a.submittedAt && a.submittedAt.toMillis ? a.submittedAt.toMillis() : 0;
+      const bt = b.submittedAt && b.submittedAt.toMillis ? b.submittedAt.toMillis() : 0;
+      return at - bt;
+    });
+  if (results.length === 0) {
+    container.innerHTML = `<div class="chart-empty">الطالب ده لسه ما دخلش أي امتحان</div>`;
+    return;
+  }
+  const rows = results.map(r => {
+    const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+    const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleDateString('ar-EG', { day: '2-digit', month: 'short' }) : "";
+    const shortTitle = (r.examTitle || "").length > 22 ? r.examTitle.slice(0, 22) + "…" : (r.examTitle || "");
+    return { label: `${dateStr} — ${shortTitle}`, value: pct, display: r.score + "/" + r.total + " (" + pct + "%)" };
+  });
+  renderBarChart("chartStudentPerformance", rows, "green");
+}
+
+function toggleExamQuestionStats() {
+  const section = document.getElementById("examQuestionStatsSection");
+  const btn = document.getElementById("examQuestionStatsToggleBtn");
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+  if (!isOpen) renderExamQuestionDifficulty();
+}
+
+function renderExamQuestionDifficulty() {
+  const container = document.getElementById("chartQuestionDifficulty");
+  if (!container) return;
+  const ex = exams.find(e => e.id === viewingExamId);
+  if (!ex) { container.innerHTML = ""; return; }
+  const questions = ex.questions || [];
+  const results = examResults.filter(r => r.examId === viewingExamId);
+  if (questions.length === 0 || results.length === 0) {
+    container.innerHTML = `<div class="chart-empty">مفيش بيانات كفاية لعرضها لسه</div>`;
+    return;
+  }
+  const rows = questions.map((q, qi) => {
+    let answeredCount = 0, correctCount = 0;
+    results.forEach(r => {
+      const ad = (r.answers || []).find(a => a.questionIndex === qi);
+      if (ad) {
+        answeredCount++;
+        if (ad.correct) correctCount++;
+      }
+    });
+    if (answeredCount === 0) return null;
+    const wrongPct = Math.round(((answeredCount - correctCount) / answeredCount) * 100);
+    const shortPrompt = (q.prompt || "").length > 42 ? q.prompt.slice(0, 42) + "…" : (q.prompt || "");
+    return { label: `س${qi + 1}: ${shortPrompt}`, value: wrongPct, display: wrongPct + "% خطأ" };
+  }).filter(Boolean);
+  if (rows.length === 0) {
+    container.innerHTML = `<div class="chart-empty">مفيش بيانات كفاية لعرضها لسه</div>`;
+    return;
+  }
+  rows.sort((a, b) => b.value - a.value);
+  renderBarChart("chartQuestionDifficulty", rows, "red");
 }
 
 function initNotifUi() {
@@ -3107,7 +3212,10 @@ function viewExamResults(examId) {
   document.getElementById("examBuilderView").style.display = "none";
   document.getElementById("examResultsView").style.display = "block";
   document.getElementById("examMissingView").style.display = "none";
+  document.getElementById("examQuestionStatsSection").style.display = "none";
+  document.getElementById("examQuestionStatsToggleBtn").classList.remove("open");
   renderExamResultsList();
+  renderExamQuestionDifficulty();
   renderExamsList();
 }
 function closeExamResults() {
@@ -3451,6 +3559,9 @@ function getVisibleExamResultsList() {
   return list;
 }
 function renderExamResultsList() {
+  if (document.getElementById("examQuestionStatsSection") && document.getElementById("examQuestionStatsSection").style.display === "block") {
+    renderExamQuestionDifficulty();
+  }
   const rawQuery = document.getElementById("examResultsSearchInput") ? document.getElementById("examResultsSearchInput").value.trim() : "";
   const list = getVisibleExamResultsList();
   const allPill = document.getElementById("resultsAllPill");
