@@ -936,9 +936,23 @@
 
   <div class="stat-section-title">أداء طالب عبر الوقت</div>
   <div class="chart-box" style="margin-bottom:0.7rem;">
-    <select class="reg-input" id="studentPerfSelect" onchange="renderStudentPerformance()">
-      <option value="">— اختر طالب —</option>
-    </select>
+    <div class="field-row" style="margin-bottom:0.6rem;">
+      <div class="field-group" style="flex:2;">
+        <input class="reg-input" id="studentPerfSearchInput" placeholder="ابحث بالاسم" oninput="renderStudentPerfSearchResults()">
+      </div>
+      <div class="field-group" style="flex:1;">
+        <select class="reg-input" id="studentPerfStageFilter" onchange="renderStudentPerfSearchResults()">
+          <option value="">كل المراحل</option>
+          <option value="Prep 1">Prep 1</option>
+          <option value="Prep 2">Prep 2</option>
+          <option value="Prep 3">Prep 3</option>
+          <option value="Sec 1">Sec 1</option>
+          <option value="Sec 2">Sec 2</option>
+          <option value="Sec 3">Sec 3</option>
+        </select>
+      </div>
+    </div>
+    <div id="studentPerfSearchResults"></div>
   </div>
   <div class="chart-box" id="chartStudentPerformance"></div>
 </main>
@@ -1104,7 +1118,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v51 — تحليلات أعمق للنتائج (أداء الطالب + صعوبة الأسئلة) — 16 سبتمبر 2026";
+const APP_VERSION = "v52 — بحث بالاسم والمرحلة بدل القايمة في أداء الطالب + تحديد الكل في بنك الأسئلة — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2003,28 +2017,58 @@ function renderStatsDashboard() {
   renderBarChart("chartExamParticipation", participationRows, "blue");
 
   // أداء طالب عبر الوقت
-  populateStudentPerfSelect();
+  renderStudentPerfSearchResults();
   renderStudentPerformance();
 }
 
-function populateStudentPerfSelect() {
-  const sel = document.getElementById("studentPerfSelect");
-  if (!sel) return;
-  const currentVal = sel.value;
-  const sorted = sortByStageThenName(students);
-  sel.innerHTML = `<option value="">— اختر طالب —</option>` + sorted.map(s =>
-    `<option value="${s.id}">${escapeHtml(s.name)}${s.stage ? " - " + escapeHtml(s.stage) : ""}</option>`
-  ).join("");
-  if (currentVal && sorted.some(s => s.id === currentVal)) sel.value = currentVal;
+let selectedStudentPerfId = null;
+
+function renderStudentPerfSearchResults() {
+  const input = document.getElementById("studentPerfSearchInput");
+  const stageFilter = document.getElementById("studentPerfStageFilter");
+  const box = document.getElementById("studentPerfSearchResults");
+  if (!input || !stageFilter || !box) return;
+  const rawQuery = input.value.trim();
+  const normQuery = normalizeArabic(rawQuery);
+  const stage = stageFilter.value;
+
+  if (selectedStudentPerfId && !students.some(s => s.id === selectedStudentPerfId)) {
+    selectedStudentPerfId = null;
+  }
+
+  let list = students;
+  if (stage) list = list.filter(s => s.stage === stage);
+  if (normQuery) list = list.filter(s => normalizeArabic(s.name).includes(normQuery));
+  list = sortByStageThenName(list);
+
+  if (!rawQuery && !stage) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">ابحث بالاسم أو اختار المرحلة عشان تشوف الطلاب.</p>`;
+    return;
+  }
+  if (list.length === 0) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب مطابقين للبحث.</p>`;
+    return;
+  }
+  const limited = list.slice(0, 20);
+  box.innerHTML = limited.map(s => `
+    <div class="result-row" style="cursor:pointer; ${selectedStudentPerfId === s.id ? 'box-shadow:0 0 0 2px #D4A93B inset;' : ''}" onclick="selectStudentPerf('${s.id}')">
+      <div class="result-row-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
+    </div>
+  `).join("") + (list.length > limited.length ? `<p style="color:#9FB8AD; text-align:center; padding:0.4rem 0; font-size:0.78rem;">فيه ${list.length - limited.length} نتيجة تانية، ضيّق البحث أكتر.</p>` : "");
+}
+
+function selectStudentPerf(studentId) {
+  selectedStudentPerfId = studentId;
+  renderStudentPerfSearchResults();
+  renderStudentPerformance();
 }
 
 function renderStudentPerformance() {
-  const sel = document.getElementById("studentPerfSelect");
   const container = document.getElementById("chartStudentPerformance");
-  if (!sel || !container) return;
-  const studentId = sel.value;
+  if (!container) return;
+  const studentId = selectedStudentPerfId;
   if (!studentId) {
-    container.innerHTML = `<div class="chart-empty">اختر طالب من فوق عشان تشوف أداءه عبر الوقت</div>`;
+    container.innerHTML = `<div class="chart-empty">اختر طالب من نتائج البحث فوق عشان تشوف أداءه عبر الوقت</div>`;
     return;
   }
   const results = examResults
