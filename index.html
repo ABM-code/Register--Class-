@@ -832,6 +832,10 @@
           <input class="reg-input" id="bankFilterTag" placeholder="مثال: Present Simple" oninput="renderQuestionBankPicker()">
         </div>
       </div>
+      <label class="checkbox-row" style="margin-bottom:0.6rem;">
+        <input type="checkbox" id="bankSelectAllBox" onchange="toggleSelectAllBankQuestions(this.checked)">
+        <span>تحديد الكل (<span id="bankSelectAllCount">0</span>)</span>
+      </label>
       <div id="bankPickerList" style="margin-bottom:0.8rem;"></div>
       <button onclick="addSelectedBankQuestions()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:9px; padding:0.7rem; font-weight:700; cursor:pointer;">أضف المحدد للامتحان</button>
     </div>
@@ -2957,11 +2961,10 @@ function closeQuestionBankPicker() {
 
 function toggleBankQuestionSelect(id, checked) {
   if (checked) selectedBankQuestionIds.add(id); else selectedBankQuestionIds.delete(id);
+  updateBankSelectAllUI();
 }
 
-function renderQuestionBankPicker() {
-  const box = document.getElementById("bankPickerList");
-  if (!box) return;
+function getFilteredBankQuestions() {
   const stageFilter = document.getElementById("bankFilterStage").value;
   const tagFilter = document.getElementById("bankFilterTag").value.trim().toLowerCase();
   let list = questionBank;
@@ -2970,11 +2973,37 @@ function renderQuestionBankPicker() {
     (q.tags || []).some(t => t.toLowerCase().includes(tagFilter)) ||
     (q.prompt || "").toLowerCase().includes(tagFilter)
   );
+  return list;
+}
+
+function toggleSelectAllBankQuestions(checked) {
+  const list = getFilteredBankQuestions();
+  if (checked) {
+    list.forEach(q => selectedBankQuestionIds.add(q.id));
+  } else {
+    list.forEach(q => selectedBankQuestionIds.delete(q.id));
+  }
+  renderQuestionBankPicker();
+}
+
+function updateBankSelectAllUI() {
+  const list = getFilteredBankQuestions();
+  const box = document.getElementById("bankSelectAllBox");
+  const countEl = document.getElementById("bankSelectAllCount");
+  if (countEl) countEl.textContent = selectedBankQuestionIds.size;
+  if (box) box.checked = list.length > 0 && list.every(q => selectedBankQuestionIds.has(q.id));
+}
+
+function renderQuestionBankPicker() {
+  const box = document.getElementById("bankPickerList");
+  if (!box) return;
+  const list = getFilteredBankQuestions();
 
   const typeLabels = { mcq: "اختياري", translation_mcq: "ترجمة", complete: "إكمال", rewrite: "صياغة", correct: "تصحيح", dialogue: "محادثة", essay: "مقالي" };
 
   if (list.length === 0) {
     box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أسئلة في البنك مطابقة للفلتر ده.</p>`;
+    updateBankSelectAllUI();
     return;
   }
   box.innerHTML = list.map(q => `
@@ -2986,6 +3015,7 @@ function renderQuestionBankPicker() {
       </div>
     </label>
   `).join("");
+  updateBankSelectAllUI();
 }
 
 function addSelectedBankQuestions() {
