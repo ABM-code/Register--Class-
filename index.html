@@ -370,6 +370,28 @@
   </div>
 </div>
 
+<div id="brandSettingsModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9996; align-items:center; justify-content:center; padding:1.25rem;">
+  <div style="background:#F5F1E6; border-radius:14px; padding:1.5rem; max-width:420px; width:100%; max-height:85vh; overflow-y:auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">🏷️ إعدادات الهوية</strong>
+      <button onclick="closeBrandSettings()" style="width:auto; background:none; color:#6B6B60; padding:0.2rem 0.5rem;">✕</button>
+    </div>
+    <div class="field-group">
+      <label>اسم السنتر / المركز (اختياري)</label>
+      <input class="reg-input" id="brandCenterNameInput" placeholder="مثال: مركز النخبة لتعليم اللغة الإنجليزية">
+    </div>
+    <div class="field-group">
+      <label>لون العلامة</label>
+      <input type="color" id="brandColorInput" value="#D4A93B" style="width:100%; height:44px; border-radius:9px; border:1px solid rgba(0,0,0,0.15); cursor:pointer; padding:2px;">
+    </div>
+    <div class="field-group">
+      <label>فوتر اختياري (هيظهر أسفل التطبيق)</label>
+      <input class="reg-input" id="brandFooterInput" placeholder="مثال: جميع الحقوق محفوظة لمركز النخبة">
+    </div>
+    <button id="brandSettingsSaveBtn" onclick="saveBrandSettings()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:9px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.5rem;">حفظ</button>
+  </div>
+</div>
+
 <div id="lockScreen" style="position:fixed;inset:0;background:#16302B;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.9rem;padding:1.5rem;text-align:center;">
   <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
   <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">دخول المدرس</h2>
@@ -383,6 +405,10 @@
 <header class="app-content">
   <div style="max-width:640px; margin:0 auto 1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
     <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="تبديل الألوان" style="position:static;">🎨</button>
+    <button class="logout-btn" id="brandSettingsBtn" onclick="openBrandSettings()" title="إعدادات الهوية والعلامة" style="position:static;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+      الهوية
+    </button>
     <button class="logout-btn" id="changePasswordBtn" onclick="openChangePassword()" title="تغيير كلمة المرور" style="position:static;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       كلمة السر
@@ -404,6 +430,7 @@
         <span class="brand-name">Class Register</span>
       </div>
       <h1 class="tname" id="teacherNameDisplay" onclick="editTeacherName()" title="اضغط لتعديل الاسم" style="cursor:pointer;">Mr. Abd El Rahman Moneer</h1>
+      <div id="centerNameDisplay" style="display:none; color:var(--c-mutedonpage); font-size:0.85rem; margin-top:0.15rem;"></div>
       <div class="subline">
         <span class="info-chip" onclick="editTeacherPhone()" title="اضغط لتعديل رقم التليفون">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -1115,12 +1142,16 @@
   <div id="torailStudentList"></div>
 </main>
 
+<div class="app-content app-version-footer" id="brandFooterDisplay" style="display:none; opacity:0.85; padding-top:0;"></div>
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v52 — بحث بالاسم والمرحلة بدل القايمة في أداء الطالب + تحديد الكل في بنك الأسئلة — 16 سبتمبر 2026";
+const APP_VERSION = "v53 — Phase 11: إعدادات هوية المعلم (اسم سنتر، لون علامة، فوتر، شعار محفوظ في الحساب) — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
+let TEACHER_BRAND_COLOR = "#D4A93B";
+let TEACHER_CENTER_NAME = "";
+let TEACHER_FOOTER_TEXT = "";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
 
@@ -4378,6 +4409,9 @@ async function ensureTeacherDoc(uid) {
     await ref.set({
       name: TEACHER_NAME,
       phone: TEACHER_PHONE,
+      brandColor: TEACHER_BRAND_COLOR,
+      centerName: "",
+      footerText: "",
       email: (auth.currentUser && auth.currentUser.email) || "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
@@ -4385,15 +4419,81 @@ async function ensureTeacherDoc(uid) {
     const d = doc.data();
     if (d.name) TEACHER_NAME = d.name;
     if (d.phone) TEACHER_PHONE = d.phone;
+    if (d.brandColor) TEACHER_BRAND_COLOR = d.brandColor;
+    if (d.centerName) TEACHER_CENTER_NAME = d.centerName;
+    if (d.footerText) TEACHER_FOOTER_TEXT = d.footerText;
+    if (d.logoUrl) {
+      const img = document.getElementById("teacherAvatarImg");
+      if (img) img.src = d.logoUrl;
+      try { localStorage.setItem("customAvatar", d.logoUrl); } catch (e) {}
+    }
   }
+  applyBrandColor(TEACHER_BRAND_COLOR);
   renderTeacherHeader();
+}
+
+function getContrastTextColor(hex) {
+  const c = (hex || "").replace("#", "");
+  if (c.length !== 6) return "#1B2420";
+  const r = parseInt(c.substr(0, 2), 16), g = parseInt(c.substr(2, 2), 16), b = parseInt(c.substr(4, 2), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#1B2420" : "#FFFDF8";
+}
+
+function applyBrandColor(color) {
+  if (!color) return;
+  document.documentElement.style.setProperty("--c-accent", color);
+  document.documentElement.style.setProperty("--c-onaccent", getContrastTextColor(color));
+}
+
+function openBrandSettings() {
+  document.getElementById("brandCenterNameInput").value = TEACHER_CENTER_NAME;
+  document.getElementById("brandColorInput").value = TEACHER_BRAND_COLOR;
+  document.getElementById("brandFooterInput").value = TEACHER_FOOTER_TEXT;
+  document.getElementById("brandSettingsModal").style.display = "flex";
+}
+
+function closeBrandSettings() {
+  document.getElementById("brandSettingsModal").style.display = "none";
+}
+
+async function saveBrandSettings() {
+  const centerName = document.getElementById("brandCenterNameInput").value.trim();
+  const brandColor = document.getElementById("brandColorInput").value || "#D4A93B";
+  const footerText = document.getElementById("brandFooterInput").value.trim();
+  const btn = document.getElementById("brandSettingsSaveBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "جاري الحفظ..."; }
+  try {
+    await teachersCol.doc(currentTeacherId).update({ centerName, brandColor, footerText });
+    TEACHER_CENTER_NAME = centerName;
+    TEACHER_BRAND_COLOR = brandColor;
+    TEACHER_FOOTER_TEXT = footerText;
+    applyBrandColor(brandColor);
+    renderTeacherHeader();
+    closeBrandSettings();
+    showSuccess("تم حفظ إعدادات الهوية بنجاح.");
+  } catch (e) {
+    showError("تعذر حفظ الإعدادات. تأكد من اتصالك بالإنترنت.");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "حفظ"; }
+  }
 }
 
 function renderTeacherHeader() {
   const nameEl = document.getElementById("teacherNameDisplay");
   const phoneEl = document.getElementById("teacherPhoneDisplay");
+  const centerEl = document.getElementById("centerNameDisplay");
+  const footerEl = document.getElementById("brandFooterDisplay");
   if (nameEl) nameEl.textContent = TEACHER_NAME;
   if (phoneEl) phoneEl.textContent = TEACHER_PHONE;
+  if (centerEl) {
+    centerEl.textContent = TEACHER_CENTER_NAME;
+    centerEl.style.display = TEACHER_CENTER_NAME ? "block" : "none";
+  }
+  if (footerEl) {
+    footerEl.textContent = TEACHER_FOOTER_TEXT;
+    footerEl.style.display = TEACHER_FOOTER_TEXT ? "block" : "none";
+  }
 }
 
 async function editTeacherName() {
@@ -4572,6 +4672,11 @@ function handleAvatarChange(file) {
         return;
       }
       document.getElementById("teacherAvatarImg").src = dataUrl;
+      if (currentTeacherId) {
+        teachersCol.doc(currentTeacherId).update({ logoUrl: dataUrl }).catch(() => {
+          showError("اتحفظت الصورة على الجهاز ده، لكن تعذر رفعها لحسابك عشان تظهر على أي جهاز تاني. تأكد من اتصالك بالإنترنت وجرب تاني.");
+        });
+      }
     };
     img.src = reader.result;
   };
