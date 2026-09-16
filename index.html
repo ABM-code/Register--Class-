@@ -799,10 +799,11 @@
         <div id="aiImportStatus" style="font-size:0.82rem; margin-top:0.5rem; display:none;"></div>
       </div>
       <div id="questionsBuilder"></div>
-      <div style="display:flex; gap:0.5rem; margin:0.5rem 0 1rem;">
+      <div style="display:flex; gap:0.5rem; margin:0.5rem 0 0.5rem;">
         <button onclick="addQuestionCard()" style="flex:1; background:#EAEAE4; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">+ ضيف سؤال</button>
         <button onclick="openQuestionBankPicker()" style="flex:1; background:#FBF3DF; color:#8A6A1F; border:1px dashed #D4A93B; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">📚 من بنك الأسئلة</button>
       </div>
+      <button onclick="saveAllQuestionsToBank()" style="width:100%; background:none; color:#4A5A50; border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.55rem; font-size:0.85rem; font-weight:600; cursor:pointer; margin-bottom:1rem;">💾 احفظ كل أسئلة الامتحان ده في البنك مرة واحدة</button>
       <button onclick="saveExam()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveExamBtnLabel">حفظ الامتحان</span></button>
     </div>
   </div>
@@ -1081,7 +1082,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v49 — أداء: ترقيم صفحات لقوائم الطلاب والنتائج — 13 سبتمبر 2026";
+const APP_VERSION = "v50 — حفظ كل أسئلة الامتحان في البنك مرة واحدة — 13 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 const AI_WORKER_URL = "https://register-class.abm319.workers.dev/";
@@ -2410,6 +2411,7 @@ function renderExamsList() {
           <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش (${missingCount}/${stageStudentCount})</button>
           <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamQuestionsPdf('${ex.id}')">طباعة الأسئلة</button>
           <button style="background:#EAF2E7; color:#3F6B4A;" onclick="printExamAnswersPdf('${ex.id}')">طباعة نموذج الإجابة</button>
+          <button style="background:none; border:1px dashed #D4A93B; color:#8A6A1F;" onclick="saveExamQuestionsToBank('${ex.id}')">💾 كل الأسئلة للبنك</button>
           <button style="background:${isClosed ? '#EAF2E7' : '#F6E7E2'}; color:${isClosed ? '#3F6B4A' : '#9C4B32'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '🔓 فتح الامتحان تاني' : '🔒 قفل الامتحان الآن'}</button>
           <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
@@ -2729,6 +2731,79 @@ function addQuestionCard() {
 function removeQuestionCard(qId) {
   currentBuilderQuestions = currentBuilderQuestions.filter(q => q.id !== qId);
   renderQuestionsBuilder();
+}
+
+async function saveExamQuestionsToBank(examId) {
+  const ex = exams.find(e => e.id === examId);
+  if (!ex) return;
+  const questions = ex.questions || [];
+  if (questions.length === 0) { showError("الامتحان ده مفيهوش أسئلة."); return; }
+  const stage = ex.stage || "";
+  if (!stage) { showError("الامتحان ده مالوش مرحلة محددة."); return; }
+
+  const tagsInput = prompt(`هيتحفظ ${questions.length} سؤال من امتحان "${ex.title}" في البنك.\nكلمات مفتاحية مشتركة (افصل بفاصلة، اختياري):`, "");
+  if (tagsInput === null) return;
+  const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
+
+  try {
+    const batch = db.batch();
+    questions.forEach(q => {
+      const ref = questionBankCol.doc();
+      batch.set(ref, {
+        teacherId: currentTeacherId,
+        stage,
+        tags,
+        type: q.type,
+        passage: q.passage || "",
+        prompt: q.prompt,
+        options: q.options || [],
+        correctIndex: (q.correctIndex ?? 0),
+        correctAnswers: q.correctAnswers || [],
+        points: q.points || 1,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+    await batch.commit();
+    showSuccess(`اتحفظ ${questions.length} سؤال من "${ex.title}" في البنك.`);
+  } catch (err) {
+    showError("تعذر الحفظ في البنك. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+async function saveAllQuestionsToBank() {
+  if (currentBuilderQuestions.length === 0) { showError("مفيش أسئلة في الامتحان ده لحفظها."); return; }
+  const stage = document.getElementById("examStageInput").value;
+  if (!stage) { showError("اختر مرحلة الامتحان الأول قبل ما تحفظ في البنك."); return; }
+  const emptyOnes = currentBuilderQuestions.filter(q => !q.prompt || !q.prompt.trim());
+  if (emptyOnes.length > 0) { showError(`فيه ${emptyOnes.length} سؤال من غير نص، اكتب نص لكل سؤال قبل الحفظ.`); return; }
+
+  const tagsInput = prompt(`هيتحفظ ${currentBuilderQuestions.length} سؤال في البنك.\nكلمات مفتاحية مشتركة تتحط على كل الأسئلة دي (افصل بفاصلة، اختياري):`, "");
+  if (tagsInput === null) return;
+  const tags = tagsInput.split(",").map(t => t.trim()).filter(Boolean);
+
+  try {
+    const batch = db.batch();
+    currentBuilderQuestions.forEach(q => {
+      const ref = questionBankCol.doc();
+      batch.set(ref, {
+        teacherId: currentTeacherId,
+        stage,
+        tags,
+        type: q.type,
+        passage: q.passage || "",
+        prompt: q.prompt,
+        options: q.options || [],
+        correctIndex: (q.correctIndex ?? 0),
+        correctAnswers: q.correctAnswers || [],
+        points: q.points || 1,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+    await batch.commit();
+    showSuccess(`اتحفظ ${currentBuilderQuestions.length} سؤال في البنك بنجاح.`);
+  } catch (err) {
+    showError("تعذر الحفظ في البنك. تأكد من اتصالك بالإنترنت.");
+  }
 }
 
 async function saveQuestionToBank(qId) {
