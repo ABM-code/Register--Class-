@@ -8,6 +8,7 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; }
+  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; }
   body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
   .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
   h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
@@ -18,11 +19,11 @@
     width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15);
     background: #FFFDF8; font-size: 0.95rem; color: #1B2420; font-family: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  select:focus, input:focus { outline: none; border-color: #D4A93B; box-shadow: 0 0 0 3px rgba(212,169,59,0.18); }
+  select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18); }
   button {
-    font-family: inherit; background: #D4A93B; color: #1B2420; border: none; border-radius: 12px;
+    font-family: inherit; background: var(--accent); color: #1B2420; border: none; border-radius: 12px;
     padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%;
-    transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(212,169,59,0.3);
+    transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(var(--accent-rgb),0.3);
   }
   button:hover:not(:disabled) { filter: brightness(1.05); }
   button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
@@ -46,7 +47,7 @@
     border-radius: 999px; padding: 0.35rem 0.85rem; font-size: 0.82rem; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
   }
   .category-pill:hover { background: rgba(245,241,230,0.2); }
-  .category-pill.active { background: #D4A93B; color: #1B2420; border-color: #D4A93B; font-weight: 600; }
+  .category-pill.active { background: var(--accent); color: #1B2420; border-color: var(--accent); font-weight: 600; }
   .mat-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.5rem; }
   .mat-category { font-size: 0.78rem; color: #6B6B60; margin-bottom: 0.7rem; }
   .mat-video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 10px; overflow: hidden; margin-bottom: 0.3rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
@@ -66,12 +67,38 @@
   <p class="sub" id="pageSub">اختر مرحلتك وادخل عشان تشوف المحتوى</p>
   <div id="errorBox"></div>
   <div id="content"></div>
+  <p id="brandFooterText" style="text-align:center; color:#9FB8AD; font-size:0.75rem; opacity:0.8; margin:2rem 0 0; display:none;"></p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
+// إعدادات هوية المعلم — حدّثها يدويًا كل ما تغيّرها من لوحة "الهوية" في التطبيق الرئيسي
+const TEACHER_CENTER_NAME = "";
+const TEACHER_BRAND_COLOR = "#D4A93B";
+const TEACHER_FOOTER_TEXT = "";
+const TEACHER_DISPLAY_LINE = TEACHER_CENTER_NAME ? (TEACHER_CENTER_NAME + " — " + TEACHER_NAME) : TEACHER_NAME;
+
+function hexToRgbTriplet(hex) {
+  const c = (hex || "").replace("#", "");
+  if (c.length !== 6) return "212,169,59";
+  const r = parseInt(c.substr(0, 2), 16), g = parseInt(c.substr(2, 2), 16), b = parseInt(c.substr(4, 2), 16);
+  return `${r},${g},${b}`;
+}
+function applyBrandColor(color) {
+  if (!color) return;
+  document.documentElement.style.setProperty("--accent", color);
+  document.documentElement.style.setProperty("--accent-rgb", hexToRgbTriplet(color));
+}
+applyBrandColor(TEACHER_BRAND_COLOR);
+function renderBrandFooter() {
+  const el = document.getElementById("brandFooterText");
+  if (!el) return;
+  if (TEACHER_FOOTER_TEXT) { el.textContent = TEACHER_FOOTER_TEXT; el.style.display = "block"; }
+}
+renderBrandFooter();
+
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
 const firebaseConfig = {
   apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
@@ -159,7 +186,7 @@ function renderStagePicker() {
 }
 
 function renderStudentPicker() {
-  document.getElementById("pageSub").textContent = selectedStage + " — " + TEACHER_NAME;
+  document.getElementById("pageSub").textContent = selectedStage + " — " + TEACHER_DISPLAY_LINE;
   const content = document.getElementById("content");
   content.innerHTML = `
     <div class="card">

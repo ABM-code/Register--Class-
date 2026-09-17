@@ -8,13 +8,14 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; }
+  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; }
   body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
   .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
   .timer-bar {
     position: sticky; top: 0; z-index: 50; background: #16302B; border-bottom: 1px solid rgba(245,241,230,0.15);
     padding: 0.6rem 1.25rem; margin: -1.75rem -1.25rem 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
   }
-  .timer-bar .timer-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.1rem; color: #D4A93B; }
+  .timer-bar .timer-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.1rem; color: var(--accent); }
   .timer-bar.timer-warning .timer-value { color: #C15B3C; }
   h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
   p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
@@ -24,11 +25,11 @@
     width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15);
     background: #FFFDF8; font-size: 0.95rem; color: #1B2420; font-family: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
-  select:focus, input:focus { outline: none; border-color: #D4A93B; box-shadow: 0 0 0 3px rgba(212,169,59,0.18); }
+  select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18); }
   button {
-    font-family: inherit; background: #D4A93B; color: #1B2420; border: none; border-radius: 12px;
+    font-family: inherit; background: var(--accent); color: #1B2420; border: none; border-radius: 12px;
     padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%;
-    transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(212,169,59,0.3);
+    transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(var(--accent-rgb),0.3);
   }
   button:hover:not(:disabled) { filter: brightness(1.05); }
   button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
@@ -37,10 +38,10 @@
   .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.7rem; unicode-bidi: plaintext; text-align: start; }
   .q-num { color: #6B6B60; font-size: 0.8rem; margin-bottom: 0.2rem; }
   .option-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.8rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; margin-bottom: 0.5rem; cursor: pointer; background: #FFFDF8; transition: border-color 0.15s ease, background 0.15s ease; }
-  .option-row:hover { border-color: rgba(212,169,59,0.5); }
+  .option-row:hover { border-color: rgba(var(--accent-rgb),0.5); }
   .option-row span { unicode-bidi: plaintext; text-align: start; flex: 1; }
   .option-row input { accent-color: #3F6B4A; width: 17px; height: 17px; flex-shrink: 0; }
-  .option-row.selected { border-color: #D4A93B; background: #FBF3DF; }
+  .option-row.selected { border-color: var(--accent); background: #FBF3DF; }
   #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 9px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
   .result-score { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700; color: #3F6B4A; text-align: center; margin: 0.4rem 0; }
   .result-label { text-align: center; color: #6B6B60; font-size: 0.9rem; }
@@ -87,6 +88,7 @@
   <p class="sub" id="examSub"></p>
   <div id="errorBox"></div>
   <div id="content"></div>
+  <p id="brandFooterText" style="text-align:center; color:#9FB8AD; font-size:0.75rem; opacity:0.8; margin:2rem 0 0; display:none;"></p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -94,6 +96,31 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
+// إعدادات هوية المعلم — حدّثها يدويًا كل ما تغيّرها من لوحة "الهوية" في التطبيق الرئيسي
+const TEACHER_CENTER_NAME = "";
+const TEACHER_BRAND_COLOR = "#D4A93B";
+const TEACHER_FOOTER_TEXT = "";
+const TEACHER_DISPLAY_LINE = TEACHER_CENTER_NAME ? (TEACHER_CENTER_NAME + " — " + TEACHER_NAME) : TEACHER_NAME;
+
+function hexToRgbTriplet(hex) {
+  const c = (hex || "").replace("#", "");
+  if (c.length !== 6) return "212,169,59";
+  const r = parseInt(c.substr(0, 2), 16), g = parseInt(c.substr(2, 2), 16), b = parseInt(c.substr(4, 2), 16);
+  return `${r},${g},${b}`;
+}
+function applyBrandColor(color) {
+  if (!color) return;
+  document.documentElement.style.setProperty("--accent", color);
+  document.documentElement.style.setProperty("--accent-rgb", hexToRgbTriplet(color));
+}
+applyBrandColor(TEACHER_BRAND_COLOR);
+function renderBrandFooter() {
+  const el = document.getElementById("brandFooterText");
+  if (!el) return;
+  if (TEACHER_FOOTER_TEXT) { el.textContent = TEACHER_FOOTER_TEXT; el.style.display = "block"; }
+}
+renderBrandFooter();
+
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
 const AI_EXPLAIN_WORKER_URL = "https://register-class.abm319.workers.dev/explain";
 const firebaseConfig = {
@@ -153,7 +180,7 @@ async function init() {
     if (!data.ok) throw new Error(data.error || "exam_lookup_failed");
     exam = { id: examId, title: data.title || "امتحان", stage: data.stage || "" };
     document.getElementById("examTitle").textContent = exam.title;
-    document.getElementById("examSub").textContent = (exam.stage || "") + " — " + TEACHER_NAME;
+    document.getElementById("examSub").textContent = (exam.stage || "") + " — " + TEACHER_DISPLAY_LINE;
     studentsInStage = (data.students || []).sort((a,b) => (a.name||"").localeCompare(b.name||""));
     renderStudentPicker();
   } catch (err) {
@@ -410,7 +437,7 @@ async function renderExam() {
 
   const timerHtml = exam.timeLimitMinutes
     ? `<div class="timer-bar" id="timerBar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="stroke:var(--accent);" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         <span>الوقت المتبقي:</span> <span class="timer-value" id="timerValue">--:--</span>
       </div>`
     : "";
