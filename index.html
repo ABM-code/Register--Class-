@@ -203,7 +203,10 @@
   .tools-toggle-btn.open #studentsListToggleIcon,
   .tools-toggle-btn.open #torailFilterPillsToggleIcon,
   .tools-toggle-btn.open #torailToolsToggleIcon,
-  .tools-toggle-btn.open #torailStudentsListToggleIcon { transform: rotate(180deg); }
+  .tools-toggle-btn.open #torailStudentsListToggleIcon,
+  .tools-toggle-btn.open #deletedStudentsToggleIcon,
+  .tools-toggle-btn.open #deletedResultsToggleIcon,
+  .tools-toggle-btn.open #torailDeletedStudentsToggleIcon { transform: rotate(180deg); }
   .tools-group-title { color: var(--c-mutedonpage); font-size: 0.78rem; font-weight: 700; margin: 0 0 0.5rem; letter-spacing: 0.03em; }
   .stage-counts { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.9rem; }
   .stage-pill {
@@ -589,11 +592,19 @@
       </button>
     </div>
 
-    <div class="tools-group-title">المحذوفين مؤخرًا (طلاب)</div>
-    <div id="deletedStudentsList"></div>
+    <button id="deletedStudentsToggleBtn" class="tools-toggle-btn" onclick="toggleDeletedStudentsSection()">
+      المحذوفين مؤخرًا (طلاب)
+      <span id="deletedStudentsBadge" class="badge-dot" style="display:none;">0</span>
+      <svg id="deletedStudentsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div id="deletedStudentsList" style="display:none;"></div>
 
-    <div class="tools-group-title">نتائج محذوفة مؤخرًا</div>
-    <div id="deletedResultsList"></div>
+    <button id="deletedResultsToggleBtn" class="tools-toggle-btn" onclick="toggleDeletedResultsSection()">
+      نتائج محذوفة مؤخرًا
+      <span id="deletedResultsBadge" class="badge-dot" style="display:none;">0</span>
+      <svg id="deletedResultsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div id="deletedResultsList" style="display:none;"></div>
 
   </div>
 
@@ -1122,8 +1133,12 @@
       </button>
     </div>
 
-    <div class="tools-group-title">المحذوفين مؤخرًا (طلاب توريل)</div>
-    <div id="torailDeletedStudentsList"></div>
+    <button id="torailDeletedStudentsToggleBtn" class="tools-toggle-btn" onclick="toggleTorailDeletedStudentsSection()">
+      المحذوفين مؤخرًا (طلاب توريل)
+      <span id="torailDeletedStudentsBadge" class="badge-dot" style="display:none;">0</span>
+      <svg id="torailDeletedStudentsToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div id="torailDeletedStudentsList" style="display:none;"></div>
   </div>
 
   <div id="torailErrorBox"></div>
@@ -1156,7 +1171,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v57 — تجميع طلاب توريل تحت بعض في قوائم النتائج والطلاب اللي لسه ما دخلوش — 16 سبتمبر 2026";
+const APP_VERSION = "v58 — قوائم المحذوفين مؤخرًا (طلاب/نتائج) بقت مطوية افتراضيًا مع عداد دايم — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -3588,6 +3603,35 @@ async function deleteSelectedTorailStudents() {
     showError("حصل خطأ أثناء الحذف: " + (err.message || err));
   }
 }
+let deletedStudentsSectionOpen = false;
+let deletedResultsSectionOpen = false;
+let torailDeletedStudentsSectionOpen = false;
+
+function updateDeletedBadge(badgeId, count) {
+  const el = document.getElementById(badgeId);
+  if (!el) return;
+  el.textContent = count;
+  el.style.display = count > 0 ? "inline-block" : "none";
+}
+
+function toggleDeletedStudentsSection() {
+  deletedStudentsSectionOpen = !deletedStudentsSectionOpen;
+  document.getElementById("deletedStudentsList").style.display = deletedStudentsSectionOpen ? "block" : "none";
+  document.getElementById("deletedStudentsToggleBtn").classList.toggle("open", deletedStudentsSectionOpen);
+}
+
+function toggleDeletedResultsSection() {
+  deletedResultsSectionOpen = !deletedResultsSectionOpen;
+  document.getElementById("deletedResultsList").style.display = deletedResultsSectionOpen ? "block" : "none";
+  document.getElementById("deletedResultsToggleBtn").classList.toggle("open", deletedResultsSectionOpen);
+}
+
+function toggleTorailDeletedStudentsSection() {
+  torailDeletedStudentsSectionOpen = !torailDeletedStudentsSectionOpen;
+  document.getElementById("torailDeletedStudentsList").style.display = torailDeletedStudentsSectionOpen ? "block" : "none";
+  document.getElementById("torailDeletedStudentsToggleBtn").classList.toggle("open", torailDeletedStudentsSectionOpen);
+}
+
 function renderDeletedStudentsList() {
   const mainBox = document.getElementById("deletedStudentsList");
   const torailBox = document.getElementById("torailDeletedStudentsList");
@@ -3619,6 +3663,8 @@ function renderDeletedStudentsList() {
       ? torailList.map(rowHtml).join("")
       : `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
   }
+  updateDeletedBadge("deletedStudentsBadge", mainList.length);
+  updateDeletedBadge("torailDeletedStudentsBadge", torailList.length);
 }
 
 async function restoreStudent(studentId) {
@@ -3643,6 +3689,7 @@ async function permanentlyDeleteStudent(studentId) {
 function renderDeletedResultsList() {
   const box = document.getElementById("deletedResultsList");
   if (!box) return;
+  updateDeletedBadge("deletedResultsBadge", deletedExamResults.length);
   if (deletedExamResults.length === 0) {
     box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش نتائج محذوفة حاليًا.</p>`;
     return;
