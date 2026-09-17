@@ -97,10 +97,12 @@
 <script>
 const TEACHER_NAME = "أ/ عبد الرحمن منير";
 // إعدادات هوية المعلم — حدّثها يدويًا كل ما تغيّرها من لوحة "الهوية" في التطبيق الرئيسي
-const TEACHER_CENTER_NAME = "";
-const TEACHER_BRAND_COLOR = "#D4A93B";
-const TEACHER_FOOTER_TEXT = "";
-const TEACHER_DISPLAY_LINE = TEACHER_CENTER_NAME ? (TEACHER_CENTER_NAME + " — " + TEACHER_NAME) : TEACHER_NAME;
+// إعدادات هوية المعلم — دي قيم افتراضية احتياطية (fallback) لو الـ Worker مرجعش هوية،
+// وبتتحدّث تلقائيًا من رد /student-exam (حقل teacherBrand) لو موجود.
+let TEACHER_CENTER_NAME = "";
+let TEACHER_BRAND_COLOR = "#D4A93B";
+let TEACHER_FOOTER_TEXT = "";
+let TEACHER_DISPLAY_LINE = TEACHER_CENTER_NAME ? (TEACHER_CENTER_NAME + " — " + TEACHER_NAME) : TEACHER_NAME;
 
 function hexToRgbTriplet(hex) {
   const c = (hex || "").replace("#", "");
@@ -118,8 +120,21 @@ function renderBrandFooter() {
   const el = document.getElementById("brandFooterText");
   if (!el) return;
   if (TEACHER_FOOTER_TEXT) { el.textContent = TEACHER_FOOTER_TEXT; el.style.display = "block"; }
+  else { el.style.display = "none"; }
 }
 renderBrandFooter();
+
+// بتاخد حقل teacherBrand من رد الـ Worker (لو موجود) وتستبدل بيه القيم الاحتياطية،
+// بعدين تعيد تطبيق اللون والفوتر. لو teacherBrand مش موجود أو فاضي، بتسيب القيم الاحتياطية زي ما هي.
+function applyTeacherBrandFromServer(brand) {
+  if (!brand) return;
+  if (brand.centerName) TEACHER_CENTER_NAME = brand.centerName;
+  if (brand.brandColor) TEACHER_BRAND_COLOR = brand.brandColor;
+  if (brand.footerText) TEACHER_FOOTER_TEXT = brand.footerText;
+  TEACHER_DISPLAY_LINE = TEACHER_CENTER_NAME ? (TEACHER_CENTER_NAME + " — " + TEACHER_NAME) : TEACHER_NAME;
+  applyBrandColor(TEACHER_BRAND_COLOR);
+  renderBrandFooter();
+}
 
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
 const AI_EXPLAIN_WORKER_URL = "https://register-class.abm319.workers.dev/explain";
@@ -178,6 +193,7 @@ async function init() {
     }
     if (!res.ok) throw new Error("exam_lookup_failed");
     if (!data.ok) throw new Error(data.error || "exam_lookup_failed");
+    applyTeacherBrandFromServer(data.teacherBrand);
     exam = { id: examId, title: data.title || "امتحان", stage: data.stage || "" };
     document.getElementById("examTitle").textContent = exam.title;
     document.getElementById("examSub").textContent = (exam.stage || "") + " — " + TEACHER_DISPLAY_LINE;
