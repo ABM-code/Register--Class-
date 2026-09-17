@@ -916,6 +916,15 @@
     <button onclick="closeExamMissing()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
     <h2 id="examMissingTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.3rem;"></h2>
     <p style="color:#9FB8AD; font-size:0.85rem; margin:0 0 0.9rem;">الطلاب اللي لسه ما دخلوش الامتحان ده</p>
+    <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.7rem; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:0.4rem; color:#9FB8AD; font-size:0.85rem; cursor:pointer;">
+        <input type="checkbox" id="missingSelectAllBox" onchange="toggleSelectAllMissing(this.checked)">
+        تحديد الكل
+      </label>
+      <button id="sendMissingParentsWhatsappBtn" onclick="startMissingParentReminderQueue()" disabled style="background:#3F6B4A; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+        📤 تذكير واتساب لأولياء أمور المحددين (<span id="selectedMissingCount">0</span>)
+      </button>
+    </div>
     <div id="examMissingList"></div>
   </div>
 </main>
@@ -1147,7 +1156,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v54 — فلتر عرض امتحانات مرحلة معيّنة في تاب الامتحانات — 16 سبتمبر 2026";
+const APP_VERSION = "v55 — تذكير واتساب جماعي لأولياء أمور الطلاب اللي لسه ما دخلوش الامتحان — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -3852,6 +3861,7 @@ function waQueueClose() {
 let viewingMissingExamId = null;
 function viewMissingStudents(examId) {
   viewingMissingExamId = examId;
+  selectedMissingIds = new Set();
   const ex = exams.find(e => e.id === examId);
   document.getElementById("examMissingTitle").textContent = ex ? ex.title : "";
   document.getElementById("examsListView").style.display = "none";
@@ -3865,31 +3875,78 @@ function closeExamMissing() {
   document.getElementById("examsListView").style.display = "block";
   document.getElementById("examMissingView").style.display = "none";
 }
+let selectedMissingIds = new Set();
+function getMissingStudentsList() {
+  const ex = exams.find(e => e.id === viewingMissingExamId);
+  if (!ex) return [];
+  const submittedIds = new Set(examResults.filter(r => r.examId === viewingMissingExamId).map(r => r.studentId));
+  const stageStudents = students.filter(s => s.stage === ex.stage);
+  return stageStudents.filter(s => !submittedIds.has(s.id)).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+}
+function toggleMissingSelect(studentId, checked) {
+  if (checked) selectedMissingIds.add(studentId); else selectedMissingIds.delete(studentId);
+  updateMissingSelectionUI();
+}
+function toggleSelectAllMissing(checked) {
+  const list = getMissingStudentsList();
+  selectedMissingIds = checked ? new Set(list.map(s => s.id)) : new Set();
+  renderMissingStudentsList();
+}
+function updateMissingSelectionUI() {
+  const countEl = document.getElementById("selectedMissingCount");
+  const btn = document.getElementById("sendMissingParentsWhatsappBtn");
+  if (!countEl || !btn) return;
+  countEl.textContent = selectedMissingIds.size;
+  btn.disabled = selectedMissingIds.size === 0;
+  btn.style.opacity = selectedMissingIds.size === 0 ? "0.5" : "1";
+  const selectAllBox = document.getElementById("missingSelectAllBox");
+  const list = getMissingStudentsList();
+  if (selectAllBox) selectAllBox.checked = list.length > 0 && list.every(s => selectedMissingIds.has(s.id));
+}
+function startMissingParentReminderQueue() {
+  const ex = exams.find(e => e.id === viewingMissingExamId);
+  if (!ex) return;
+  const list = getMissingStudentsList().filter(s => selectedMissingIds.has(s.id));
+  if (list.length === 0) return;
+  waQueue = list.map(s => {
+    const waNumber = formatPhoneForWhatsapp(s.parentPhone);
+    const message = `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${ex.title}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
+    return { name: s.name, phone: s.parentPhone || "", waNumber, message };
+  });
+  waQueueIndex = 0;
+  document.getElementById("waQueueModal").style.display = "flex";
+  renderWaQueueStep();
+}
 function renderMissingStudentsList() {
   const ex = exams.find(e => e.id === viewingMissingExamId);
   const container = document.getElementById("examMissingList");
   if (!ex) { container.innerHTML = ""; return; }
-  const submittedIds = new Set(examResults.filter(r => r.examId === viewingMissingExamId).map(r => r.studentId));
   const stageStudents = students.filter(s => s.stage === ex.stage);
-  const missing = stageStudents.filter(s => !submittedIds.has(s.id)).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+  const missing = getMissingStudentsList();
 
   if (stageStudents.length === 0) {
     container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p>`;
+    updateMissingSelectionUI();
     return;
   }
   if (missing.length === 0) {
     container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">كل الطلاب دخلوا الامتحان ✓</p>`;
+    updateMissingSelectionUI();
     return;
   }
   container.innerHTML = missing.map(s => `
     <div class="result-row">
-      <div class="result-row-name">${escapeHtml(s.name)}</div>
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <input type="checkbox" onchange="toggleMissingSelect('${s.id}', this.checked)" ${selectedMissingIds.has(s.id) ? "checked" : ""}>
+        <div class="result-row-name">${escapeHtml(s.name)}</div>
+      </div>
       <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
         ${s.studentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "student")'>تذكير للطالب</button>` : ""}
         ${s.parentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "parent")'>تذكير لولي الأمر</button>` : ""}
       </div>
     </div>
   `).join("");
+  updateMissingSelectionUI();
 }
 function sendExamReminderWhatsapp(s, examTitle, target) {
   const phone = target === "parent" ? s.parentPhone : s.studentPhone;
