@@ -658,7 +658,10 @@
       📋 نسخ رابط المكتبة للطلاب
     </button>
 
-    <div class="tools-group-title">المحتوى الحالي</div>
+    <div class="tools-group-title" style="display:flex; align-items:center; justify-content:space-between;">
+      المحتوى الحالي
+      <span onclick="refreshMaterialsList()" style="cursor:pointer; font-size:0.75rem; color:#8A6A1F; font-weight:600;">🔄 تحديث</span>
+    </div>
     <div id="materialsStageFilter" class="category-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem;"></div>
     <div id="materialsListBox"></div>
   </div>
@@ -851,7 +854,10 @@
     <div style="background:#F5F1E6; border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:85vh; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
         <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">📚 بنك الأسئلة</strong>
-        <button onclick="closeQuestionBankPicker()" style="width:auto; background:none; color:#6B6B60; padding:0.2rem 0.5rem;">✕</button>
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <span onclick="refreshQuestionBankPicker()" style="cursor:pointer; font-size:0.75rem; color:#8A6A1F; font-weight:600;">🔄 تحديث</span>
+          <button onclick="closeQuestionBankPicker()" style="width:auto; background:none; color:#6B6B60; padding:0.2rem 0.5rem;">✕</button>
+        </div>
       </div>
       <div class="field-row" style="margin-bottom:0.6rem;">
         <div class="field-group">
@@ -1171,7 +1177,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v58 — قوائم المحذوفين مؤخرًا (طلاب/نتائج) بقت مطوية افتراضيًا مع عداد دايم — 16 سبتمبر 2026";
+const APP_VERSION = "v59 — Phase 15: تحميل كسول للمحتوى التعليمي وبنك الأسئلة + نسخ احتياطية أخف حجمًا — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1318,34 +1324,48 @@ function startSync() {
     console.error("examResults sync error", err);
     showError("تعذر تحميل النتائج: " + (err.message || err));
   });
-  materialsCol.where("teacherId", "==", currentTeacherId).onSnapshot(
-    (snapshot) => {
-      materials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      materials.sort((a, b) => {
-        const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-        const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-        return bt - at;
-      });
-      if (document.getElementById("materialsListBox")) renderMaterialsList();
-    },
-    (err) => {
-      console.error("materials sync error", err);
-    }
-  );
-  questionBankCol.where("teacherId", "==", currentTeacherId).onSnapshot(
-    (snapshot) => {
-      questionBank = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      questionBank.sort((a, b) => {
-        const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-        const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-        return bt - at;
-      });
-      if (document.getElementById("bankPickerList")) renderQuestionBankPicker();
-    },
-    (err) => {
-      console.error("questionBank sync error", err);
-    }
-  );
+  // ملاحظة (Phase 15 — تحسين القراءات): المحتوى التعليمي وبنك الأسئلة مش محتاجين مزامنة لحظية
+  // من أول تسجيل الدخول، فبقوا يتحمّلوا مرة واحدة بس أول ما تفتح القسم بتاعهم (لازم تدوس
+  // "🔄 تحديث" لو عايز أحدث نسخة بعد كده)، بدل فتح listener دائم يفضل شغال طول الجلسة.
+  // ده بيقلل عدد القراءات المضمونة في كل مرة تسجل دخول فيها، خصوصًا لو مستخدمتش القسمين دول أصلًا.
+}
+
+let materialsLoaded = false;
+async function loadMaterialsOnce(force) {
+  if (materialsLoaded && !force) return;
+  try {
+    const snapshot = await materialsCol.where("teacherId", "==", currentTeacherId).get();
+    materials = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    materials.sort((a, b) => {
+      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return bt - at;
+    });
+    materialsLoaded = true;
+    if (document.getElementById("materialsListBox")) renderMaterialsList();
+  } catch (err) {
+    console.error("materials load error", err);
+    showError("تعذر تحميل المحتوى التعليمي. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+let questionBankLoaded = false;
+async function loadQuestionBankOnce(force) {
+  if (questionBankLoaded && !force) return;
+  try {
+    const snapshot = await questionBankCol.where("teacherId", "==", currentTeacherId).get();
+    questionBank = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    questionBank.sort((a, b) => {
+      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return bt - at;
+    });
+    questionBankLoaded = true;
+    if (document.getElementById("bankPickerList")) renderQuestionBankPicker();
+  } catch (err) {
+    console.error("questionBank load error", err);
+    showError("تعذر تحميل بنك الأسئلة. تأكد من اتصالك بالإنترنت.");
+  }
 }
 function fmtDate(d) {
   if (!d) return "—";
@@ -2196,14 +2216,25 @@ function initNotifUi() {
   card.style.display = Notification.permission === "default" ? "block" : "none";
 }
 
+// Phase 15 — تخزين النسخ الاحتياطية بشكل أخف: بدل ما نخزّن قوائم الطلاب والامتحانات
+// كاملة جوه مستند autoBackups نفسه (بيكبّر حجم كل نسخة وبيقرّبنا من حد الميجابايت لكل
+// مستند في Firestore كل ما عدد الطلاب يزيد)، بقينا نخزّن المحتوى الفعلي في collection
+// منفصلة (autoBackupData) ونسيب autoBackups يحتوي بيانات وصفية خفيفة بس (تاريخ + عدد).
+// النسخ القديمة (من غير format) هتفضل شغالة بالظبط زي ما هي — القراءة والاسترجاع بيتعاملوا مع الشكلين.
 async function createAutoBackupNow() {
   if (students.length === 0) return false;
-  await db.collection("autoBackups").add({
+  const contentRef = db.collection("autoBackupData").doc();
+  await contentRef.set({
+    teacherId: currentTeacherId,
+    students: students,
+    exams: exams,
+  });
+  await db.collection("autoBackups").doc(contentRef.id).set({
     teacherId: currentTeacherId,
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     studentsCount: students.length,
-    students: students,
-    exams: exams,
+    examsCount: exams.length,
+    format: "v2",
   });
   try { localStorage.setItem("lastAutoBackup", Date.now().toString()); } catch (e) {}
   const old = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).get();
@@ -2214,7 +2245,12 @@ async function createAutoBackupNow() {
   });
   if (oldSorted.length > 8) {
     const batch = db.batch();
-    oldSorted.slice(8).forEach(d => batch.delete(d.ref));
+    oldSorted.slice(8).forEach(d => {
+      batch.delete(d.ref);
+      if (d.data().format === "v2") {
+        batch.delete(db.collection("autoBackupData").doc(d.id));
+      }
+    });
     await batch.commit();
   }
   return true;
@@ -2268,7 +2304,20 @@ function toggleMaterialsSection() {
   const isOpen = section.style.display === "block";
   section.style.display = isOpen ? "none" : "block";
   btn.classList.toggle("open", !isOpen);
-  if (!isOpen) renderMaterialsList();
+  if (!isOpen) {
+    if (materialsLoaded) {
+      renderMaterialsList();
+    } else {
+      document.getElementById("materialsListBox").innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+      loadMaterialsOnce();
+    }
+  }
+}
+
+function refreshMaterialsList() {
+  const box = document.getElementById("materialsListBox");
+  if (box) box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
+  loadMaterialsOnce(true);
 }
 
 const MATERIALS_PAGE_URL = "https://abm-code.github.io/Register--Class-/materials.html";
@@ -2394,6 +2443,7 @@ async function submitAddMaterial() {
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
       await materialsCol.add(data);
     }
+    await loadMaterialsOnce(true);
 
     cancelEditMaterial();
     statusMsg.textContent = isEditing ? "✓ تم حفظ التعديلات." : "✓ تمت الإضافة بنجاح.";
@@ -2411,6 +2461,7 @@ async function deleteMaterial(materialId) {
   if (!confirm("متأكد إنك عايز تمسح المحتوى ده؟")) return;
   try {
     await materialsCol.doc(materialId).delete();
+    await loadMaterialsOnce(true);
   } catch (err) {
     showError("تعذر حذف المحتوى. تأكد من اتصالك بالإنترنت.");
   }
@@ -2552,9 +2603,15 @@ async function loadAutoBackupsList(boxId = "autoBackupsList") {
 async function restoreAutoBackup(backupId, boxId = "autoBackupsList") {
   if (!confirm("هيتم استبدال بيانات الطلاب والامتحانات الحالية بالنسخة دي. متأكد؟")) return;
   try {
-    const doc = await db.collection("autoBackups").doc(backupId).get();
-    if (!doc.exists) { showError("النسخة دي مش موجودة."); return; }
-    const data = doc.data();
+    const metaDoc = await db.collection("autoBackups").doc(backupId).get();
+    if (!metaDoc.exists) { showError("النسخة دي مش موجودة."); return; }
+    const meta = metaDoc.data();
+    let data = meta;
+    if (meta.format === "v2") {
+      const contentDoc = await db.collection("autoBackupData").doc(backupId).get();
+      if (!contentDoc.exists) { showError("محتوى هذه النسخة مفقود."); return; }
+      data = contentDoc.data();
+    }
     const batch = db.batch();
     (data.students || []).forEach(s => {
       const { id, ...rest } = s;
@@ -2997,6 +3054,7 @@ async function saveExamQuestionsToBank(examId) {
       });
     });
     await batch.commit();
+    await loadQuestionBankOnce(true);
     showSuccess(`اتحفظ ${questions.length} سؤال من "${ex.title}" في البنك.`);
   } catch (err) {
     showError("تعذر الحفظ في البنك. تأكد من اتصالك بالإنترنت.");
@@ -3033,6 +3091,7 @@ async function saveAllQuestionsToBank() {
       });
     });
     await batch.commit();
+    await loadQuestionBankOnce(true);
     showSuccess(`اتحفظ ${currentBuilderQuestions.length} سؤال في البنك بنجاح.`);
   } catch (err) {
     showError("تعذر الحفظ في البنك. تأكد من اتصالك بالإنترنت.");
@@ -3062,6 +3121,7 @@ async function saveQuestionToBank(qId) {
       points: q.points || 1,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    await loadQuestionBankOnce(true);
     showSuccess("اتحفظ السؤال في البنك بنجاح.");
   } catch (err) {
     showError("تعذر الحفظ في البنك. تأكد من اتصالك بالإنترنت.");
@@ -3076,7 +3136,18 @@ function openQuestionBankPicker() {
   const examStage = document.getElementById("examStageInput").value;
   if (examStage) stageSelect.value = examStage;
   document.getElementById("bankPickerModal").style.display = "flex";
-  renderQuestionBankPicker();
+  if (questionBankLoaded) {
+    renderQuestionBankPicker();
+  } else {
+    document.getElementById("bankPickerList").innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+    loadQuestionBankOnce();
+  }
+}
+
+function refreshQuestionBankPicker() {
+  const box = document.getElementById("bankPickerList");
+  if (box) box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
+  loadQuestionBankOnce(true);
 }
 
 function closeQuestionBankPicker() {
