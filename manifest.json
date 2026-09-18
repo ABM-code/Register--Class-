@@ -2,6 +2,7 @@
   "name": "Class Register - أ/ عبد الرحمن منير",
   "short_name": "Class Register",
   "description": "تطبيق تسجيل بيانات الطلاب والمدفوعات",
+  "id": "/",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",

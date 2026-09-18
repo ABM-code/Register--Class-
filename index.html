@@ -396,14 +396,21 @@
 </div>
 
 <div id="lockScreen" style="position:fixed;inset:0;background:#16302B;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.9rem;padding:1.5rem;text-align:center;">
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-  <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">دخول المدرس</h2>
-  <input id="lockEmailInput" type="email" placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
-  <input id="lockPasswordInput" type="password" placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
-  <button id="lockUnlockBtn" style="background:#D4A93B;color:#1B2420;border:none;border-radius:10px;padding:0.65rem 1.6rem;font-weight:600;font-size:0.92rem;cursor:pointer;">دخول</button>
-  <span onclick="handleForgotPassword()" style="color:#9FB8AD; font-size:0.82rem; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;">نسيت كلمة المرور؟</span>
-  <p id="lockErrorMsg" style="color:#C15B3C;font-size:0.85rem;display:none;margin:0;"></p>
+  <div id="lockCheckingState" style="display:flex; flex-direction:column; align-items:center; gap:0.9rem;">
+    <div style="width:30px; height:30px; border-radius:50%; border:3px solid rgba(212,169,59,0.25); border-top-color:#D4A93B; animation:bootSpin 0.8s linear infinite;"></div>
+    <p style="color:#9FB8AD; font-size:0.85rem; margin:0;">جاري التحقق من تسجيل الدخول...</p>
+  </div>
+  <div id="lockFormContent" style="display:none; flex-direction:column; align-items:center; gap:0.9rem;">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">دخول المدرس</h2>
+    <input id="lockEmailInput" type="email" placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
+    <input id="lockPasswordInput" type="password" placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
+    <button id="lockUnlockBtn" style="background:#D4A93B;color:#1B2420;border:none;border-radius:10px;padding:0.65rem 1.6rem;font-weight:600;font-size:0.92rem;cursor:pointer;">دخول</button>
+    <span onclick="handleForgotPassword()" style="color:#9FB8AD; font-size:0.82rem; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;">نسيت كلمة المرور؟</span>
+    <p id="lockErrorMsg" style="color:#C15B3C;font-size:0.85rem;display:none;margin:0;"></p>
+  </div>
 </div>
+<style>@keyframes bootSpin { to { transform: rotate(360deg); } }</style>
 
 <header class="app-content">
   <div style="max-width:640px; margin:0 auto 1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end; position:relative;">
@@ -1192,7 +1199,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v61 — Phase 12: مركز إشعارات (🔔) للنتائج الجديدة والامتحانات القريبة من القفل — 16 سبتمبر 2026";
+const APP_VERSION = "v62 — Phase 13: شاشة تحقق دخول بدل ما فورمة اللوجين تفلاش لحظة، تحسينات PWA — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -5100,7 +5107,12 @@ async function tryUnlock() {
 document.getElementById("lockUnlockBtn").addEventListener("click", tryUnlock);
 ["lockEmailInput","lockPasswordInput"].forEach(id => document.getElementById(id).addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); }));
 auth.onAuthStateChanged(user => {
-  if (user && !user.isAnonymous) showApp();
+  if (user && !user.isAnonymous) {
+    showApp();
+  } else {
+    document.getElementById("lockCheckingState").style.display = "none";
+    document.getElementById("lockFormContent").style.display = "flex";
+  }
 });
 
 if ("serviceWorker" in navigator) {
