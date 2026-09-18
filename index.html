@@ -406,7 +406,20 @@
 </div>
 
 <header class="app-content">
-  <div style="max-width:640px; margin:0 auto 1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end;">
+  <div style="max-width:640px; margin:0 auto 1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end; position:relative;">
+    <div style="position:relative;">
+      <button class="logout-btn" id="notifCenterBtn" onclick="toggleNotificationCenter()" title="مركز الإشعارات" style="position:static;">
+        🔔
+        <span id="notifCenterBadge" class="badge-dot" style="display:none; position:absolute; top:-4px; left:-4px;">0</span>
+      </button>
+      <div id="notifCenterPanel" style="display:none; position:absolute; top:calc(100% + 8px); left:0; width:300px; max-width:80vw; max-height:380px; overflow-y:auto; background:#F5F1E6; border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,0.28); z-index:60; padding:0.7rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+          <strong style="font-family:'Fraunces',serif; font-size:0.95rem; color:#1B2420;">الإشعارات</strong>
+          <span onclick="markAllNotificationsSeen()" style="cursor:pointer; font-size:0.72rem; color:#4A5A50; font-weight:600;">تعليم الكل كمقروء</span>
+        </div>
+        <div id="notifCenterList"></div>
+      </div>
+    </div>
     <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="تبديل الألوان" style="position:static;">🎨</button>
     <button class="logout-btn" id="brandSettingsBtn" onclick="openBrandSettings()" title="إعدادات الهوية والعلامة" style="position:static;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
@@ -1179,7 +1192,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v60 — Phase 15: نتائج آخر 3 شهور بس Real-time، نتائج الامتحانات الأقدم تتحمّل عند الفتح — 16 سبتمبر 2026";
+const APP_VERSION = "v61 — Phase 12: مركز إشعارات (🔔) للنتائج الجديدة والامتحانات القريبة من القفل — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1288,6 +1301,7 @@ function startSync() {
     (snapshot) => {
       exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       renderExamsList();
+      renderNotificationCenter();
       if (isStatsTabVisible()) renderStatsDashboard();
       if (viewingExamId) renderExamResultsList();
     },
@@ -1328,6 +1342,7 @@ function startSync() {
     }
     firstResultsSnapshot = false;
     updateExamsBadge();
+    renderNotificationCenter();
     renderExamsList();
     if (viewingExamId) renderExamResultsList();
     if (viewingMissingExamId) renderMissingStudentsList();
@@ -2031,6 +2046,102 @@ function updateExamsBadge() {
     badge.style.display = "none";
   }
 }
+
+// Phase 12 — مركز الإشعارات: بيحسب إشعارين نوعهم مختلف من نفس البيانات المحمّلة أصلًا
+// (مفيش أي قراءة إضافية من Firestore): 1) نتائج جديدة مش متشافة لكل امتحان،
+// 2) امتحانات مفتوحة وموعدها النهائي قرّب (أقل من 24 ساعة) ولسه فيها طلاب ما دخلوش.
+function computeNotifications() {
+  const notifications = [];
+  const now = Date.now();
+  exams.forEach(ex => {
+    const examLastSeen = getExamLastSeen(ex.id);
+    const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
+    if (newCount > 0) {
+      notifications.push({
+        kind: "new_results",
+        examId: ex.id,
+        sortKey: 2000000000000 + newCount,
+        html: `<strong>${newCount}</strong> نتيجة جديدة في "${escapeHtml(ex.title)}"`,
+      });
+    }
+    const deadlinePassed = !!(ex.deadline && new Date(ex.deadline) < now);
+    const isClosed = !!ex.closedManually || deadlinePassed;
+    if (!isClosed && ex.deadline) {
+      const msLeft = new Date(ex.deadline).getTime() - now;
+      if (msLeft > 0 && msLeft <= 24 * 60 * 60 * 1000) {
+        const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
+        const submittedIds = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId));
+        const missingCount = students.filter(s => s.stage === ex.stage && !submittedIds.has(s.id)).length;
+        if (missingCount > 0 && stageStudentCount > 0) {
+          const hoursLeft = Math.max(1, Math.round(msLeft / (60 * 60 * 1000)));
+          notifications.push({
+            kind: "deadline",
+            examId: ex.id,
+            sortKey: 1000000000000 - msLeft,
+            html: `⏰ امتحان "${escapeHtml(ex.title)}" هيقفل خلال ${hoursLeft} ساعة، و${missingCount} طالب لسه ما دخلش`,
+          });
+        }
+      }
+    }
+  });
+  notifications.sort((a, b) => b.sortKey - a.sortKey);
+  return notifications;
+}
+
+function renderNotificationCenter() {
+  const badge = document.getElementById("notifCenterBadge");
+  const list = document.getElementById("notifCenterList");
+  if (!badge || !list) return;
+  const notifications = computeNotifications();
+  if (notifications.length > 0) {
+    badge.textContent = notifications.length;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+  const panel = document.getElementById("notifCenterPanel");
+  if (panel && panel.style.display === "block") {
+    list.innerHTML = notifications.length
+      ? notifications.map(n => `
+          <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:#1B2420;">
+            ${n.html}
+          </div>`).join("")
+      : `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش إشعارات جديدة 🎉</p>`;
+  }
+}
+
+function toggleNotificationCenter() {
+  const panel = document.getElementById("notifCenterPanel");
+  if (!panel) return;
+  const isOpen = panel.style.display === "block";
+  panel.style.display = isOpen ? "none" : "block";
+  if (!isOpen) renderNotificationCenter();
+}
+
+function openNotificationItem(examId) {
+  document.getElementById("notifCenterPanel").style.display = "none";
+  switchTab("exams");
+  viewExamResults(examId);
+}
+
+function markAllNotificationsSeen() {
+  const now = Date.now();
+  exams.forEach(ex => {
+    try { localStorage.setItem("examSeen_" + ex.id, now.toString()); } catch (e) {}
+  });
+  try { localStorage.setItem("examsLastSeen", now.toString()); } catch (e) {}
+  updateExamsBadge();
+  renderExamsList();
+  renderNotificationCenter();
+}
+
+document.addEventListener("click", (e) => {
+  const panel = document.getElementById("notifCenterPanel");
+  const btn = document.getElementById("notifCenterBtn");
+  if (!panel || panel.style.display !== "block") return;
+  if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+  panel.style.display = "none";
+});
 
 function renderBarChart(containerId, rows, colorClass) {
   const container = document.getElementById(containerId);
@@ -3493,6 +3604,7 @@ async function viewExamResults(examId) {
   renderExamResultsList();
   renderExamQuestionDifficulty();
   renderExamsList();
+  renderNotificationCenter();
 }
 function closeExamResults() {
   viewingExamId = null;
