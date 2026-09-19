@@ -373,6 +373,17 @@
   </div>
 </div>
 
+<div id="smartSearchModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9995; align-items:flex-start; justify-content:center; padding:1.25rem;">
+  <div style="background:#F5F1E6; border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:88vh; overflow-y:auto; margin-top:2rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+      <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">🔍 بحث شامل</strong>
+      <button onclick="closeSmartSearch()" style="width:auto; background:none; color:#6B6B60; padding:0.2rem 0.5rem;">✕</button>
+    </div>
+    <input class="reg-input" id="smartSearchInput" placeholder="دوّر على طالب، امتحان، سؤال، أو نتيجة..." oninput="renderSmartSearchResults()" style="margin-bottom:0.9rem;">
+    <div id="smartSearchResults"></div>
+  </div>
+</div>
+
 <div id="brandSettingsModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9996; align-items:center; justify-content:center; padding:1.25rem;">
   <div style="background:#F5F1E6; border-radius:14px; padding:1.5rem; max-width:420px; width:100%; max-height:85vh; overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
@@ -414,6 +425,7 @@
 
 <header class="app-content">
   <div style="max-width:640px; margin:0 auto 1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end; position:relative;">
+    <button class="logout-btn" id="smartSearchBtn" onclick="openSmartSearch()" title="بحث شامل" style="position:static;">🔍</button>
     <div style="position:relative;">
       <button class="logout-btn" id="notifCenterBtn" onclick="toggleNotificationCenter()" title="مركز الإشعارات" style="position:static;">
         🔔
@@ -1199,7 +1211,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v62 — Phase 13: شاشة تحقق دخول بدل ما فورمة اللوجين تفلاش لحظة، تحسينات PWA — 16 سبتمبر 2026";
+const APP_VERSION = "v63 — Phase 14: بحث شامل (🔍) عبر الطلاب والامتحانات وبنك الأسئلة والنتائج الحديثة — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1398,6 +1410,9 @@ async function loadQuestionBankOnce(force) {
     });
     questionBankLoaded = true;
     if (document.getElementById("bankPickerList")) renderQuestionBankPicker();
+    if (document.getElementById("smartSearchModal") && document.getElementById("smartSearchModal").style.display === "flex") {
+      renderSmartSearchResults();
+    }
   } catch (err) {
     console.error("questionBank load error", err);
     showError("تعذر تحميل بنك الأسئلة. تأكد من اتصالك بالإنترنت.");
@@ -2149,6 +2164,126 @@ document.addEventListener("click", (e) => {
   if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
   panel.style.display = "none";
 });
+
+// Phase 14 — بحث شامل (Smart Search): بيدور في نفس البيانات المحمّلة أصلًا محليًا
+// (طلاب، امتحانات، بنك أسئلة، نتائج آخر 3 شهور) من غير أي قراءة إضافية من Firestore،
+// إلا تحميل بنك الأسئلة أول مرة بس لو لسه ما اتحمّلش (Phase 15).
+function openSmartSearch() {
+  document.getElementById("smartSearchInput").value = "";
+  document.getElementById("smartSearchModal").style.display = "flex";
+  if (!questionBankLoaded) loadQuestionBankOnce();
+  renderSmartSearchResults();
+  setTimeout(() => document.getElementById("smartSearchInput").focus(), 50);
+}
+
+function closeSmartSearch() {
+  document.getElementById("smartSearchModal").style.display = "none";
+}
+
+function smartSearchGoToStudent(studentId) {
+  closeSmartSearch();
+  goToStudentProfile(studentId);
+}
+
+function smartSearchGoToExam(examId) {
+  closeSmartSearch();
+  switchTab("exams");
+  viewExamResults(examId);
+}
+
+function smartSearchGoToResult(examId, studentName) {
+  closeSmartSearch();
+  switchTab("exams");
+  viewExamResults(examId).then(() => {
+    const input = document.getElementById("examResultsSearchInput");
+    if (input) { input.value = studentName; resultsPage = 1; renderExamResultsList(); }
+  });
+}
+
+function renderSmartSearchResults() {
+  const box = document.getElementById("smartSearchResults");
+  if (!box) return;
+  const rawQuery = document.getElementById("smartSearchInput").value.trim();
+  if (rawQuery.length < 2) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">اكتب حرفين على الأقل عشان تبدأ البحث.</p>`;
+    return;
+  }
+  const normQuery = normalizeArabic(rawQuery);
+
+  const matchedStudents = students.filter(s =>
+    normalizeArabic(s.name).includes(normQuery) ||
+    (s.studentPhone || "").includes(rawQuery) ||
+    (s.parentPhone || "").includes(rawQuery)
+  ).slice(0, 6);
+
+  const matchedExams = exams.filter(ex =>
+    normalizeArabic(ex.title || "").includes(normQuery) ||
+    normalizeArabic(ex.stage || "").includes(normQuery)
+  ).slice(0, 6);
+
+  const matchedQuestions = questionBank.filter(q =>
+    normalizeArabic(q.prompt || "").includes(normQuery) ||
+    (q.tags || []).some(t => normalizeArabic(t).includes(normQuery))
+  ).slice(0, 6);
+
+  const matchedResults = examResults.filter(r => normalizeArabic(r.studentName).includes(normQuery)).slice(0, 6);
+
+  const sections = [];
+  const typeLabels = { mcq: "اختياري", translation_mcq: "ترجمة", complete: "إكمال", rewrite: "صياغة", correct: "تصحيح", dialogue: "محادثة", essay: "مقالي" };
+
+  if (matchedStudents.length) {
+    sections.push(`
+      <div class="tools-group-title">طلاب</div>
+      ${matchedStudents.map(s => `
+        <div class="result-row" style="cursor:pointer;" onclick="smartSearchGoToStudent('${s.id}')">
+          <div class="result-row-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}${s.group === 'torail' ? ' <span class="mini-badge" style="background:#FBF0DE;color:#8A6A1F;">توريل</span>' : ''}</div>
+        </div>`).join("")}
+    `);
+  }
+  if (matchedExams.length) {
+    sections.push(`
+      <div class="tools-group-title">امتحانات</div>
+      ${matchedExams.map(ex => `
+        <div class="result-row" style="cursor:pointer;" onclick="smartSearchGoToExam('${ex.id}')">
+          <div class="result-row-name">${escapeHtml(ex.title)}</div>
+          <div class="result-row-date">${escapeHtml(ex.stage || "")}</div>
+        </div>`).join("")}
+    `);
+  }
+  if (matchedQuestions.length) {
+    sections.push(`
+      <div class="tools-group-title">أسئلة (بنك الأسئلة)</div>
+      ${matchedQuestions.map(q => `
+        <div class="result-row">
+          <div>
+            <div class="result-row-name">${escapeHtml(q.prompt || "")}</div>
+            <div class="result-row-date">${escapeHtml(q.stage || "")} — ${typeLabels[q.type] || q.type}</div>
+          </div>
+        </div>`).join("")}
+    `);
+  }
+  if (matchedResults.length) {
+    sections.push(`
+      <div class="tools-group-title">نتائج (آخر 3 شهور)</div>
+      ${matchedResults.map(r => {
+        const ex = exams.find(e => e.id === r.examId);
+        const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+        return `
+        <div class="result-row" style="cursor:pointer;" onclick='smartSearchGoToResult(${JSON.stringify(r.examId)}, ${JSON.stringify(r.studentName)})'>
+          <div class="result-row-name">${escapeHtml(r.studentName)}</div>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span class="result-row-date">${escapeHtml(ex ? ex.title : (r.examTitle || ""))}</span>
+            <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+          </div>
+        </div>`;
+      }).join("")}
+    `);
+  }
+
+  box.innerHTML = sections.length
+    ? sections.join("")
+    : `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش نتائج مطابقة.</p>`;
+}
 
 function renderBarChart(containerId, rows, colorClass) {
   const container = document.getElementById(containerId);
