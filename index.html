@@ -206,7 +206,10 @@
   .tools-toggle-btn.open #torailStudentsListToggleIcon,
   .tools-toggle-btn.open #deletedStudentsToggleIcon,
   .tools-toggle-btn.open #deletedResultsToggleIcon,
-  .tools-toggle-btn.open #torailDeletedStudentsToggleIcon { transform: rotate(180deg); }
+  .tools-toggle-btn.open #torailDeletedStudentsToggleIcon,
+  .tools-toggle-btn.open #attendanceToggleIcon,
+  .tools-toggle-btn.open #torailAttendanceToggleIcon,
+  .tools-toggle-btn.open #qrAttendanceToggleIcon { transform: rotate(180deg); }
   .tools-group-title { color: var(--c-mutedonpage); font-size: 0.78rem; font-weight: 700; margin: 0 0 0.5rem; letter-spacing: 0.03em; }
   .stage-counts { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.9rem; }
   .stage-pill {
@@ -353,6 +356,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -700,6 +704,54 @@
     </div>
     <div id="materialsStageFilter" class="category-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem;"></div>
     <div id="materialsListBox"></div>
+  </div>
+
+  <button id="attendanceToggleBtn" class="tools-toggle-btn" onclick="toggleAttendanceSection('normal')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    📋 تسجيل الحضور
+    <svg id="attendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div id="attendanceSection" style="display:none;">
+    <div class="field-row" style="margin-bottom:0.7rem;">
+      <div class="field-group">
+        <label>المرحلة</label>
+        <select class="reg-input" id="attStageSelect" onchange="loadAttendanceDayView('normal')">
+          <option value="">— اختر المرحلة —</option>
+          <option value="Prep 1">Prep 1</option>
+          <option value="Prep 2">Prep 2</option>
+          <option value="Prep 3">Prep 3</option>
+          <option value="Sec 1">Sec 1</option>
+          <option value="Sec 2">Sec 2</option>
+          <option value="Sec 3">Sec 3</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>التاريخ</label>
+        <input type="date" class="reg-input" id="attDateInput" onchange="loadAttendanceDayView('normal')">
+      </div>
+    </div>
+    <div id="attendanceStudentsList"></div>
+    <button onclick="saveAttendanceDay('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.7rem;">💾 حفظ الحضور</button>
+    <button onclick="printStageQrCards(document.getElementById('attStageSelect').value, 'normal')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;">🖨️ طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
+  </div>
+
+  <button id="qrAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleQrAttendanceSection()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14h.01M14 21h.01M21 21h.01"/></svg>
+    📷 تسجيل حضور بمسح QR
+    <svg id="qrAttendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div id="qrAttendanceSection" style="display:none;">
+    <div class="field-group">
+      <label>تاريخ الحضور</label>
+      <input type="date" class="reg-input" id="qrAttDateInput">
+    </div>
+    <div class="field-group">
+      <label>وجّه جهاز قراءة الـ QR هنا وامسح كارنيه الطالب (سيب الحقل ده مفعّل طول وقت المسح)</label>
+      <input type="text" class="reg-input" id="qrScanInput" placeholder="جاهز للمسح..." autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); handleQrScanInput(this); }">
+    </div>
+    <div id="qrScanFeedback" style="display:none; text-align:center; padding:0.8rem; border-radius:10px; margin-top:0.7rem; font-weight:700;"></div>
+    <div class="tools-group-title" style="margin-top:1rem;">✓ الحاضرين بالمسح النهاردة (<span id="qrScanCount">0</span>)</div>
+    <div id="qrScanLog"></div>
   </div>
 
   <div id="errorBox"></div>
@@ -1190,6 +1242,35 @@
     <div id="torailDeletedStudentsList" style="display:none;"></div>
   </div>
 
+  <button id="torailAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleAttendanceSection('torail')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    📋 تسجيل الحضور
+    <svg id="torailAttendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div id="torailAttendanceSection" style="display:none;">
+    <div class="field-row" style="margin-bottom:0.7rem;">
+      <div class="field-group">
+        <label>المرحلة</label>
+        <select class="reg-input" id="torailAttStageSelect" onchange="loadAttendanceDayView('torail')">
+          <option value="">— اختر المرحلة —</option>
+          <option value="Prep 1">Prep 1</option>
+          <option value="Prep 2">Prep 2</option>
+          <option value="Prep 3">Prep 3</option>
+          <option value="Sec 1">Sec 1</option>
+          <option value="Sec 2">Sec 2</option>
+          <option value="Sec 3">Sec 3</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>التاريخ</label>
+        <input type="date" class="reg-input" id="torailAttDateInput" onchange="loadAttendanceDayView('torail')">
+      </div>
+    </div>
+    <div id="torailAttendanceStudentsList"></div>
+    <button onclick="saveAttendanceDay('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.7rem;">💾 حفظ الحضور</button>
+    <button onclick="printStageQrCards(document.getElementById('torailAttStageSelect').value, 'torail')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;">🖨️ طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
+  </div>
+
   <div id="torailErrorBox"></div>
 
   <div id="torailEmptyState">
@@ -1220,7 +1301,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v69 — فكرة 1: تذكير واتساب جماعي لكل المتأخرين في الدفع (طلاب + توريل) — 16 سبتمبر 2026";
+const APP_VERSION = "v70 — فكرة 3: نظام حضور كامل (تسجيل يدوي + بطاقات QR قابلة للطباعة + مسح فوري) — 16 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1246,6 +1327,7 @@ const examResultsCol = db.collection("examResults");
 const teachersCol = db.collection("teachers");
 const materialsCol = db.collection("materials");
 const questionBankCol = db.collection("questionBank");
+const attendanceCol = db.collection("attendance");
 let currentTeacherId = null;
 
 let moneyRevealed = {};
@@ -1445,6 +1527,332 @@ async function loadQuestionBankOnce(force) {
     showError("تعذر تحميل بنك الأسئلة. تأكد من اتصالك بالإنترنت.");
   }
 }
+
+// ============ تسجيل الحضور (فكرة 3) ============
+// كل يوم/مرحلة/مجموعة (طلاب عاديين أو توريل) بيتخزن في مستند واحد بس يحتوي خريطة
+// studentId -> true/false، بدل مستند منفصل لكل طالب — أخف بكتير على التخزين والقراءة.
+let currentAttendanceRecords = { normal: {}, torail: {} };
+let attendanceSummaryCache = {}; // key: `${group}|${stage}` -> array of attendance day docs
+
+function getAttendanceElIds(group) {
+  const p = group === "torail" ? "torail" : "";
+  return {
+    stageSelect: p ? "torailAttStageSelect" : "attStageSelect",
+    dateInput: p ? "torailAttDateInput" : "attDateInput",
+    list: p ? "torailAttendanceStudentsList" : "attendanceStudentsList",
+    section: p ? "torailAttendanceSection" : "attendanceSection",
+    toggleBtn: p ? "torailAttendanceToggleBtn" : "attendanceToggleBtn",
+  };
+}
+
+function toggleAttendanceSection(group) {
+  const ids = getAttendanceElIds(group);
+  const section = document.getElementById(ids.section);
+  const btn = document.getElementById(ids.toggleBtn);
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+  if (!isOpen) {
+    const dateInput = document.getElementById(ids.dateInput);
+    if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+    loadAttendanceDayView(group);
+  }
+}
+
+async function loadAttendanceDayView(group) {
+  const ids = getAttendanceElIds(group);
+  const stage = document.getElementById(ids.stageSelect).value;
+  const date = document.getElementById(ids.dateInput).value;
+  const box = document.getElementById(ids.list);
+  if (!stage || !date) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة والتاريخ عشان تسجّل الحضور.</p>`;
+    return;
+  }
+  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  const stageStudents = students
+    .filter(s => s.stage === stage && (group === "torail" ? s.group === "torail" : s.group !== "torail"))
+    .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  if (stageStudents.length === 0) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش طلاب في المرحلة دي.</p>`;
+    return;
+  }
+  const docId = `${currentTeacherId}_${group}_${stage}_${date}`;
+  let existingRecords = {};
+  try {
+    const doc = await attendanceCol.doc(docId).get();
+    if (doc.exists) existingRecords = doc.data().records || {};
+  } catch (err) {
+    console.error("attendance load error", err);
+  }
+  currentAttendanceRecords[group] = {};
+  stageStudents.forEach(s => {
+    // افتراضيًا كل الطلاب حاضرين، وتتعلّم بس الغايبين — أسرع في الاستخدام اليومي
+    currentAttendanceRecords[group][s.id] = existingRecords.hasOwnProperty(s.id) ? existingRecords[s.id] : true;
+  });
+  renderAttendanceStudentsList(group, stageStudents);
+}
+
+function renderAttendanceStudentsList(group, stageStudents) {
+  const ids = getAttendanceElIds(group);
+  const box = document.getElementById(ids.list);
+  const records = currentAttendanceRecords[group];
+  box.innerHTML = stageStudents.map(s => `
+    <div class="result-row">
+      <div class="result-row-name">${escapeHtml(s.name)}</div>
+      <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+        <input type="checkbox" ${records[s.id] ? "checked" : ""} onchange="toggleAttendanceRecord('${group}', '${s.id}', this.checked)">
+        <span id="attStatusLabel_${group}_${s.id}" style="font-size:0.85rem; font-weight:700; color:${records[s.id] ? '#3F6B4A' : '#C15B3C'};">${records[s.id] ? 'حاضر' : 'غايب'}</span>
+      </label>
+    </div>
+  `).join("");
+}
+
+function toggleAttendanceRecord(group, studentId, checked) {
+  currentAttendanceRecords[group][studentId] = checked;
+  const label = document.getElementById(`attStatusLabel_${group}_${studentId}`);
+  if (label) {
+    label.textContent = checked ? "حاضر" : "غايب";
+    label.style.color = checked ? "#3F6B4A" : "#C15B3C";
+  }
+}
+
+async function saveAttendanceDay(group) {
+  const ids = getAttendanceElIds(group);
+  const stage = document.getElementById(ids.stageSelect).value;
+  const date = document.getElementById(ids.dateInput).value;
+  if (!stage || !date) { showError("اختر المرحلة والتاريخ الأول."); return; }
+  const docId = `${currentTeacherId}_${group}_${stage}_${date}`;
+  try {
+    await attendanceCol.doc(docId).set({
+      teacherId: currentTeacherId,
+      group,
+      stage,
+      date,
+      records: currentAttendanceRecords[group],
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    delete attendanceSummaryCache[`${group}|${stage}`];
+    showSuccess("تم حفظ الحضور بنجاح.");
+  } catch (err) {
+    showError("تعذر حفظ الحضور. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+async function loadStudentAttendanceSummary(studentId, stage, group, boxId) {
+  const box = document.getElementById(boxId);
+  if (!box || !stage) return;
+  box.innerHTML = `<p class="no-payments">جاري التحميل...</p>`;
+  const cacheKey = `${group}|${stage}`;
+  try {
+    let dayDocs = attendanceSummaryCache[cacheKey];
+    if (!dayDocs) {
+      const snap = await attendanceCol.where("teacherId", "==", currentTeacherId).where("stage", "==", stage).where("group", "==", group).get();
+      dayDocs = snap.docs.map(d => d.data());
+      attendanceSummaryCache[cacheKey] = dayDocs;
+    }
+    const relevant = dayDocs.filter(d => d.records && d.records.hasOwnProperty(studentId));
+    if (relevant.length === 0) {
+      box.innerHTML = `<p class="no-payments">لسه مفيش حضور مسجّل لهذا الطالب.</p>`;
+      return;
+    }
+    const presentCount = relevant.filter(d => d.records[studentId]).length;
+    const pct = Math.round((presentCount / relevant.length) * 100);
+    const recentSorted = [...relevant].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10);
+    const dotsHtml = recentSorted.map(d => `<span title="${d.date}${d.records[studentId] ? ' - حاضر' : ' - غايب'}" style="display:inline-block; width:11px; height:11px; border-radius:50%; margin-left:4px; background:${d.records[studentId] ? '#5E9468' : '#C15B3C'};"></span>`).join("");
+    box.innerHTML = `<div style="font-size:0.85rem; margin-bottom:0.4rem;">نسبة الحضور: <strong>${pct}%</strong> (${presentCount} من ${relevant.length} يوم مسجّل)</div><div>${dotsHtml}</div>`;
+  } catch (err) {
+    console.error("attendance summary error", err);
+    box.innerHTML = `<p class="no-payments">تعذر تحميل بيانات الحضور.</p>`;
+  }
+}
+
+// ============ بطاقات QR للحضور ============
+// كل بطاقة بترمّز نص بسيط "CR-ATT:teacherId:studentId" — القارئ بيتحقق إن teacherId
+// مطابق لحساب المعلم الحالي قبل ما يسجّل أي حضور، عشان محدش يمسح كود من تطبيق تاني بالغلط.
+function makeQrImgTag(text, cellSize) {
+  const qr = qrcode(0, "M");
+  qr.addData(text);
+  qr.make();
+  return qr.createImgTag(cellSize || 4, 0);
+}
+
+function printStudentQrCard(studentId) {
+  const student = students.find(s => s.id === studentId);
+  if (!student) return;
+  const qrText = `CR-ATT:${currentTeacherId}:${studentId}`;
+  const qrImgTag = makeQrImgTag(qrText, 6);
+  const centerLine = TEACHER_CENTER_NAME ? `<div style="font-size:11pt;color:#555;margin-bottom:2px;">${escapeHtml(TEACHER_CENTER_NAME)}</div>` : "";
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>كارنيه ${escapeHtml(student.name)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; }
+      .card { width: 320px; border: 3px solid #16302B; border-radius: 14px; padding: 18px; text-align:center; margin: 0 auto; }
+      .brand { font-weight:bold; color:#16302B; font-size:13pt; }
+      .name { font-size:16pt; font-weight:bold; margin: 8px 0 2px; color:#1B2420; }
+      .stage { font-size:11pt; color:#4A5A50; margin-bottom:10px; }
+      img { width: 170px; height: 170px; }
+    </style></head>
+    <body>
+      <div class="card">
+        <div class="brand">${escapeHtml(TEACHER_NAME)}</div>
+        ${centerLine}
+        <div class="name">${escapeHtml(student.name)}</div>
+        <div class="stage">${escapeHtml(student.stage || "")}</div>
+        ${qrImgTag}
+        <div style="font-size:9pt; color:#999; margin-top:8px;">كارنيه حضور — لا يُستخدم إلا داخل السنتر</div>
+      </div>
+      <script>window.onload = () => window.print();<\/script>
+    </body></html>`;
+  const win = window.open("", "_blank");
+  if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
+function printStageQrCards(stage, group) {
+  if (!stage) { showError("اختر المرحلة الأول من القايمة فوق."); return; }
+  const list = students
+    .filter(s => s.stage === stage && (group === "torail" ? s.group === "torail" : s.group !== "torail"))
+    .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  if (list.length === 0) { showError("مفيش طلاب في المرحلة دي."); return; }
+  const cardsHtml = list.map(s => {
+    const qrText = `CR-ATT:${currentTeacherId}:${s.id}`;
+    const qrImgTag = makeQrImgTag(qrText, 4);
+    return `<div class="card">
+      <div class="brand">${escapeHtml(TEACHER_NAME)}</div>
+      <div class="name">${escapeHtml(s.name)}</div>
+      <div class="stage">${escapeHtml(s.stage || "")}</div>
+      ${qrImgTag}
+    </div>`;
+  }).join("");
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>بطاقات QR - ${escapeHtml(stage)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin:0; }
+      .grid { display:flex; flex-wrap:wrap; gap:14px; padding:14px; }
+      .card { width: 230px; border: 2px solid #16302B; border-radius: 12px; padding: 10px; text-align:center; page-break-inside: avoid; }
+      .brand { font-weight:bold; color:#16302B; font-size:10pt; }
+      .name { font-size:12pt; font-weight:bold; margin:4px 0 2px; }
+      .stage { font-size:9pt; color:#4A5A50; margin-bottom:6px; }
+      img { width: 110px; height: 110px; }
+    </style></head>
+    <body>
+      <div class="grid">${cardsHtml}</div>
+      <script>window.onload = () => window.print();<\/script>
+    </body></html>`;
+  const win = window.open("", "_blank");
+  if (!win) { showError("المتصفح منع فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة وحاول تاني."); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
+// ============ المسح المباشر (Check-in) ============
+let qrScanLog = [];
+
+function toggleQrAttendanceSection() {
+  const section = document.getElementById("qrAttendanceSection");
+  const btn = document.getElementById("qrAttendanceToggleBtn");
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+  if (!isOpen) {
+    const dateInput = document.getElementById("qrAttDateInput");
+    if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+    qrScanLog = [];
+    renderQrScanLog();
+    document.getElementById("qrScanFeedback").style.display = "none";
+    setTimeout(() => document.getElementById("qrScanInput").focus(), 100);
+  }
+}
+
+function parseAttendanceQrCode(raw) {
+  const parts = String(raw || "").trim().split(":");
+  if (parts.length !== 3 || parts[0] !== "CR-ATT") return null;
+  if (parts[1] !== currentTeacherId) return null;
+  return parts[2];
+}
+
+async function markQrAttendance(studentId, dateStr) {
+  const student = students.find(s => s.id === studentId);
+  if (!student) return { ok: false };
+  const group = student.group === "torail" ? "torail" : "normal";
+  const stage = student.stage || "";
+  if (!stage) return { ok: false };
+  const docId = `${currentTeacherId}_${group}_${stage}_${dateStr}`;
+  try {
+    await attendanceCol.doc(docId).update({
+      [`records.${studentId}`]: true,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (err) {
+    try {
+      await attendanceCol.doc(docId).set({
+        teacherId: currentTeacherId,
+        group, stage, date: dateStr,
+        records: { [studentId]: true },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (err2) {
+      return { ok: false };
+    }
+  }
+  delete attendanceSummaryCache[`${group}|${stage}`];
+  return { ok: true };
+}
+
+function showQrFeedback(message, isError) {
+  const el = document.getElementById("qrScanFeedback");
+  el.textContent = message;
+  el.style.display = "block";
+  el.style.background = isError ? "#F6E7E2" : "#EAF2E7";
+  el.style.color = isError ? "#9C4B32" : "#3F6B4A";
+}
+
+function renderQrScanLog() {
+  const countEl = document.getElementById("qrScanCount");
+  if (countEl) countEl.textContent = qrScanLog.length;
+  const box = document.getElementById("qrScanLog");
+  if (!box) return;
+  if (qrScanLog.length === 0) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">لسه محدش اتمسح النهاردة.</p>`;
+    return;
+  }
+  box.innerHTML = qrScanLog.map(item => `
+    <div class="result-row">
+      <div class="result-row-name">${escapeHtml(item.name)}${item.stage ? ` <span class="stage-tag">${escapeHtml(item.stage)}</span>` : ''}</div>
+      <div class="result-row-date">${item.time}</div>
+    </div>
+  `).join("");
+}
+
+async function handleQrScanInput(inputEl) {
+  const raw = inputEl.value;
+  inputEl.value = "";
+  const dateStr = document.getElementById("qrAttDateInput").value || new Date().toISOString().slice(0, 10);
+  const studentId = parseAttendanceQrCode(raw);
+  if (!studentId) {
+    showQrFeedback("كود غير معروف أو تابع لتطبيق تاني — جرب تاني.", true);
+    return;
+  }
+  const student = students.find(s => s.id === studentId);
+  if (!student) {
+    showQrFeedback("الطالب ده مش موجود (يمكن اتحذف). جرب كود تاني.", true);
+    return;
+  }
+  if (qrScanLog.some(item => item.id === studentId)) {
+    showQrFeedback(`${student.name} اتسجل حضوره بالفعل النهاردة ✓`, false);
+    return;
+  }
+  const result = await markQrAttendance(studentId, dateStr);
+  if (!result.ok) {
+    showQrFeedback("تعذر تسجيل الحضور. تأكد من الاتصال بالإنترنت.", true);
+    return;
+  }
+  qrScanLog.unshift({ id: studentId, name: student.name, stage: student.stage, time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) });
+  renderQrScanLog();
+  showQrFeedback(`✅ تم تسجيل حضور: ${student.name}`, false);
+}
+
 function fmtDate(d) {
   if (!d) return "—";
   const dt = new Date(d + "T00:00:00");
@@ -4765,6 +5173,14 @@ function render() {
           </span></div>
 
           <div class="payments-section">
+            <div class="payments-title">الحضور</div>
+            <div id="attSummaryTrigger_${s.id}">
+              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'normal', 'attSummaryTrigger_${s.id}')">📅 عرض نسبة الحضور</button>
+            </div>
+            <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')">🖨️ طباعة كارنيه QR للحضور</button>
+          </div>
+
+          <div class="payments-section">
             <div class="payments-title">سجل المدفوعات</div>
             ${paymentsHtml}
             <div class="add-payment-row">
@@ -4948,6 +5364,14 @@ function renderTorail() {
               ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
               : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
           </span></div>
+
+          <div class="payments-section">
+            <div class="payments-title">الحضور</div>
+            <div id="attSummaryTrigger_${s.id}">
+              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'torail', 'attSummaryTrigger_${s.id}')">📅 عرض نسبة الحضور</button>
+            </div>
+            <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')">🖨️ طباعة كارنيه QR للحضور</button>
+          </div>
 
           <div class="payments-section">
             <div class="payments-title">سجل المدفوعات</div>
