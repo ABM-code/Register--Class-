@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#16302B">
+<title>تفعيل كود الوصول</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+  h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
+  p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
+  .card { background: #F5F1E6; border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+  label { display: block; font-size: 0.82rem; color: #6B6B60; margin-bottom: 0.4rem; font-weight: 500; }
+  input { width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15); background: #FFFDF8; font-size: 0.95rem; color: #1B2420; font-family: inherit; margin-bottom: 0.8rem; }
+  input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18); }
+  input.code-input { font-family: 'Fraunces', serif; font-size: 1.2rem; text-align: center; letter-spacing: 2px; text-transform: uppercase; }
+  button { font-family: inherit; background: var(--accent); color: #1B2420; border: none; border-radius: 12px; padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%; box-shadow: 0 3px 10px rgba(var(--accent-rgb),0.3); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .link-btn { background: none; box-shadow: none; color: #4A5A50; font-weight: 600; font-size: 0.85rem; padding: 0.5rem; }
+  #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 9px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
+  #successBox { background: #E7F1E9; color: #3F6B4A; padding: 0.9rem; border-radius: 12px; font-size: 0.9rem; }
+  .item-line { padding: 0.35rem 0; border-bottom: 1px solid rgba(0,0,0,0.08); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>تفعيل كود الوصول</h1>
+  <p class="sub" id="pageSub">سجّل دخولك أو اعمل حساب جديد عشان تفعّل الكود</p>
+  <div id="errorBox"></div>
+  <div id="content"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
+const firebaseConfig = {
+  apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
+  authDomain: "register-class-302e6.firebaseapp.com",
+  projectId: "register-class-302e6",
+  storageBucket: "register-class-302e6.firebasestorage.app",
+  messagingSenderId: "230991294181",
+  appId: "1:230991294181:web:167cb0a370c68b6a6f6e0c"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.textContent = msg; box.style.display = "block";
+}
+function clearError() { document.getElementById("errorBox").style.display = "none"; }
+
+const ERROR_MESSAGES = {
+  invalid_code: "الكود غير صحيح.",
+  already_activated: "هذا الكود تم تفعيله بالفعل من حساب آخر.",
+  code_expired: "انتهت صلاحية تفعيل هذا الكود.",
+  code_disabled: "هذا الكود معطّل.",
+  product_unavailable: "هذا المنتج غير متاح حاليًا.",
+  server_error: "حدث خطأ. حاول تاني.",
+};
+
+let mode = "login"; // login | signup
+
+function renderAuthForm() {
+  document.getElementById("content").innerHTML = `
+    <div class="card">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="emailInput" autocomplete="email">
+      <label>كلمة المرور</label>
+      <input type="password" id="passwordInput" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}">
+      <button id="authBtn">${mode === 'signup' ? 'إنشاء حساب' : 'تسجيل الدخول'}</button>
+    </div>
+    <button class="link-btn" id="toggleModeBtn">${mode === 'signup' ? 'عندك حساب بالفعل؟ سجّل دخولك' : 'مفيش عندك حساب؟ اعمل حساب جديد'}</button>
+  `;
+  document.getElementById("toggleModeBtn").addEventListener("click", () => {
+    mode = mode === "signup" ? "login" : "signup";
+    clearError();
+    renderAuthForm();
+  });
+  document.getElementById("authBtn").addEventListener("click", async () => {
+    clearError();
+    const email = document.getElementById("emailInput").value.trim();
+    const password = document.getElementById("passwordInput").value;
+    if (!email || password.length < 6) { showError("اكتب بريد إلكتروني صحيح وكلمة مرور 6 أحرف على الأقل."); return; }
+    const btn = document.getElementById("authBtn");
+    btn.disabled = true; btn.textContent = "جاري التحقق...";
+    try {
+      if (mode === "signup") {
+        await auth.createUserWithEmailAndPassword(email, password);
+      } else {
+        await auth.signInWithEmailAndPassword(email, password);
+      }
+      renderRedeemForm();
+    } catch (err) {
+      const map = {
+        "auth/email-already-in-use": "البريد ده مستخدم بالفعل. سجّل دخولك بدل إنشاء حساب.",
+        "auth/wrong-password": "كلمة المرور غير صحيحة.",
+        "auth/user-not-found": "مفيش حساب بالبريد ده. اعمل حساب جديد.",
+        "auth/invalid-email": "البريد الإلكتروني غير صحيح.",
+      };
+      showError(map[err.code] || "تعذر تسجيل الدخول. حاول تاني.");
+      btn.disabled = false; btn.textContent = mode === "signup" ? "إنشاء حساب" : "تسجيل الدخول";
+    }
+  });
+}
+
+function renderRedeemForm() {
+  document.getElementById("pageSub").textContent = "اكتب كود الوصول المطبوع على الكارت";
+  document.getElementById("content").innerHTML = `
+    <div class="card">
+      <label>كود الوصول</label>
+      <input type="text" id="codeInput" class="code-input" placeholder="XXXX-XXXX-XXXX" maxlength="14">
+      <button id="redeemBtn">تفعيل الكود</button>
+    </div>
+    <a href="my-content.html" style="display:block; text-align:center; color:#F5F1E6; margin-bottom:0.6rem; font-size:0.9rem;">عرض المحتوى اللي عندي بالفعل</a>
+    <button class="link-btn" id="signOutBtn">تسجيل خروج</button>
+  `;
+  const codeInput = document.getElementById("codeInput");
+  codeInput.addEventListener("input", () => {
+    let v = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+    v = v.replace(/(.{4})(?=.)/g, "$1-");
+    codeInput.value = v;
+  });
+  document.getElementById("signOutBtn").addEventListener("click", async () => {
+    await auth.signOut();
+    mode = "login";
+    renderAuthForm();
+  });
+  document.getElementById("redeemBtn").addEventListener("click", async () => {
+    clearError();
+    const code = codeInput.value.trim();
+    if (!code) { showError("اكتب الكود أولاً."); return; }
+    const btn = document.getElementById("redeemBtn");
+    btn.disabled = true; btn.textContent = "جاري التفعيل...";
+    try {
+      const idToken = await auth.currentUser.getIdToken();
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/redeem-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || "server_error");
+      renderSuccess(data.product, data.expiresAt);
+    } catch (err) {
+      showError(ERROR_MESSAGES[err.message] || ERROR_MESSAGES.server_error);
+      btn.disabled = false; btn.textContent = "تفعيل الكود";
+    }
+  });
+}
+
+function renderSuccess(product, expiresAt) {
+  const itemsHtml = (product.items || []).map(it => `<div class="item-line">✓ ${it.type === 'exam' ? 'امتحان' : 'محتوى'}: ${it.title || it.id}</div>`).join("");
+  document.getElementById("content").innerHTML = `
+    <div id="successBox">
+      <strong>✓ تم التفعيل بنجاح!</strong>
+      <p style="margin:0.5rem 0;">${product.title || ""}</p>
+      ${itemsHtml}
+      <p style="font-size:0.8rem; margin-top:0.6rem; opacity:0.85;">${expiresAt ? `الوصول متاح لحد ${new Date(expiresAt).toLocaleDateString('ar-EG')}` : 'الوصول دائم'}</p>
+    </div>
+    <a href="my-content.html" style="display:block; text-align:center; color:#F5F1E6; margin-top:1rem; font-size:0.9rem;">فتح محتواي</a>
+  `;
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) renderRedeemForm();
+  else renderAuthForm();
+});
+</script>
+</body>
+</html>

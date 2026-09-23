@@ -487,6 +487,7 @@
   </button>
   <button class="tab-btn" id="tabStatsBtn" onclick="switchTab('stats')">الإحصائيات</button>
   <button class="tab-btn" id="tabTorailBtn" onclick="switchTab('torail')">طلاب توريل</button>
+  <button class="tab-btn" id="tabProductsBtn" onclick="switchTab('products')">المنتجات والأكواد</button>
 </div>
 
 <main class="app-content" id="viewStudents">
@@ -1035,6 +1036,81 @@
   </div>
 </main>
 
+<main class="app-content" id="viewProducts" style="display:none;">
+  <div id="productsListView">
+    <button id="newProductBtn" class="reg-btn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.75rem; font-weight:700; margin-bottom:1rem; cursor:pointer;" onclick="openProductBuilder()">+ منتج جديد</button>
+    <p style="color:#9FB8AD; font-size:0.85rem; margin:0 0 1rem;">المنتج هو حزمة محتوى (امتحانات و/أو مواد) تقدر تبيعها بكارت كود مطبوع. الطالب اللي يفعّل الكود يفتح الحزمة دي من غير ما يكون مسجّل عندك مسبقًا.</p>
+    <div id="productsList"></div>
+  </div>
+
+  <div id="productBuilderView" style="display:none;">
+    <button onclick="closeProductBuilder()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة المنتجات</button>
+    <h2 id="productBuilderTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;">منتج جديد</h2>
+    <div class="form-card-exam">
+      <div class="field-group">
+        <label>اسم المنتج</label>
+        <input class="reg-input" id="productTitleInput" placeholder="مثلاً: باقة الوحدة 3">
+      </div>
+      <div class="field-group">
+        <label>مدة الوصول</label>
+        <select class="reg-input" id="productDurationType" onchange="onProductDurationTypeChange()">
+          <option value="permanent">دائم</option>
+          <option value="days">محدد بعدد أيام</option>
+        </select>
+      </div>
+      <div class="field-group" id="productDurationDaysGroup" style="display:none;">
+        <label>عدد الأيام من لحظة التفعيل</label>
+        <input class="reg-input" type="number" min="1" step="1" id="productDurationDaysInput" placeholder="مثلاً: 30">
+      </div>
+      <div class="field-group">
+        <label>اختر الامتحانات المضمّنة</label>
+        <div id="productExamsPicker" style="max-height:220px; overflow-y:auto; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:9px; padding:0.5rem 0.7rem;"></div>
+      </div>
+      <div class="field-group">
+        <label>اختر المواد التعليمية المضمّنة</label>
+        <div id="productMaterialsPicker" style="max-height:220px; overflow-y:auto; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:9px; padding:0.5rem 0.7rem;"></div>
+      </div>
+      <button onclick="saveProduct()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveProductBtnLabel">حفظ المنتج</span></button>
+    </div>
+  </div>
+
+  <div id="productDetailView" style="display:none;">
+    <button onclick="closeProductDetail()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة المنتجات</button>
+    <h2 id="productDetailTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.3rem;"></h2>
+    <p id="productDetailSub" style="color:#9FB8AD; font-size:0.85rem; margin:0 0 1rem;"></p>
+
+    <div class="form-card-exam" style="margin-bottom:1rem;">
+      <div class="field-group">
+        <label>اسم الدفعة (اختياري)</label>
+        <input class="reg-input" id="batchNameInput" placeholder="مثلاً: دفعة سبتمبر">
+      </div>
+      <div class="field-group">
+        <label>عدد الأكواد المطلوب توليدها</label>
+        <input class="reg-input" type="number" min="1" max="2000" step="1" id="batchCountInput" placeholder="مثلاً: 100">
+      </div>
+      <div class="field-group">
+        <label>آخر موعد للتفعيل الأول (اختياري)</label>
+        <input class="reg-input" type="date" id="batchExpiryInput">
+        <p style="font-size:0.78rem; color:#9FB8AD; margin:0.3rem 0 0;">بعد التاريخ ده، أي كود لسه ماتفعلش مايشتغلش. سيبه فاضي لو عايز الأكواد بدون تاريخ انتهاء للتفعيل.</p>
+      </div>
+      <button onclick="generateCodesForCurrentProduct()" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="generateCodesBtnLabel">توليد الأكواد</span></button>
+    </div>
+
+    <div id="generatedCodesBox" style="display:none; margin-bottom:1rem;"></div>
+
+    <h3 style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1rem; margin:0 0 0.6rem;">الدفعات السابقة</h3>
+    <div id="productBatchesList"></div>
+
+    <div class="form-card-exam" style="margin-top:1rem;">
+      <div class="field-group">
+        <label>تعطيل كود معيّن</label>
+        <input class="reg-input code-input-field" id="disableCodeInput" placeholder="XXXX-XXXX-XXXX" oninput="formatCodeInputEl(this)" maxlength="14">
+      </div>
+      <button onclick="disableVoucherCodeAction()" style="width:100%; background:#C15B3C; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">تعطيل الكود</button>
+    </div>
+  </div>
+</main>
+
 <main class="app-content" id="viewStats" style="display:none;">
   <div class="notif-card" id="notifPermCard" style="display:none;">
     <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.4rem;">
@@ -1328,6 +1404,8 @@ const teachersCol = db.collection("teachers");
 const materialsCol = db.collection("materials");
 const questionBankCol = db.collection("questionBank");
 const attendanceCol = db.collection("attendance");
+const productsCol = db.collection("products");
+const voucherBatchesCol = db.collection("voucherBatches");
 let currentTeacherId = null;
 
 let moneyRevealed = {};
@@ -1362,6 +1440,11 @@ let questionBank = [];
 let currentBuilderQuestions = [];
 let viewingExamId = null;
 let editingExamId = null;
+let products = [];
+let editingProductId = null;
+let viewingProductId = null;
+let currentProductBatches = [];
+let lastGeneratedCodes = null;
 
 let firstResultsSnapshot = true;
 let autoBackupChecked = false;
@@ -1525,6 +1608,365 @@ async function loadQuestionBankOnce(force) {
   } catch (err) {
     console.error("questionBank load error", err);
     showError("تعذر تحميل بنك الأسئلة. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+// ============ المنتجات وكروت الأكواد (Voucher System) ============
+const VOUCHER_WORKER_URL = STUDENT_AUTH_WORKER_URL; // نفس الـ Worker بتاع تسجيل دخول الطلاب
+
+let productsLoaded = false;
+async function loadProductsOnce(force) {
+  if (productsLoaded && !force) return;
+  try {
+    const snapshot = await productsCol.where("teacherId", "==", currentTeacherId).get();
+    products = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    products.sort((a, b) => {
+      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return bt - at;
+    });
+    productsLoaded = true;
+    await loadMaterialsOnce();
+    renderProductsList();
+  } catch (err) {
+    console.error("products load error", err);
+    showError("تعذر تحميل المنتجات. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+function formatCodeInputEl(el) {
+  let v = el.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+  v = v.replace(/(.{4})(?=.)/g, "$1-");
+  el.value = v;
+}
+
+function renderProductsList() {
+  const box = document.getElementById("productsList");
+  if (!box) return;
+  if (products.length === 0) {
+    box.innerHTML = `<div class="card" style="text-align:center; color:#6B6B60; padding:1.5rem;">لسه مفيش منتجات. اضغط "+ منتج جديد" عشان تبدأ.</div>`;
+    return;
+  }
+  box.innerHTML = products.map(p => {
+    const itemsCount = (p.items || []).length;
+    const durationText = p.accessDurationType === "days" ? `${p.accessDurationDays || 0} يوم من التفعيل` : "دائم";
+    return `
+      <div class="card" style="background:#F5F1E6; border-radius:14px; padding:1rem; margin-bottom:0.8rem; cursor:pointer;" onclick="openProductDetail('${p.id}')">
+        <div style="font-family:'Fraunces',serif; font-weight:600; font-size:1.02rem; color:#1B2420;">${escapeHtml(p.title || "")}</div>
+        <div style="font-size:0.8rem; color:#6B6B60; margin-top:0.3rem;">${itemsCount} عنصر — الوصول: ${durationText}${p.archived ? " — 🗄️ مؤرشف" : ""}</div>
+        <div style="margin-top:0.6rem; display:flex; gap:0.5rem;">
+          <button type="button" onclick="event.stopPropagation(); openProductBuilder('${p.id}')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px;">تعديل</button>
+          <button type="button" onclick="event.stopPropagation(); toggleArchiveProduct('${p.id}')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px; box-shadow:none;">${p.archived ? "إلغاء الأرشفة" : "أرشفة"}</button>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function onProductDurationTypeChange() {
+  const type = document.getElementById("productDurationType").value;
+  document.getElementById("productDurationDaysGroup").style.display = type === "days" ? "block" : "none";
+}
+
+function renderProductPickers(selectedItems) {
+  const selected = selectedItems || [];
+  const isSelected = (type, id) => selected.some(it => it.type === type && it.id === id);
+  const examsBox = document.getElementById("productExamsPicker");
+  if (exams.length === 0) {
+    examsBox.innerHTML = `<p style="font-size:0.82rem; color:#6B6B60; margin:0;">مفيش امتحانات متاحة.</p>`;
+  } else {
+    examsBox.innerHTML = exams.map(e => `
+      <label class="checkbox-row" style="margin-bottom:0.4rem;">
+        <input type="checkbox" data-item-type="exam" data-item-id="${e.id}" ${isSelected("exam", e.id) ? "checked" : ""}>
+        <span>${escapeHtml(e.title || "")} <span style="color:#9C9C90;">(${escapeHtml(e.stage || "")})</span></span>
+      </label>`).join("");
+  }
+  const materialsBox = document.getElementById("productMaterialsPicker");
+  if (materials.length === 0) {
+    materialsBox.innerHTML = `<p style="font-size:0.82rem; color:#6B6B60; margin:0;">مفيش مواد تعليمية متاحة.</p>`;
+  } else {
+    materialsBox.innerHTML = materials.map(m => `
+      <label class="checkbox-row" style="margin-bottom:0.4rem;">
+        <input type="checkbox" data-item-type="material" data-item-id="${m.id}" ${isSelected("material", m.id) ? "checked" : ""}>
+        <span>${escapeHtml(m.title || "")} <span style="color:#9C9C90;">(${escapeHtml(m.category || "عام")})</span></span>
+      </label>`).join("");
+  }
+}
+
+async function openProductBuilder(productId) {
+  editingProductId = productId || null;
+  await loadMaterialsOnce();
+  const existing = productId ? products.find(p => p.id === productId) : null;
+  document.getElementById("productBuilderTitle").textContent = existing ? "تعديل منتج" : "منتج جديد";
+  document.getElementById("productTitleInput").value = existing ? (existing.title || "") : "";
+  document.getElementById("productDurationType").value = existing ? (existing.accessDurationType || "permanent") : "permanent";
+  document.getElementById("productDurationDaysInput").value = existing && existing.accessDurationDays ? existing.accessDurationDays : "";
+  onProductDurationTypeChange();
+  renderProductPickers(existing ? existing.items : []);
+  document.getElementById("productsListView").style.display = "none";
+  document.getElementById("productDetailView").style.display = "none";
+  document.getElementById("productBuilderView").style.display = "block";
+}
+
+function closeProductBuilder() {
+  editingProductId = null;
+  document.getElementById("productBuilderView").style.display = "none";
+  document.getElementById("productsListView").style.display = "block";
+}
+
+async function saveProduct() {
+  const title = document.getElementById("productTitleInput").value.trim();
+  if (!title) { showError("اكتب اسم المنتج."); return; }
+  const durationType = document.getElementById("productDurationType").value;
+  const durationDays = durationType === "days" ? (parseInt(document.getElementById("productDurationDaysInput").value) || 0) : null;
+  if (durationType === "days" && (!durationDays || durationDays < 1)) { showError("اكتب عدد أيام صحيح."); return; }
+
+  const items = [];
+  document.querySelectorAll('#productExamsPicker input[type=checkbox]:checked').forEach(cb => {
+    const exam = exams.find(e => e.id === cb.dataset.itemId);
+    items.push({ type: "exam", id: cb.dataset.itemId, title: exam ? (exam.title || "") : "" });
+  });
+  document.querySelectorAll('#productMaterialsPicker input[type=checkbox]:checked').forEach(cb => {
+    const mat = materials.find(m => m.id === cb.dataset.itemId);
+    items.push({ type: "material", id: cb.dataset.itemId, title: mat ? (mat.title || "") : "" });
+  });
+  if (items.length === 0) { showError("اختار على الأقل امتحان واحد أو مادة واحدة للمنتج."); return; }
+
+  const payload = {
+    teacherId: currentTeacherId,
+    title,
+    items,
+    accessDurationType: durationType,
+    accessDurationDays: durationDays,
+    archived: false,
+  };
+  try {
+    if (editingProductId) {
+      await productsCol.doc(editingProductId).update(payload);
+    } else {
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await productsCol.add(payload);
+    }
+    showSuccess("تم حفظ المنتج بنجاح.");
+    await loadProductsOnce(true);
+    closeProductBuilder();
+  } catch (err) {
+    console.error("save product error", err);
+    showError("تعذر حفظ المنتج. حاول تاني.");
+  }
+}
+
+async function toggleArchiveProduct(productId) {
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+  try {
+    await productsCol.doc(productId).update({ archived: !p.archived });
+    await loadProductsOnce(true);
+  } catch (err) {
+    console.error("archive product error", err);
+    showError("تعذر تحديث حالة المنتج.");
+  }
+}
+
+async function openProductDetail(productId) {
+  viewingProductId = productId;
+  const p = products.find(x => x.id === productId);
+  if (!p) return;
+  document.getElementById("productDetailTitle").textContent = p.title || "";
+  const durationText = p.accessDurationType === "days" ? `الوصول: ${p.accessDurationDays || 0} يوم من لحظة التفعيل` : "الوصول: دائم";
+  document.getElementById("productDetailSub").textContent = `${(p.items || []).length} عنصر — ${durationText}`;
+  document.getElementById("generatedCodesBox").style.display = "none";
+  document.getElementById("batchNameInput").value = "";
+  document.getElementById("batchCountInput").value = "";
+  document.getElementById("batchExpiryInput").value = "";
+  document.getElementById("disableCodeInput").value = "";
+  document.getElementById("productsListView").style.display = "none";
+  document.getElementById("productBuilderView").style.display = "none";
+  document.getElementById("productDetailView").style.display = "block";
+  await loadBatchesForProduct(productId);
+}
+
+function closeProductDetail() {
+  viewingProductId = null;
+  document.getElementById("productDetailView").style.display = "none";
+  document.getElementById("productsListView").style.display = "block";
+}
+
+async function loadBatchesForProduct(productId) {
+  const box = document.getElementById("productBatchesList");
+  box.innerHTML = `<p style="color:#9FB8AD; font-size:0.85rem;">جاري التحميل...</p>`;
+  try {
+    const snapshot = await voucherBatchesCol.where("teacherId", "==", currentTeacherId).where("productId", "==", productId).get();
+    currentProductBatches = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    currentProductBatches.sort((a, b) => {
+      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return bt - at;
+    });
+    renderProductBatchesList();
+  } catch (err) {
+    console.error("batches load error", err);
+    box.innerHTML = `<p style="color:#C15B3C; font-size:0.85rem;">تعذر تحميل الدفعات.</p>`;
+  }
+}
+
+function renderProductBatchesList() {
+  const box = document.getElementById("productBatchesList");
+  if (currentProductBatches.length === 0) {
+    box.innerHTML = `<p style="color:#9FB8AD; font-size:0.85rem;">لسه مفيش دفعات أكواد لهذا المنتج.</p>`;
+    return;
+  }
+  box.innerHTML = currentProductBatches.map(b => `
+    <div class="card" style="background:#F5F1E6; padding:0.9rem; margin-bottom:0.6rem;">
+      <div style="font-weight:600;">${escapeHtml(b.batchName || "")}</div>
+      <div style="font-size:0.78rem; color:#6B6B60; margin:0.2rem 0 0.5rem;">إجمالي: ${b.count || 0}</div>
+      <div id="batchStats_${b.id}" style="font-size:0.8rem; color:#4A5A50;">
+        <button type="button" onclick="refreshBatchStats('${b.id}')" style="width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.3rem 0.6rem; font-size:0.75rem; border-radius:7px; box-shadow:none;">📊 عرض الإحصائيات</button>
+      </div>
+    </div>`).join("");
+}
+
+async function refreshBatchStats(batchId) {
+  const el = document.getElementById(`batchStats_${batchId}`);
+  el.innerHTML = "جاري التحميل...";
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${VOUCHER_WORKER_URL}/voucher-stats?batchId=${encodeURIComponent(batchId)}`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || "failed");
+    el.innerHTML = `مولّد: ${data.generated} — مفعّل: ${data.bound} — متبقي: ${data.unused} — معطّل: ${data.disabled}`;
+  } catch (err) {
+    console.error("batch stats error", err);
+    el.innerHTML = `<span style="color:#C15B3C;">تعذر تحميل الإحصائيات.</span>`;
+  }
+}
+
+async function generateCodesForCurrentProduct() {
+  const productId = viewingProductId;
+  if (!productId) return;
+  const count = parseInt(document.getElementById("batchCountInput").value) || 0;
+  if (!count || count < 1 || count > 2000) { showError("اكتب عدد أكواد بين 1 و 2000."); return; }
+  const batchName = document.getElementById("batchNameInput").value.trim();
+  const expiryDate = document.getElementById("batchExpiryInput").value;
+  const activationExpiresAt = expiryDate ? new Date(expiryDate + "T23:59:59").toISOString() : null;
+
+  const btn = document.getElementById("generateCodesBtnLabel");
+  btn.textContent = "جاري التوليد...";
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${VOUCHER_WORKER_URL}/generate-codes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ productId, count, batchName, activationExpiresAt }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || "generate_failed");
+    lastGeneratedCodes = { codes: data.codes, batchName: data.batchName, productTitle: data.productTitle, batchId: data.batchId };
+    renderGeneratedCodesBox();
+    await loadBatchesForProduct(productId);
+    showSuccess(`تم توليد ${data.codes.length} كود بنجاح.`);
+  } catch (err) {
+    console.error("generate codes error", err);
+    showError("تعذر توليد الأكواد. حاول تاني.");
+  } finally {
+    btn.textContent = "توليد الأكواد";
+  }
+}
+
+function renderGeneratedCodesBox() {
+  const box = document.getElementById("generatedCodesBox");
+  if (!lastGeneratedCodes) { box.style.display = "none"; return; }
+  const { codes, batchName } = lastGeneratedCodes;
+  const listHtml = codes.slice(0, 500).map(c => `<div style="font-family:'Fraunces',serif; padding:0.15rem 0; direction:ltr; text-align:center;">${c}</div>`).join("");
+  const moreNote = codes.length > 500 ? `<p style="font-size:0.75rem; color:#9C9C90; text-align:center;">+ ${codes.length - 500} كود إضافي (متاحين في التصدير والطباعة)</p>` : "";
+  box.style.display = "block";
+  box.innerHTML = `
+    <div class="card" style="background:#F5F1E6; padding:1rem;">
+      <strong>${escapeHtml(batchName)} — ${codes.length} كود</strong>
+      <p style="font-size:0.78rem; color:#9C4B32; margin:0.4rem 0 0.8rem;">⚠️ هذه هي المرة الوحيدة اللي هتشوف فيها الأكواد بالكامل. صدّرها أو اطبعها دلوقتي.</p>
+      <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem;">
+        <button type="button" onclick="exportGeneratedCodes()" style="flex:1; width:auto; background:#3F6B4A; color:#F5F1E6; padding:0.6rem; font-size:0.85rem; border-radius:8px;">⬇️ تصدير Excel</button>
+        <button type="button" onclick="printGeneratedCards()" style="flex:1; width:auto; background:#D4A93B; color:#1B2420; padding:0.6rem; font-size:0.85rem; border-radius:8px;">🖨️ طباعة الكروت</button>
+      </div>
+      <div style="max-height:260px; overflow-y:auto; background:#FFFDF8; border-radius:8px; padding:0.5rem;">${listHtml}${moreNote}</div>
+    </div>`;
+}
+
+function exportGeneratedCodes() {
+  if (!lastGeneratedCodes) return;
+  const { codes, batchName, productTitle } = lastGeneratedCodes;
+  const rows = codes.map(c => ({ "الكود": c, "المنتج": productTitle || "", "الدفعة": batchName || "" }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "الأكواد");
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `codes-${(batchName || "batch").replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, "_")}-${today}.xlsx`);
+}
+
+function buildVoucherCardsPrintHtml(codes, productTitle) {
+  const cardsHtml = codes.map(code => `
+    <div class="v-card">
+      <div class="v-brand">${escapeHtml(TEACHER_CENTER_NAME || TEACHER_NAME)}</div>
+      <div class="v-product">${escapeHtml(productTitle || "")}</div>
+      <div class="v-label">ACCESS CODE</div>
+      <div class="v-code">${escapeHtml(code)}</div>
+      <div class="v-instructions">
+        1. افتح التطبيق<br>
+        2. سجّل الدخول أو اعمل حساب جديد<br>
+        3. اختر "تفعيل كود"<br>
+        4. أدخل الكود وابدأ
+      </div>
+    </div>`).join("");
+  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>كروت الأكواد</title>
+    <style>
+      * { box-sizing: border-box; }
+      @page { size: A4; margin: 10mm; }
+      body { font-family: Arial, sans-serif; margin: 0; }
+      .v-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm; }
+      .v-card {
+        border: 2px dashed #0a1f44; border-radius: 8px; padding: 10px 12px; text-align: center;
+        page-break-inside: avoid; break-inside: avoid;
+      }
+      .v-brand { font-size: 10pt; font-weight: bold; color: #0a1f44; }
+      .v-product { font-size: 11pt; font-weight: bold; color: #1B2420; margin-top: 2px; }
+      .v-label { font-size: 8pt; color: #6B6B60; margin-top: 8px; letter-spacing: 1px; }
+      .v-code { font-size: 15pt; font-weight: bold; letter-spacing: 2px; direction: ltr; color: #0a1f44; margin: 4px 0 8px; }
+      .v-instructions { font-size: 7.5pt; color: #4A5A50; line-height: 1.5; text-align: right; }
+    </style></head>
+    <body><div class="v-grid">${cardsHtml}</div></body></html>`;
+}
+
+function printGeneratedCards() {
+  if (!lastGeneratedCodes) return;
+  const html = buildVoucherCardsPrintHtml(lastGeneratedCodes.codes, lastGeneratedCodes.productTitle);
+  openPrintWindow(html);
+}
+
+async function disableVoucherCodeAction() {
+  const code = document.getElementById("disableCodeInput").value.trim();
+  if (!code) { showError("اكتب الكود المطلوب تعطيله."); return; }
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${VOUCHER_WORKER_URL}/disable-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ code }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) {
+      const map = {
+        invalid_code: "الكود غير موجود.",
+        already_bound: "الكود ده اتفعّل بالفعل، مينفعش يتعطل.",
+        not_allowed: "الكود ده مش تابع لك.",
+      };
+      throw new Error(map[data.error] || "تعذر تعطيل الكود.");
+    }
+    showSuccess("تم تعطيل الكود بنجاح.");
+    document.getElementById("disableCodeInput").value = "";
+  } catch (err) {
+    showError(err.message || "تعذر تعطيل الكود.");
   }
 }
 
@@ -2475,10 +2917,12 @@ function switchTab(tab) {
   document.getElementById("viewExams").style.display = tab === "exams" ? "block" : "none";
   document.getElementById("viewStats").style.display = tab === "stats" ? "block" : "none";
   document.getElementById("viewTorail").style.display = tab === "torail" ? "block" : "none";
+  document.getElementById("viewProducts").style.display = tab === "products" ? "block" : "none";
   document.getElementById("tabStudentsBtn").classList.toggle("active", tab === "students");
   document.getElementById("tabExamsBtn").classList.toggle("active", tab === "exams");
   document.getElementById("tabStatsBtn").classList.toggle("active", tab === "stats");
   document.getElementById("tabTorailBtn").classList.toggle("active", tab === "torail");
+  document.getElementById("tabProductsBtn").classList.toggle("active", tab === "products");
   if (tab === "exams") {
     try { localStorage.setItem("examsLastSeen", Date.now().toString()); } catch (e) {}
     updateExamsBadge();
@@ -2488,6 +2932,9 @@ function switchTab(tab) {
   }
   if (tab === "torail") {
     renderTorail();
+  }
+  if (tab === "products") {
+    loadProductsOnce();
   }
 }
 

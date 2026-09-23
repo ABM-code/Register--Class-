@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#16302B">
+<title>محتواي</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  * { box-sizing: border-box; }
+  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+  h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
+  p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
+  .card { background: #F5F1E6; border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+  .product-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; margin-bottom: 0.2rem; }
+  .product-status { font-size: 0.78rem; color: #6B6B60; margin-bottom: 0.8rem; }
+  .product-status.expired { color: #C15B3C; font-weight: 600; }
+  .item-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(0,0,0,0.08); }
+  .item-row:last-child { border-bottom: none; }
+  .item-title { font-weight: 500; font-size: 0.92rem; }
+  button { font-family: inherit; background: var(--accent); color: #1B2420; border: none; border-radius: 10px; padding: 0.5rem 0.9rem; font-weight: 700; font-size: 0.82rem; cursor: pointer; width: auto; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .link-btn { background: none; box-shadow: none; color: #4A5A50; font-weight: 600; font-size: 0.85rem; padding: 0.5rem; width: 100%; }
+  #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 9px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
+  .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
+  .mat-video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 10px; overflow: hidden; margin: 0.5rem 0; }
+  .mat-video-wrap iframe { position: absolute; top: 0; right: 0; width: 100%; height: 100%; border: none; }
+  .mat-image { width: 100%; border-radius: 10px; display: block; margin: 0.5rem 0; }
+  .mat-pdf-link { display: block; text-align: center; background: #3F6B4A; color: #F5F1E6 !important; text-decoration: none; padding: 0.7rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; margin: 0.5rem 0; }
+  .q-card { border-right: 4px solid transparent; }
+  .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.7rem; unicode-bidi: plaintext; text-align: start; }
+  .passage { background: #EAEAE4; border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; font-size: 0.9rem; line-height: 1.6; unicode-bidi: plaintext; text-align: start; }
+  .option-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.8rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; margin-bottom: 0.5rem; cursor: pointer; background: #FFFDF8; }
+  .option-row.selected { border-color: var(--accent); background: #FBF3DF; }
+  .option-row span { unicode-bidi: plaintext; text-align: start; flex: 1; }
+  input[type=text] { width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15); background: #FFFDF8; font-size: 0.95rem; font-family: inherit; }
+  .review-correct { border-right-color: #5E9468; }
+  .review-wrong { border-right-color: #C15B3C; }
+  .result-score { font-family: 'Fraunces', serif; font-size: 2.2rem; font-weight: 700; color: #3F6B4A; text-align: center; margin: 0.3rem 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="pageTitle">محتواي</h1>
+  <p class="sub" id="pageSub">كل المنتجات اللي فعّلتها بالأكواد</p>
+  <div id="errorBox"></div>
+  <div id="content"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
+const firebaseConfig = {
+  apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
+  authDomain: "register-class-302e6.firebaseapp.com",
+  projectId: "register-class-302e6",
+  storageBucket: "register-class-302e6.firebasestorage.app",
+  messagingSenderId: "230991294181",
+  appId: "1:230991294181:web:167cb0a370c68b6a6f6e0c"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+function escapeHtml(s) {
+  return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function showError(msg) {
+  const box = document.getElementById("errorBox");
+  box.textContent = msg; box.style.display = "block";
+}
+function clearError() { document.getElementById("errorBox").style.display = "none"; }
+
+let myAccess = [];
+let currentExam = null; // { examId, title, questions }
+let currentAnswers = {};
+
+async function loadMyAccess() {
+  const content = document.getElementById("content");
+  content.innerHTML = `<div class="loading">جاري تحميل محتواك...</div>`;
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/my-access`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error("load_failed");
+    myAccess = data.access || [];
+    renderAccessList();
+  } catch (err) {
+    content.innerHTML = "";
+    showError("تعذر تحميل محتواك. تأكد من اتصالك بالإنترنت وحاول تاني.");
+  }
+}
+
+function renderAccessList() {
+  clearError();
+  const content = document.getElementById("content");
+  if (myAccess.length === 0) {
+    content.innerHTML = `<div class="card" style="text-align:center; color:#6B6B60;">لسه معندكش أي منتج مفعّل.</div>
+      <a href="redeem.html" style="display:block; text-align:center; color:#F5F1E6; margin-top:1rem; font-size:0.9rem;">تفعيل كود جديد</a>`;
+    return;
+  }
+  content.innerHTML = myAccess.map(acc => {
+    const statusHtml = acc.status === "expired"
+      ? `<div class="product-status expired">⚠️ انتهت مدة الوصول${acc.expiresAt ? " في " + new Date(acc.expiresAt).toLocaleDateString('ar-EG') : ""}</div>`
+      : (acc.expiresAt ? `<div class="product-status">الوصول متاح لحد ${new Date(acc.expiresAt).toLocaleDateString('ar-EG')}</div>` : `<div class="product-status">وصول دائم</div>`);
+    const itemsHtml = acc.items.map(it => renderItemRow(it, acc.status === "expired")).join("");
+    return `<div class="card">
+      <div class="product-title">${escapeHtml(acc.productTitle)}</div>
+      ${statusHtml}
+      ${itemsHtml}
+    </div>`;
+  }).join("") + `<a href="redeem.html" style="display:block; text-align:center; color:#F5F1E6; margin-top:0.5rem; font-size:0.9rem;">تفعيل كود جديد</a>`;
+
+  content.querySelectorAll("[data-exam-open]").forEach(btn => {
+    btn.addEventListener("click", () => openExam(btn.getAttribute("data-exam-open")));
+  });
+}
+
+function renderItemRow(it, isExpired) {
+  if (it.type === "material") {
+    if (isExpired || it.unavailable || !it.url) {
+      return `<div class="item-row"><span class="item-title">${escapeHtml(it.title)}</span><span style="color:#9C4B32; font-size:0.8rem;">غير متاح</span></div>`;
+    }
+    let bodyHtml = "";
+    if (it.mediaType === "video") bodyHtml = `<div class="mat-video-wrap"><iframe src="${escapeHtml(it.url)}" allowfullscreen></iframe></div>`;
+    else if (it.mediaType === "image") bodyHtml = `<img class="mat-image" src="${escapeHtml(it.url)}" alt="${escapeHtml(it.title)}">`;
+    else if (it.mediaType === "pdf") bodyHtml = `<a class="mat-pdf-link" href="${escapeHtml(it.url)}" target="_blank" rel="noopener">📄 افتح ملف الـPDF</a>`;
+    return `<div><div class="item-row"><span class="item-title">${escapeHtml(it.title)}</span></div>${bodyHtml}</div>`;
+  }
+  if (it.type === "exam") {
+    if (isExpired) {
+      return `<div class="item-row"><span class="item-title">${escapeHtml(it.title)}</span><span style="color:#9C4B32; font-size:0.8rem;">غير متاح</span></div>`;
+    }
+    const actionHtml = it.submitted
+      ? `<button data-exam-open="${it.id}" style="background:#3F6B4A; color:#F5F1E6;">${it.score}/${it.total}</button>`
+      : `<button data-exam-open="${it.id}">ابدأ الامتحان</button>`;
+    return `<div class="item-row"><span class="item-title">${escapeHtml(it.title)}</span>${actionHtml}</div>`;
+  }
+  return "";
+}
+
+async function openExam(examId) {
+  const content = document.getElementById("content");
+  content.innerHTML = `<div class="loading">جاري تحميل الامتحان...</div>`;
+  clearError();
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/voucher-exam?examId=${encodeURIComponent(examId)}`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || "load_failed");
+    if (data.alreadySubmitted) {
+      renderExamReview(data);
+      return;
+    }
+    currentExam = { examId, title: data.title, questions: data.questions };
+    currentAnswers = {};
+    renderExamForm();
+  } catch (err) {
+    showError("تعذر تحميل الامتحان. حاول تاني.");
+    renderAccessList();
+  }
+}
+
+function renderExamForm() {
+  const content = document.getElementById("content");
+  const backBtn = `<button class="link-btn" id="backBtn">← رجوع لمحتواي</button>`;
+  const questionsHtml = currentExam.questions.map((q, i) => {
+    const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
+    let bodyHtml = "";
+    if (q.type === "mcq" || q.type === "translation_mcq") {
+      bodyHtml = (q.options || []).map((opt, oi) => `
+        <div class="option-row" data-q="${i}" data-opt="${oi}">
+          <input type="radio" name="q_${i}" ${currentAnswers[i] === oi ? "checked" : ""}>
+          <span>${escapeHtml(opt)}</span>
+        </div>`).join("");
+    } else {
+      bodyHtml = `<input type="text" data-q-text="${i}" value="${escapeHtml(currentAnswers[i] || "")}" placeholder="اكتب إجابتك هنا">`;
+    }
+    return `<div class="card q-card">
+      <div class="q-title">${i + 1}. ${escapeHtml(q.prompt)}</div>
+      ${passageHtml}${bodyHtml}
+    </div>`;
+  }).join("");
+
+  content.innerHTML = `${backBtn}
+    <h2 style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0.5rem 0 1rem;">${escapeHtml(currentExam.title)}</h2>
+    ${questionsHtml}
+    <button id="submitExamBtn" style="width:100%; padding:0.8rem;">تسليم الإجابات</button>`;
+
+  document.getElementById("backBtn").addEventListener("click", renderAccessList);
+  content.querySelectorAll(".option-row").forEach(row => {
+    row.addEventListener("click", () => {
+      const qi = Number(row.dataset.q);
+      const oi = Number(row.dataset.opt);
+      currentAnswers[qi] = oi;
+      renderExamForm();
+    });
+  });
+  content.querySelectorAll("[data-q-text]").forEach(input => {
+    input.addEventListener("input", () => {
+      currentAnswers[Number(input.dataset.qText)] = input.value;
+    });
+  });
+  document.getElementById("submitExamBtn").addEventListener("click", submitCurrentExam);
+}
+
+async function submitCurrentExam() {
+  const btn = document.getElementById("submitExamBtn");
+  btn.disabled = true;
+  btn.textContent = "جاري التسليم...";
+  const answers = currentExam.questions.map((q, i) => ({ questionIndex: i, given: currentAnswers[i] ?? null }));
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/voucher-submit-result`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ examId: currentExam.examId, answers }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error("submit_failed");
+    openExam(currentExam.examId);
+  } catch (err) {
+    showError("تعذر تسليم الإجابات. حاول تاني.");
+    btn.disabled = false;
+    btn.textContent = "تسليم الإجابات";
+  }
+}
+
+function renderExamReview(data) {
+  const backBtn = `<button class="link-btn" id="backBtn">← رجوع لمحتواي</button>`;
+  const questions = data.questions || [];
+  const answers = data.answers || [];
+  const itemsHtml = questions.map((q, i) => {
+    const ad = answers.find(a => a.questionIndex === i) || {};
+    let givenText = "", correctText = "";
+    if (q.type === "mcq" || q.type === "translation_mcq") {
+      const opts = q.options || [];
+      givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
+      correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
+    } else {
+      givenText = ad.given || "(لم يُجب)";
+      correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
+    }
+    return `<div class="card q-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
+      <div class="q-title">${i + 1}. ${escapeHtml(q.prompt)}</div>
+      <div style="font-size:0.88rem; margin-bottom:0.3rem;">${ad.correct ? '✓' : '✗'} إجابتك: <strong>${escapeHtml(givenText)}</strong></div>
+      ${!ad.correct ? `<div style="font-size:0.88rem; color:#3F6B4A;">الإجابة الصحيحة: <strong>${escapeHtml(correctText)}</strong></div>` : ""}
+    </div>`;
+  }).join("");
+
+  document.getElementById("content").innerHTML = `${backBtn}
+    <div class="card">
+      <div class="result-score">${data.score} / ${data.total}</div>
+    </div>
+    ${itemsHtml}`;
+  document.getElementById("backBtn").addEventListener("click", renderAccessList);
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) loadMyAccess();
+  else window.location.href = "redeem.html";
+});
+</script>
+</body>
+</html>
