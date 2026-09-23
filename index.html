@@ -919,6 +919,12 @@
         <input class="reg-input" type="datetime-local" id="examDeadlineInput">
         <p style="font-size:0.78rem; color:#9FB8AD; margin:0.3rem 0 0;">بعد الموعد ده، الامتحان يقفل تلقائي ومحدش يقدر يفتحه. سيبه فاضي لو مش عايز موعد نهائي.</p>
       </div>
+      <div class="field-group">
+        <label class="checkbox-row">
+          <input type="checkbox" id="examPaidOnlyInput">
+          <span>🔒 امتحان مدفوع — يتطلب شراء كود وصول (مش هيفتح مجانًا لطلابك بالـPIN)</span>
+        </label>
+      </div>
       <div class="ai-import-box" id="aiImportBox">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.5rem;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/></svg>
@@ -3844,11 +3850,12 @@ function renderExamsList() {
       const statusBadge = isClosed
         ? `<span class="mini-badge" style="background:#F6E7E2;color:#9C4B32;">🔒 مقفول${deadlinePassed && !ex.closedManually ? ' (انتهى الموعد)' : ''}</span>`
         : (ex.deadline ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">🔓 مفتوح — يقفل ${deadlineText}</span>` : "");
+      const paidBadge = ex.paidOnly ? `<span class="mini-badge" style="background:#FBF3DF;color:#8A6A1F;">💰 مدفوع — مش مجاني لطلاب الـPIN</span>` : "";
       return `
       <div class="exam-card">
         <div class="exam-card-title">${escapeHtml(ex.title)}${newBadgeHtml}</div>
         <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${isOldUnloadedExam ? 'دوس "النتائج" لعرض العدد' : resultCount + ' إجابة مسجلة'}${ex.timeLimitMinutes ? ' — ⏱ ' + ex.timeLimitMinutes + ' دقيقة' : ''}</div>
-        ${statusBadge ? `<div style="margin-bottom:0.6rem;">${statusBadge}</div>` : ""}
+        ${statusBadge || paidBadge ? `<div style="margin-bottom:0.6rem; display:flex; gap:0.4rem; flex-wrap:wrap;">${statusBadge}${paidBadge}</div>` : ""}
         <div class="exam-card-actions">
           <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
           <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
@@ -4028,6 +4035,7 @@ function openExamBuilder() {
   document.getElementById("examStageInput").value = "";
   document.getElementById("examTimeLimitInput").value = "";
   document.getElementById("examDeadlineInput").value = "";
+  document.getElementById("examPaidOnlyInput").checked = false;
   document.getElementById("questionsBuilder").innerHTML = "";
   document.getElementById("aiImportStatus").style.display = "none";
   document.getElementById("examsListView").style.display = "none";
@@ -4056,6 +4064,7 @@ function editExam(examId) {
   document.getElementById("examStageInput").value = ex.stage || "";
   document.getElementById("examTimeLimitInput").value = ex.timeLimitMinutes || "";
   document.getElementById("examDeadlineInput").value = ex.deadline ? isoToLocalInputValue(ex.deadline) : "";
+  document.getElementById("examPaidOnlyInput").checked = !!ex.paidOnly;
   document.getElementById("aiImportStatus").style.display = "none";
   document.getElementById("examsListView").style.display = "none";
   document.getElementById("examBuilderView").style.display = "block";
@@ -4576,6 +4585,7 @@ async function saveExam() {
   const timeLimitMinutes = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
   const deadlineRaw = document.getElementById("examDeadlineInput").value;
   const deadline = deadlineRaw ? new Date(deadlineRaw).toISOString() : null;
+  const paidOnly = document.getElementById("examPaidOnlyInput").checked;
   if (!title) { showError("لازم تكتب عنوان للامتحان."); return; }
   if (!stage) { showError("لازم تختار المرحلة."); return; }
   if (timeLimitRaw && (isNaN(timeLimitMinutes) || timeLimitMinutes < 1)) { showError("مدة الامتحان لازم تكون رقم صحيح أكبر من صفر."); return; }
@@ -4591,7 +4601,7 @@ async function saveExam() {
   }
   try {
     const examData = {
-      title, stage, timeLimitMinutes, deadline,
+      title, stage, timeLimitMinutes, deadline, paidOnly,
       teacherId: currentTeacherId,
       questions: currentBuilderQuestions.map(q => ({
         type: q.type, passage: q.passage || "", prompt: q.prompt,
