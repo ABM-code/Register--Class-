@@ -2393,6 +2393,21 @@ function sendWhatsappReceipt(s, payment) {
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
+function openWhatsappFor(studentId, target) {
+  const s = students.find(x => x.id === studentId) || deletedStudents.find(x => x.id === studentId);
+  if (!s) return;
+  const phone = target === "parent" ? s.parentPhone : s.studentPhone;
+  const waNumber = formatPhoneForWhatsapp(phone);
+  if (!waNumber) {
+    showError(target === "parent" ? "مفيش رقم ولي أمر مسجل لهذا الطالب." : "مفيش رقم طالب مسجل لهذا الطالب.");
+    return;
+  }
+  const message = target === "parent"
+    ? `تحية طيبة، معاك ${TEACHER_NAME} بخصوص الطالب/ة ${s.name}.`
+    : `أهلاً ${s.name}، معاك ${TEACHER_NAME}.`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  window.open(url, "_blank");
+}
 async function addPayment(studentId) {
   const dateInput = document.getElementById("newPayDate_" + studentId);
   const amountInput = document.getElementById("newPayAmount_" + studentId);
@@ -5612,8 +5627,8 @@ function render() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6B60" stroke-width="2">${isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>'}</svg>
         </div>
         <div class="card-details" style="display:${isOpen ? 'block' : 'none'};">
-          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}</span></div>
-          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}${s.studentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','student')">واتساب</button>` : ""}</span></div>
+          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}${s.parentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','parent')">واتساب</button>` : ""}</span></div>
           <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
             <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
             <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
@@ -5805,8 +5820,8 @@ function renderTorail() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6B6B60" stroke-width="2">${isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>'}</svg>
         </div>
         <div class="card-details" style="display:${isOpen ? 'block' : 'none'};">
-          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}</span></div>
-          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}</span></div>
+          <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}${s.studentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','student')">واتساب</button>` : ""}</span></div>
+          <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}${s.parentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','parent')">واتساب</button>` : ""}</span></div>
           <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
             <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
             <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
