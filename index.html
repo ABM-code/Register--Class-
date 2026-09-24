@@ -737,7 +737,7 @@
     <button onclick="printStageQrCards(document.getElementById('attStageSelect').value, 'normal')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;">🖨️ طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
   </div>
 
-  <button id="qrAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleQrAttendanceSection()">
+  <button id="qrAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleQrAttendanceSection('normal')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14h.01M14 21h.01M21 21h.01"/></svg>
     📷 تسجيل حضور بمسح QR
     <svg id="qrAttendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
@@ -748,7 +748,7 @@
       <input type="date" class="reg-input" id="qrAttDateInput">
     </div>
     <div class="field-group">
-      <button type="button" id="qrCameraToggleBtn" onclick="toggleQrCameraScan()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
+      <button type="button" id="qrCameraToggleBtn" onclick="toggleQrCameraScan('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
       <div id="qrCameraBox" style="display:none; margin-top:0.6rem; position:relative; border-radius:10px; overflow:hidden; background:#000;">
         <video id="qrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
         <canvas id="qrCameraCanvas" style="display:none;"></canvas>
@@ -757,7 +757,7 @@
     </div>
     <div class="field-group">
       <label>أو وجّه جهاز قراءة QR خارجي هنا وامسح كارنيه الطالب (سيب الحقل ده مفعّل طول وقت المسح)</label>
-      <input type="text" class="reg-input" id="qrScanInput" placeholder="جاهز للمسح..." autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); handleQrScanInput(this); }">
+      <input type="text" class="reg-input" id="qrScanInput" placeholder="جاهز للمسح..." autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); handleQrScanInput(this, 'normal'); }">
     </div>
     <div id="qrScanFeedback" style="display:none; text-align:center; padding:0.8rem; border-radius:10px; margin-top:0.7rem; font-weight:700;"></div>
     <div class="tools-group-title" style="margin-top:1rem;">✓ الحاضرين بالمسح النهاردة (<span id="qrScanCount">0</span>)</div>
@@ -1360,6 +1360,33 @@
     <div id="torailAttendanceStudentsList"></div>
     <button onclick="saveAttendanceDay('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.7rem;">💾 حفظ الحضور</button>
     <button onclick="printStageQrCards(document.getElementById('torailAttStageSelect').value, 'torail')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;">🖨️ طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
+  </div>
+
+  <button id="torailQrAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleQrAttendanceSection('torail')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14h.01M14 21h.01M21 21h.01"/></svg>
+    📷 تسجيل حضور بمسح QR
+    <svg id="torailQrAttendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div id="torailQrAttendanceSection" style="display:none;">
+    <div class="field-group">
+      <label>تاريخ الحضور</label>
+      <input type="date" class="reg-input" id="torailQrAttDateInput">
+    </div>
+    <div class="field-group">
+      <button type="button" id="torailQrCameraToggleBtn" onclick="toggleQrCameraScan('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
+      <div id="torailQrCameraBox" style="display:none; margin-top:0.6rem; position:relative; border-radius:10px; overflow:hidden; background:#000;">
+        <video id="torailQrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
+        <canvas id="torailQrCameraCanvas" style="display:none;"></canvas>
+      </div>
+      <p id="torailQrCameraError" style="display:none; color:#C15B3C; font-size:0.82rem; margin-top:0.4rem;"></p>
+    </div>
+    <div class="field-group">
+      <label>أو وجّه جهاز قراءة QR خارجي هنا وامسح كارنيه الطالب (سيب الحقل ده مفعّل طول وقت المسح)</label>
+      <input type="text" class="reg-input" id="torailQrScanInput" placeholder="جاهز للمسح..." autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); handleQrScanInput(this, 'torail'); }">
+    </div>
+    <div id="torailQrScanFeedback" style="display:none; text-align:center; padding:0.8rem; border-radius:10px; margin-top:0.7rem; font-weight:700;"></div>
+    <div class="tools-group-title" style="margin-top:1rem;">✓ الحاضرين بالمسح النهاردة (<span id="torailQrScanCount">0</span>)</div>
+    <div id="torailQrScanLog"></div>
   </div>
 
   <div id="torailErrorBox"></div>
@@ -2199,23 +2226,42 @@ function printStageQrCards(stage, group) {
 }
 
 // ============ المسح المباشر (Check-in) ============
-let qrScanLog = [];
+let qrScanLog = { normal: [], torail: [] };
 
-function toggleQrAttendanceSection() {
-  const section = document.getElementById("qrAttendanceSection");
-  const btn = document.getElementById("qrAttendanceToggleBtn");
+function getQrElIds(group) {
+  const p = group === "torail" ? "torail" : "";
+  return {
+    toggleBtn: p ? "torailQrAttendanceToggleBtn" : "qrAttendanceToggleBtn",
+    section: p ? "torailQrAttendanceSection" : "qrAttendanceSection",
+    dateInput: p ? "torailQrAttDateInput" : "qrAttDateInput",
+    cameraToggleBtn: p ? "torailQrCameraToggleBtn" : "qrCameraToggleBtn",
+    cameraBox: p ? "torailQrCameraBox" : "qrCameraBox",
+    cameraVideo: p ? "torailQrCameraVideo" : "qrCameraVideo",
+    cameraCanvas: p ? "torailQrCameraCanvas" : "qrCameraCanvas",
+    cameraError: p ? "torailQrCameraError" : "qrCameraError",
+    scanInput: p ? "torailQrScanInput" : "qrScanInput",
+    feedback: p ? "torailQrScanFeedback" : "qrScanFeedback",
+    count: p ? "torailQrScanCount" : "qrScanCount",
+    log: p ? "torailQrScanLog" : "qrScanLog",
+  };
+}
+
+function toggleQrAttendanceSection(group) {
+  const ids = getQrElIds(group);
+  const section = document.getElementById(ids.section);
+  const btn = document.getElementById(ids.toggleBtn);
   const isOpen = section.style.display === "block";
   section.style.display = isOpen ? "none" : "block";
   btn.classList.toggle("open", !isOpen);
   if (!isOpen) {
-    const dateInput = document.getElementById("qrAttDateInput");
+    const dateInput = document.getElementById(ids.dateInput);
     if (!dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
-    qrScanLog = [];
-    renderQrScanLog();
-    document.getElementById("qrScanFeedback").style.display = "none";
-    setTimeout(() => document.getElementById("qrScanInput").focus(), 100);
+    qrScanLog[group] = [];
+    renderQrScanLog(group);
+    document.getElementById(ids.feedback).style.display = "none";
+    setTimeout(() => document.getElementById(ids.scanInput).focus(), 100);
   } else {
-    stopQrCamera();
+    stopQrCamera(group);
   }
 }
 
@@ -2257,27 +2303,29 @@ async function markQrAttendance(studentId, dateStr) {
     }
   }
   delete attendanceSummaryCache[`${group}|${stage}`];
-  return { ok: true, scanTimeIso };
+  return { ok: true, scanTimeIso, group };
 }
 
-function showQrFeedback(message, isError) {
-  const el = document.getElementById("qrScanFeedback");
+function showQrFeedback(message, isError, group) {
+  const el = document.getElementById(getQrElIds(group).feedback);
   el.textContent = message;
   el.style.display = "block";
   el.style.background = isError ? "#F6E7E2" : "#EAF2E7";
   el.style.color = isError ? "#9C4B32" : "#3F6B4A";
 }
 
-function renderQrScanLog() {
-  const countEl = document.getElementById("qrScanCount");
-  if (countEl) countEl.textContent = qrScanLog.length;
-  const box = document.getElementById("qrScanLog");
+function renderQrScanLog(group) {
+  const ids = getQrElIds(group);
+  const log = qrScanLog[group] || [];
+  const countEl = document.getElementById(ids.count);
+  if (countEl) countEl.textContent = log.length;
+  const box = document.getElementById(ids.log);
   if (!box) return;
-  if (qrScanLog.length === 0) {
+  if (log.length === 0) {
     box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">لسه محدش اتمسح النهاردة.</p>`;
     return;
   }
-  box.innerHTML = qrScanLog.map(item => `
+  box.innerHTML = log.map(item => `
     <div class="result-row">
       <div class="result-row-name">${escapeHtml(item.name)}${item.stage ? ` <span class="stage-tag">${escapeHtml(item.stage)}</span>` : ''}</div>
       <div class="result-row-date">${item.time}</div>
@@ -2285,100 +2333,129 @@ function renderQrScanLog() {
   `).join("");
 }
 
-async function handleQrScanInput(inputEl) {
+async function handleQrScanInput(inputEl, group) {
   const raw = inputEl.value;
   inputEl.value = "";
-  await processAttendanceCode(raw);
+  await processAttendanceCode(raw, group);
 }
 
 // نفس منطق معالجة كود الحضور، مستخدم من المدخل الخاص بجهاز المسح الخارجي
-// ومن كاميرا الجهاز في نفس الوقت، عشان أي تعديل مستقبلي يتطبق على الاتنين
-// من غير تكرار أو تعارض بينهم.
-let qrScanProcessing = new Set();
-async function processAttendanceCode(raw) {
-  const dateStr = document.getElementById("qrAttDateInput").value || new Date().toISOString().slice(0, 10);
+// ومن كاميرا الجهاز في نفس الوقت (لطلاب الفصل العادي أو توريل)، عشان أي
+// تعديل مستقبلي يتطبق على الكل من غير تكرار أو تعارض بينهم. لاحظ إن الطالب
+// بيتحدد فعليًا من كود الـQR نفسه (student.group)، والـgroup هنا بس بيحدد
+// شاشة الإدخال اللي المسح جاي منها (لعرض النتيجة في المكان الصح).
+let qrScanProcessing = { normal: new Set(), torail: new Set() };
+async function processAttendanceCode(raw, group) {
+  const ids = getQrElIds(group);
+  const dateStr = document.getElementById(ids.dateInput).value || new Date().toISOString().slice(0, 10);
   const studentId = parseAttendanceQrCode(raw);
   if (!studentId) {
-    showQrFeedback("كود غير معروف أو تابع لتطبيق تاني — جرب تاني.", true);
+    showQrFeedback("كود غير معروف أو تابع لتطبيق تاني — جرب تاني.", true, group);
     return;
   }
   const student = students.find(s => s.id === studentId);
   if (!student) {
-    showQrFeedback("الطالب ده مش موجود (يمكن اتحذف). جرب كود تاني.", true);
+    showQrFeedback("الطالب ده مش موجود (يمكن اتحذف). جرب كود تاني.", true, group);
     return;
   }
-  if (qrScanLog.some(item => item.id === studentId)) {
-    showQrFeedback(`${student.name} اتسجل حضوره بالفعل النهاردة ✓`, false);
+  if (qrScanLog[group].some(item => item.id === studentId)) {
+    showQrFeedback(`${student.name} اتسجل حضوره بالفعل النهاردة ✓`, false, group);
     return;
   }
   // قفل مؤقت (مش بس فحص qrScanLog) عشان لقطات كاميرا متتالية سريعة لنفس
   // الطالب ما تبعتش أكتر من طلب حفظ لـFirestore في نفس اللحظة.
-  if (qrScanProcessing.has(studentId)) return;
-  qrScanProcessing.add(studentId);
+  if (qrScanProcessing[group].has(studentId)) return;
+  qrScanProcessing[group].add(studentId);
   try {
     const result = await markQrAttendance(studentId, dateStr);
     if (!result.ok) {
-      showQrFeedback("تعذر تسجيل الحضور. تأكد من الاتصال بالإنترنت.", true);
+      showQrFeedback("تعذر تسجيل الحضور. تأكد من الاتصال بالإنترنت.", true, group);
       return;
     }
-    qrScanLog.unshift({ id: studentId, name: student.name, stage: student.stage, time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) });
-    renderQrScanLog();
-    showQrFeedback(`✅ تم تسجيل حضور: ${student.name}`, false);
+    qrScanLog[group].unshift({ id: studentId, name: student.name, stage: student.stage, time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) });
+    renderQrScanLog(group);
+    showQrFeedback(`✅ تم تسجيل حضور: ${student.name}`, false, group);
   } finally {
-    qrScanProcessing.delete(studentId);
+    qrScanProcessing[group].delete(studentId);
   }
 }
 
 // ============ المسح بكاميرا الجهاز ============
-let qrCameraStream = null;
-let qrCameraRafId = null;
+let qrCameraStream = { normal: null, torail: null };
+let qrCameraRafId = { normal: null, torail: null };
 
-function toggleQrCameraScan() {
-  if (qrCameraStream) {
-    stopQrCamera();
+function toggleQrCameraScan(group) {
+  if (qrCameraStream[group]) {
+    stopQrCamera(group);
   } else {
-    startQrCamera();
+    startQrCamera(group);
   }
 }
 
-async function startQrCamera() {
-  const errEl = document.getElementById("qrCameraError");
+async function startQrCamera(group) {
+  const ids = getQrElIds(group);
+  const errEl = document.getElementById(ids.cameraError);
   errEl.style.display = "none";
   if (typeof jsQR !== "function") {
     errEl.textContent = "مكتبة قراءة الـQR لم تُحمّل. تأكد من اتصالك بالإنترنت وحاول تاني.";
     errEl.style.display = "block";
     return;
   }
-  try {
-    qrCameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-  } catch (err) {
-    errEl.textContent = "تعذر فتح الكاميرا. تأكد إنك سمحت للمتصفح بالوصول للكاميرا.";
+  // الكاميرا في المتصفح متاحة بس على HTTPS (أو localhost وقت التطوير).
+  // لو التطبيق اتفتح كملف مباشرة (file://) أو عبر رابط http عادي، المتصفح
+  // بيقفل الوصول للكاميرا تمامًا حتى لو المستخدم وافق — والسبب مش "صلاحيات"
+  // في الحالة دي، فبنوضحه بشكل منفصل بدل ما نديه نفس رسالة رفض الإذن.
+  const isSecure = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  if (!isSecure) {
+    errEl.textContent = "الكاميرا متاحة بس لما تفتح التطبيق من رابط https (رابط GitHub Pages بتاعك)، مش من ملف مفتوح مباشرة على الجهاز.";
     errEl.style.display = "block";
     return;
   }
-  const video = document.getElementById("qrCameraVideo");
-  video.srcObject = qrCameraStream;
-  await video.play();
-  document.getElementById("qrCameraBox").style.display = "block";
-  document.getElementById("qrCameraToggleBtn").textContent = "⏹️ إيقاف الكاميرا";
-  qrCameraRafId = requestAnimationFrame(tickQrCamera);
-}
-
-function stopQrCamera() {
-  if (qrCameraRafId) cancelAnimationFrame(qrCameraRafId);
-  qrCameraRafId = null;
-  if (qrCameraStream) {
-    qrCameraStream.getTracks().forEach(track => track.stop());
-    qrCameraStream = null;
+  if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
+    errEl.textContent = "المتصفح ده مش بيدعم فتح الكاميرا من صفحة الويب. جرّب متصفح حديث زي Chrome أو Safari.";
+    errEl.style.display = "block";
+    return;
   }
-  document.getElementById("qrCameraBox").style.display = "none";
-  document.getElementById("qrCameraToggleBtn").textContent = "📷 مسح بكاميرا الجهاز";
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch (err) {
+    const messages = {
+      NotAllowedError: "تم رفض إذن الكاميرا. افتح إعدادات الموقع في المتصفح وسمح بالوصول للكاميرا، وبعدين حاول تاني.",
+      NotFoundError: "مفيش كاميرا متاحة على الجهاز ده.",
+      NotReadableError: "الكاميرا مستخدمة في تطبيق تاني دلوقتي. اقفل أي تطبيق بيستخدم الكاميرا وجرّب تاني.",
+      OverconstrainedError: "تعذر ضبط إعدادات الكاميرا المطلوبة. جرّب تاني.",
+    };
+    errEl.textContent = messages[err.name] || `تعذر فتح الكاميرا (${err.name || "خطأ غير معروف"}). تأكد إنك سمحت للمتصفح بالوصول للكاميرا.`;
+    errEl.style.display = "block";
+    return;
+  }
+  qrCameraStream[group] = stream;
+  const video = document.getElementById(ids.cameraVideo);
+  video.srcObject = stream;
+  await video.play();
+  document.getElementById(ids.cameraBox).style.display = "block";
+  document.getElementById(ids.cameraToggleBtn).textContent = "⏹️ إيقاف الكاميرا";
+  qrCameraRafId[group] = requestAnimationFrame(() => tickQrCamera(group));
 }
 
-function tickQrCamera() {
-  if (!qrCameraStream) return;
-  const video = document.getElementById("qrCameraVideo");
-  const canvas = document.getElementById("qrCameraCanvas");
+function stopQrCamera(group) {
+  const ids = getQrElIds(group);
+  if (qrCameraRafId[group]) cancelAnimationFrame(qrCameraRafId[group]);
+  qrCameraRafId[group] = null;
+  if (qrCameraStream[group]) {
+    qrCameraStream[group].getTracks().forEach(track => track.stop());
+    qrCameraStream[group] = null;
+  }
+  document.getElementById(ids.cameraBox).style.display = "none";
+  document.getElementById(ids.cameraToggleBtn).textContent = "📷 مسح بكاميرا الجهاز";
+}
+
+function tickQrCamera(group) {
+  if (!qrCameraStream[group]) return;
+  const ids = getQrElIds(group);
+  const video = document.getElementById(ids.cameraVideo);
+  const canvas = document.getElementById(ids.cameraCanvas);
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -2388,11 +2465,11 @@ function tickQrCamera() {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const code = jsQR(imageData.data, imageData.width, imageData.height);
       if (code && code.data) {
-        processAttendanceCode(code.data);
+        processAttendanceCode(code.data, group);
       }
     } catch (e) { /* إطار غير صالح للقراءة — نتجاهله ونكمل على الإطار اللي بعده */ }
   }
-  qrCameraRafId = requestAnimationFrame(tickQrCamera);
+  qrCameraRafId[group] = requestAnimationFrame(() => tickQrCamera(group));
 }
 
 function fmtDate(d) {
