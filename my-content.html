@@ -28,7 +28,7 @@
   .mat-video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 10px; overflow: hidden; margin: 0.5rem 0; }
   .mat-video-wrap iframe { position: absolute; top: 0; right: 0; width: 100%; height: 100%; border: none; }
   .mat-image { width: 100%; border-radius: 10px; display: block; margin: 0.5rem 0; }
-  .mat-pdf-link { display: block; text-align: center; background: #3F6B4A; color: #F5F1E6 !important; text-decoration: none; padding: 0.7rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; margin: 0.5rem 0; }
+  .mat-pdf-link { display: block; text-align: center; background: #3F6B4A; color: #F5F1E6 !important; text-decoration: none; padding: 0.7rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; margin: 0.5rem 0; border: none; width: 100%; cursor: pointer; font-family: inherit; }
   .q-card { border-right: 4px solid transparent; }
   .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.7rem; unicode-bidi: plaintext; text-align: start; }
   .passage { background: #EAEAE4; border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; font-size: 0.9rem; line-height: 1.6; unicode-bidi: plaintext; text-align: start; }
@@ -72,6 +72,25 @@ function showError(msg) {
   box.textContent = msg; box.style.display = "block";
 }
 function clearError() { document.getElementById("errorBox").style.display = "none"; }
+
+async function openPdfContent(materialId) {
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/content-pdf?materialId=${encodeURIComponent(materialId)}`, {
+      headers: { "Authorization": `Bearer ${idToken}` }
+    });
+    if (!res.ok) throw new Error("failed");
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, "_blank");
+  } catch (err) {
+    showError("تعذر فتح الملف. حاول تاني.");
+  }
+}
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-pdf-id]");
+  if (btn) openPdfContent(btn.dataset.pdfId);
+});
 
 let myAccess = [];
 let currentExam = null; // { examId, title, questions }
@@ -122,13 +141,14 @@ function renderAccessList() {
 
 function renderItemRow(it, isExpired) {
   if (it.type === "material") {
-    if (isExpired || it.unavailable || !it.url) {
+    const hasContent = it.mediaType === "pdf" ? it.hasFile : !!it.url;
+    if (isExpired || it.unavailable || !hasContent) {
       return `<div class="item-row"><span class="item-title">${escapeHtml(it.title)}</span><span style="color:#9C4B32; font-size:0.8rem;">غير متاح</span></div>`;
     }
     let bodyHtml = "";
     if (it.mediaType === "video") bodyHtml = `<div class="mat-video-wrap"><iframe src="${escapeHtml(it.url)}" allowfullscreen></iframe></div>`;
     else if (it.mediaType === "image") bodyHtml = `<img class="mat-image" src="${escapeHtml(it.url)}" alt="${escapeHtml(it.title)}">`;
-    else if (it.mediaType === "pdf") bodyHtml = `<a class="mat-pdf-link" href="${escapeHtml(it.url)}" target="_blank" rel="noopener">📄 افتح ملف الـPDF</a>`;
+    else if (it.mediaType === "pdf") bodyHtml = `<button type="button" class="mat-pdf-link" data-pdf-id="${escapeHtml(it.id)}">📄 افتح ملف الـPDF</button>`;
     return `<div><div class="item-row"><span class="item-title">${escapeHtml(it.title)}</span></div>${bodyHtml}</div>`;
   }
   if (it.type === "exam") {
