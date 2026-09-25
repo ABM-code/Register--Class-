@@ -767,7 +767,7 @@
 
   <button id="absenceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAbsenceLogSection('normal')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 سجل الغياب
+    📋 سجل الحضور والغياب
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="absenceLogSection" style="display:none;">
@@ -800,42 +800,6 @@
       <button type="button" onclick="printAbsenceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
     <button type="button" onclick="sendAbsenceWhatsapp('normal')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="absenceLogSelectedCount">0</span>)</button>
-  </div>
-
-  <button id="attendanceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAttendanceLogSection('normal')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 سجل الحضور
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
-  </button>
-  <div id="attendanceLogSection" style="display:none;">
-    <div class="field-group">
-      <label>المرحلة</label>
-      <select class="reg-input" id="attendanceLogStageSelect">
-        <option value="">— اختر المرحلة —</option>
-        <option value="Prep 1">Prep 1</option>
-        <option value="Prep 2">Prep 2</option>
-        <option value="Prep 3">Prep 3</option>
-        <option value="Sec 1">Sec 1</option>
-        <option value="Sec 2">Sec 2</option>
-        <option value="Sec 3">Sec 3</option>
-      </select>
-    </div>
-    <div style="display:flex; gap:0.6rem;">
-      <div class="field-group" style="flex:1;">
-        <label>من تاريخ</label>
-        <input type="date" class="reg-input" id="attendanceLogFromInput">
-      </div>
-      <div class="field-group" style="flex:1;">
-        <label>إلى تاريخ</label>
-        <input type="date" class="reg-input" id="attendanceLogToInput">
-      </div>
-    </div>
-    <button type="button" onclick="loadAttendanceLog('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
-    <div id="attendanceLogList"></div>
-    <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAttendanceLogExcel('normal')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAttendanceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
-    </div>
   </div>
 
   <div id="errorBox"></div>
@@ -1466,7 +1430,7 @@
 
   <button id="torailAbsenceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAbsenceLogSection('torail')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 سجل الغياب
+    📋 سجل الحضور والغياب
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="torailAbsenceLogSection" style="display:none;">
@@ -1499,42 +1463,6 @@
       <button type="button" onclick="printAbsenceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
     <button type="button" onclick="sendAbsenceWhatsapp('torail')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="torailAbsenceLogSelectedCount">0</span>)</button>
-  </div>
-
-  <button id="torailAttendanceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAttendanceLogSection('torail')">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 سجل الحضور
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
-  </button>
-  <div id="torailAttendanceLogSection" style="display:none;">
-    <div class="field-group">
-      <label>المرحلة</label>
-      <select class="reg-input" id="torailAttendanceLogStageSelect">
-        <option value="">— اختر المرحلة —</option>
-        <option value="Prep 1">Prep 1</option>
-        <option value="Prep 2">Prep 2</option>
-        <option value="Prep 3">Prep 3</option>
-        <option value="Sec 1">Sec 1</option>
-        <option value="Sec 2">Sec 2</option>
-        <option value="Sec 3">Sec 3</option>
-      </select>
-    </div>
-    <div style="display:flex; gap:0.6rem;">
-      <div class="field-group" style="flex:1;">
-        <label>من تاريخ</label>
-        <input type="date" class="reg-input" id="torailAttendanceLogFromInput">
-      </div>
-      <div class="field-group" style="flex:1;">
-        <label>إلى تاريخ</label>
-        <input type="date" class="reg-input" id="torailAttendanceLogToInput">
-      </div>
-    </div>
-    <button type="button" onclick="loadAttendanceLog('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
-    <div id="torailAttendanceLogList"></div>
-    <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAttendanceLogExcel('torail')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAttendanceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
-    </div>
   </div>
 
   <div id="torailErrorBox"></div>
@@ -2358,30 +2286,58 @@ async function loadAbsenceLog(group) {
   }
 }
 
+// بترجع كل طلاب المرحلة دي مع حالة حضور/غياب كل واحد في يوم معيّن، وبتضيف
+// أي طالب موجود في سجل اليوم بس مش موجود في القايمة الحالية (اتحذف مثلاً)
+// عشان البيانات التاريخية متضيعش. مستخدمة في العرض والتصدير والطباعة الثلاثة
+// عشان الثلاثة يطلعوا بنفس البيانات بالظبط.
+function getDayRosterRows(group, stage, day) {
+  const records = day.records || {};
+  const roster = students.filter(s => s.stage === stage && (s.group === "torail") === (group === "torail"));
+  const rows = roster.map(s => ({
+    id: s.id,
+    name: s.name,
+    present: records.hasOwnProperty(s.id) ? !!records[s.id] : false,
+  }));
+  Object.keys(records).forEach(sid => {
+    if (!rows.some(r => r.id === sid)) {
+      rows.push({ id: sid, name: "(طالب محذوف)", present: !!records[sid] });
+    }
+  });
+  rows.sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  return rows;
+}
+
 function renderAbsenceLog(group) {
   const ids = getAbsenceLogElIds(group);
   const box = document.getElementById(ids.list);
   const dayDocs = absenceLogDayDocs[group] || [];
+  const stage = document.getElementById(ids.stageSelect).value;
   const rowsHtml = dayDocs.map(day => {
-    const absentIds = Object.keys(day.records || {}).filter(sid => !day.records[sid]);
-    if (absentIds.length === 0) return "";
-    const studentsHtml = absentIds.map(sid => {
-      const student = students.find(s => s.id === sid);
-      const name = student ? student.name : "(طالب محذوف)";
-      const key = `${sid}|${day.date}`;
+    const rows = getDayRosterRows(group, stage, day);
+    const presentCount = rows.filter(r => r.present).length;
+    const absentCount = rows.length - presentCount;
+    const studentsHtml = rows.map(r => {
+      if (r.present) {
+        return `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0;">
+          <span style="color:#3F6B4A; font-weight:700; width:1.2rem;">✓</span>
+          <span style="font-size:0.88rem;">${escapeHtml(r.name)}</span>
+        </div>`;
+      }
+      const key = `${r.id}|${day.date}`;
       const checked = selectedAbsentees[group].has(key);
-      return `<label style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0;">
-        <input type="checkbox" ${checked ? "checked" : ""} onchange="toggleAbsenceSelect('${group}', '${sid}', '${day.date}', this.checked)">
-        <span style="font-size:0.88rem;">${escapeHtml(name)}</span>
+      return `<label style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0; cursor:pointer;">
+        <input type="checkbox" ${checked ? "checked" : ""} onchange="toggleAbsenceSelect('${group}', '${r.id}', '${day.date}', this.checked)">
+        <span style="color:#C15B3C; font-weight:700; width:1.2rem;">✗</span>
+        <span style="font-size:0.88rem;">${escapeHtml(r.name)}</span>
       </label>`;
     }).join("");
     return `<div class="card" style="background:#F5F1E6; padding:0.9rem; margin-bottom:0.6rem;">
-      <div style="font-weight:700; margin-bottom:0.4rem;">${day.date} — ${absentIds.length} غايب</div>
+      <div style="font-weight:700; margin-bottom:0.4rem;">${fmtDate(day.date)} — ✓ ${presentCount} / ✗ ${absentCount}</div>
       ${studentsHtml}
     </div>`;
   }).join("");
   if (!rowsHtml) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أي غياب مسجّل في الفترة والمرحلة دي.</p>`;
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أي سجل حضور مسجّل في الفترة والمرحلة دي.</p>`;
     return;
   }
   box.innerHTML = rowsHtml;
@@ -2432,245 +2388,74 @@ function sendAbsenceWhatsapp(group) {
 
 function exportAbsenceLogExcel(group) {
   const dayDocs = absenceLogDayDocs[group] || [];
+  const stage = document.getElementById(getAbsenceLogElIds(group).stageSelect).value || "";
   const rows = [];
   dayDocs.forEach(day => {
-    const absentIds = Object.keys(day.records || {}).filter(sid => !day.records[sid]);
-    absentIds.forEach(sid => {
-      const student = students.find(s => s.id === sid);
+    const dayRows = getDayRosterRows(group, stage, day);
+    const dt = day.date ? new Date(day.date + "T00:00:00") : null;
+    dayRows.forEach(r => {
       rows.push({
+        "اليوم": dt && !isNaN(dt) ? dt.getDate() : "",
+        "الشهر": dt && !isNaN(dt) ? (dt.getMonth() + 1) : "",
+        "السنة": dt && !isNaN(dt) ? dt.getFullYear() : "",
         "التاريخ": day.date,
-        "الاسم": student ? student.name : "(طالب محذوف)",
-        "المرحلة": day.stage || "",
+        "الاسم": r.name,
+        "الحالة": r.present ? "✓ حاضر" : "✗ غائب",
+        "المرحلة": stage,
       });
     });
   });
   if (rows.length === 0) { showError("مفيش بيانات لتصديرها. اعرض السجل الأول."); return; }
-  rows.sort((a, b) => b["التاريخ"].localeCompare(a["التاريخ"]));
+  rows.sort((a, b) => b["التاريخ"].localeCompare(a["التاريخ"]) || a["الاسم"].localeCompare(b["الاسم"], "ar"));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "سجل الغياب");
-  const stage = document.getElementById(getAbsenceLogElIds(group).stageSelect).value || "";
+  XLSX.utils.book_append_sheet(wb, ws, "سجل الحضور والغياب");
   const today = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `absence-log-${stage.replace(/[^a-zA-Z0-9]/g, "_")}-${today}.xlsx`);
+  XLSX.writeFile(wb, `attendance-log-${stage.replace(/[^a-zA-Z0-9]/g, "_")}-${today}.xlsx`);
 }
 
 function printAbsenceLog(group) {
   const ids = getAbsenceLogElIds(group);
   const dayDocs = absenceLogDayDocs[group] || [];
-  const rowsWithAbsentees = dayDocs.map(day => {
-    const absentIds = Object.keys(day.records || {}).filter(sid => !day.records[sid]);
-    if (absentIds.length === 0) return null;
-    const names = absentIds.map(sid => {
-      const student = students.find(s => s.id === sid);
-      return student ? student.name : "(طالب محذوف)";
-    });
-    return { date: day.date, names };
-  }).filter(Boolean);
-  if (rowsWithAbsentees.length === 0) { showError("مفيش بيانات لطباعتها. اعرض السجل الأول."); return; }
-
   const stage = document.getElementById(ids.stageSelect).value || "";
+  const rowsPerDay = dayDocs.map(day => {
+    const rows = getDayRosterRows(group, stage, day);
+    if (rows.length === 0) return null;
+    return { date: day.date, rows };
+  }).filter(Boolean);
+  if (rowsPerDay.length === 0) { showError("مفيش بيانات لطباعتها. اعرض السجل الأول."); return; }
+
   const from = document.getElementById(ids.fromInput).value || "";
   const to = document.getElementById(ids.toInput).value || "";
-  const totalAbsences = rowsWithAbsentees.reduce((sum, r) => sum + r.names.length, 0);
+  const totalPresent = rowsPerDay.reduce((sum, d) => sum + d.rows.filter(r => r.present).length, 0);
+  const totalAbsent = rowsPerDay.reduce((sum, d) => sum + d.rows.filter(r => !r.present).length, 0);
 
-  const daysHtml = rowsWithAbsentees.map(r => `
+  const arabicMonthDay = (dateStr) => {
+    const dt = new Date(dateStr + "T00:00:00");
+    if (isNaN(dt)) return dateStr;
+    return dt.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' });
+  };
+
+  const daysHtml = rowsPerDay.map(d => {
+    const rowsHtml = d.rows.map(r => `
+      <div class="student-row ${r.present ? "row-present" : "row-absent"}">
+        <span class="row-mark">${r.present ? "✓" : "✗"}</span>
+        <span class="row-name">${escapeHtml(r.name)}</span>
+      </div>`).join("");
+    return `
     <div class="day-card">
       <div class="day-card-header">
-        <span class="day-date">📅 ${r.date}</span>
-        <span class="day-count">${r.names.length} غايب</span>
+        <span class="day-date">📅 ${arabicMonthDay(d.date)}</span>
+        <span class="day-count">✓ ${d.rows.filter(r => r.present).length} &nbsp;|&nbsp; ✗ ${d.rows.filter(r => !r.present).length}</span>
       </div>
-      <div class="chips">
-        ${r.names.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join("")}
+      <div class="student-list">
+        ${rowsHtml}
       </div>
-    </div>`).join("");
-
-  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
-    <title>سجل الغياب</title>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Cairo:wght@400;600;700&display=swap');
-      * { box-sizing: border-box; }
-      @page { size: A4; margin: 12mm; }
-      body { font-family: 'Cairo', Arial, sans-serif; margin: 0; color: #4A2A3A; background: #FFF9FB; }
-      .hero {
-        background: linear-gradient(135deg, #FFD3E0 0%, #FFEAF2 60%, #FFF3F8 100%);
-        border-radius: 18px; padding: 22px 26px; margin-bottom: 20px;
-        border: 2px solid #FFB8CE;
-      }
-      .hero-title { font-family: 'Fraunces', serif; font-size: 22pt; font-weight: 700; color: #C23B72; margin: 0; }
-      .hero-sub { font-size: 11pt; color: #8A4F68; margin-top: 4px; }
-      .stats-row { display: flex; gap: 12px; margin-top: 14px; }
-      .stat-pill {
-        background: #ffffffcc; border: 1.5px solid #FFB8CE; border-radius: 12px;
-        padding: 8px 14px; font-size: 10.5pt; font-weight: 700; color: #C23B72;
-      }
-      .day-card {
-        background: #ffffff; border: 1.5px solid #FFD6E4; border-radius: 14px;
-        padding: 12px 16px; margin-bottom: 12px; page-break-inside: avoid; break-inside: avoid;
-        box-shadow: 0 2px 6px rgba(194,59,114,0.06);
-      }
-      .day-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-      .day-date { font-weight: 700; font-size: 12.5pt; color: #C23B72; }
-      .day-count { background: #FFE3ED; color: #C23B72; font-weight: 700; font-size: 9.5pt; padding: 3px 10px; border-radius: 20px; }
-      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-      .chip {
-        background: #FFF0F5; border: 1px solid #FFC2D6; color: #7A3B54;
-        font-size: 10pt; padding: 4px 12px; border-radius: 20px;
-      }
-      .footer-note { text-align: center; color: #C79AAE; font-size: 8.5pt; margin-top: 20px; }
-    </style></head>
-    <body>
-      <div class="hero">
-        <div class="hero-title">📋 سجل الغياب</div>
-        <div class="hero-sub">${escapeHtml(TEACHER_NAME)} — المرحلة: ${escapeHtml(stage)}${from || to ? ` — من ${from || "البداية"} إلى ${to || "اليوم"}` : ""}</div>
-        <div class="stats-row">
-          <div class="stat-pill">📆 ${rowsWithAbsentees.length} يوم فيه غياب</div>
-          <div class="stat-pill">🙋 ${totalAbsences} حالة غياب إجمالًا</div>
-        </div>
-      </div>
-      ${daysHtml}
-      <div class="footer-note">تم إنشاء هذا التقرير بتاريخ ${new Date().toLocaleDateString('ar-EG')}</div>
-    </body></html>`;
-  openPrintWindow(html);
-}
-
-// ============ سجل الحضور (نسخة القراءة من نفس البيانات) ============
-let attendanceLogDayDocs = { normal: [], torail: [] };
-
-function getAttendanceLogElIds(group) {
-  const p = group === "torail" ? "torail" : "";
-  return {
-    toggleBtn: p ? "torailAttendanceLogToggleBtn" : "attendanceLogToggleBtn",
-    section: p ? "torailAttendanceLogSection" : "attendanceLogSection",
-    stageSelect: p ? "torailAttendanceLogStageSelect" : "attendanceLogStageSelect",
-    fromInput: p ? "torailAttendanceLogFromInput" : "attendanceLogFromInput",
-    toInput: p ? "torailAttendanceLogToInput" : "attendanceLogToInput",
-    list: p ? "torailAttendanceLogList" : "attendanceLogList",
-  };
-}
-
-function toggleAttendanceLogSection(group) {
-  const ids = getAttendanceLogElIds(group);
-  const section = document.getElementById(ids.section);
-  const btn = document.getElementById(ids.toggleBtn);
-  const isOpen = section.style.display === "block";
-  section.style.display = isOpen ? "none" : "block";
-  btn.classList.toggle("open", !isOpen);
-  if (!isOpen) {
-    const toInput = document.getElementById(ids.toInput);
-    const fromInput = document.getElementById(ids.fromInput);
-    if (!toInput.value) toInput.value = new Date().toISOString().slice(0, 10);
-    if (!fromInput.value) {
-      const d = new Date();
-      d.setDate(d.getDate() - 30);
-      fromInput.value = d.toISOString().slice(0, 10);
-    }
-  }
-}
-
-async function loadAttendanceLog(group) {
-  const ids = getAttendanceLogElIds(group);
-  const stage = document.getElementById(ids.stageSelect).value;
-  const from = document.getElementById(ids.fromInput).value;
-  const to = document.getElementById(ids.toInput).value;
-  const box = document.getElementById(ids.list);
-  if (!stage) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة الأول.</p>`;
-    return;
-  }
-  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
-  try {
-    const snap = await attendanceCol.where("teacherId", "==", currentTeacherId).where("stage", "==", stage).where("group", "==", group).get();
-    let dayDocs = snap.docs.map(d => d.data());
-    if (from) dayDocs = dayDocs.filter(d => (d.date || "") >= from);
-    if (to) dayDocs = dayDocs.filter(d => (d.date || "") <= to);
-    dayDocs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-    attendanceLogDayDocs[group] = dayDocs;
-    renderAttendanceLog(group);
-  } catch (err) {
-    console.error("attendance log load error", err);
-    box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل السجل. تأكد من اتصالك بالإنترنت.</p>`;
-  }
-}
-
-function renderAttendanceLog(group) {
-  const ids = getAttendanceLogElIds(group);
-  const box = document.getElementById(ids.list);
-  const dayDocs = attendanceLogDayDocs[group] || [];
-  const rowsHtml = dayDocs.map(day => {
-    const presentIds = Object.keys(day.records || {}).filter(sid => !!day.records[sid]);
-    if (presentIds.length === 0) return "";
-    const names = presentIds.map(sid => {
-      const student = students.find(s => s.id === sid);
-      return student ? student.name : "(طالب محذوف)";
-    });
-    return `<div class="card" style="background:#F5F1E6; padding:0.9rem; margin-bottom:0.6rem;">
-      <div style="font-weight:700; margin-bottom:0.4rem;">${day.date} — ${names.length} حاضر</div>
-      ${names.map(n => `<div style="font-size:0.88rem; padding:0.2rem 0;">${escapeHtml(n)}</div>`).join("")}
     </div>`;
   }).join("");
-  if (!rowsHtml) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أي حضور مسجّل في الفترة والمرحلة دي.</p>`;
-    return;
-  }
-  box.innerHTML = rowsHtml;
-}
-
-function exportAttendanceLogExcel(group) {
-  const dayDocs = attendanceLogDayDocs[group] || [];
-  const rows = [];
-  dayDocs.forEach(day => {
-    const presentIds = Object.keys(day.records || {}).filter(sid => !!day.records[sid]);
-    presentIds.forEach(sid => {
-      const student = students.find(s => s.id === sid);
-      rows.push({
-        "التاريخ": day.date,
-        "الاسم": student ? student.name : "(طالب محذوف)",
-        "المرحلة": day.stage || "",
-      });
-    });
-  });
-  if (rows.length === 0) { showError("مفيش بيانات لتصديرها. اعرض السجل الأول."); return; }
-  rows.sort((a, b) => b["التاريخ"].localeCompare(a["التاريخ"]));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "سجل الحضور");
-  const stage = document.getElementById(getAttendanceLogElIds(group).stageSelect).value || "";
-  const today = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `attendance-log-${stage.replace(/[^a-zA-Z0-9]/g, "_")}-${today}.xlsx`);
-}
-
-function printAttendanceLog(group) {
-  const ids = getAttendanceLogElIds(group);
-  const dayDocs = attendanceLogDayDocs[group] || [];
-  const rowsWithPresent = dayDocs.map(day => {
-    const presentIds = Object.keys(day.records || {}).filter(sid => !!day.records[sid]);
-    if (presentIds.length === 0) return null;
-    const names = presentIds.map(sid => {
-      const student = students.find(s => s.id === sid);
-      return student ? student.name : "(طالب محذوف)";
-    });
-    return { date: day.date, names };
-  }).filter(Boolean);
-  if (rowsWithPresent.length === 0) { showError("مفيش بيانات لطباعتها. اعرض السجل الأول."); return; }
-
-  const stage = document.getElementById(ids.stageSelect).value || "";
-  const from = document.getElementById(ids.fromInput).value || "";
-  const to = document.getElementById(ids.toInput).value || "";
-  const totalPresent = rowsWithPresent.reduce((sum, r) => sum + r.names.length, 0);
-
-  const daysHtml = rowsWithPresent.map(r => `
-    <div class="day-card">
-      <div class="day-card-header">
-        <span class="day-date">📅 ${r.date}</span>
-        <span class="day-count">${r.names.length} حاضر</span>
-      </div>
-      <div class="chips">
-        ${r.names.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join("")}
-      </div>
-    </div>`).join("");
 
   const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
-    <title>سجل الحضور</title>
+    <title>سجل الحضور والغياب</title>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Cairo:wght@400;600;700&display=swap');
       * { box-sizing: border-box; }
@@ -2690,26 +2475,36 @@ function printAttendanceLog(group) {
       }
       .day-card {
         background: #ffffff; border: 1.5px solid #FFD6E4; border-radius: 14px;
-        padding: 12px 16px; margin-bottom: 12px; page-break-inside: avoid; break-inside: avoid;
+        padding: 14px 18px; margin-bottom: 14px; page-break-inside: avoid; break-inside: avoid;
         box-shadow: 0 2px 6px rgba(194,59,114,0.06);
       }
-      .day-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-      .day-date { font-weight: 700; font-size: 12.5pt; color: #C23B72; }
-      .day-count { background: #FFE3ED; color: #C23B72; font-weight: 700; font-size: 9.5pt; padding: 3px 10px; border-radius: 20px; }
-      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-      .chip {
-        background: #FFF0F5; border: 1px solid #FFC2D6; color: #7A3B54;
-        font-size: 10pt; padding: 4px 12px; border-radius: 20px;
+      .day-card-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px dashed #FFD6E4;
       }
+      .day-date { font-weight: 700; font-size: 13pt; color: #C23B72; }
+      .day-count { background: #FFE3ED; color: #C23B72; font-weight: 700; font-size: 10pt; padding: 4px 12px; border-radius: 20px; white-space: nowrap; }
+      .student-list { display: flex; flex-direction: column; gap: 2px; }
+      .student-row {
+        display: flex; align-items: center; gap: 10px; padding: 6px 10px;
+        border-radius: 8px; font-size: 11pt;
+      }
+      .row-present { background: #F1FBF3; }
+      .row-absent { background: #FFF1F5; }
+      .row-mark { font-weight: 700; font-size: 12pt; width: 18px; text-align: center; }
+      .row-present .row-mark { color: #3F9E56; }
+      .row-absent .row-mark { color: #E0507A; }
+      .row-name { font-weight: 600; }
       .footer-note { text-align: center; color: #C79AAE; font-size: 8.5pt; margin-top: 20px; }
     </style></head>
     <body>
       <div class="hero">
-        <div class="hero-title">📋 سجل الحضور</div>
+        <div class="hero-title">📋 سجل الحضور والغياب</div>
         <div class="hero-sub">${escapeHtml(TEACHER_NAME)} — المرحلة: ${escapeHtml(stage)}${from || to ? ` — من ${from || "البداية"} إلى ${to || "اليوم"}` : ""}</div>
         <div class="stats-row">
-          <div class="stat-pill">📆 ${rowsWithPresent.length} يوم مسجّل</div>
-          <div class="stat-pill">✅ ${totalPresent} حضور إجمالًا</div>
+          <div class="stat-pill">📆 ${rowsPerDay.length} يوم مسجّل</div>
+          <div class="stat-pill">✓ ${totalPresent} حضور</div>
+          <div class="stat-pill">✗ ${totalAbsent} غياب</div>
         </div>
       </div>
       ${daysHtml}
