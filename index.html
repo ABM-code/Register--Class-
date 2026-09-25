@@ -795,6 +795,10 @@
     </div>
     <button type="button" onclick="loadAbsenceLog('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="absenceLogList"></div>
+    <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
+      <button type="button" onclick="exportAbsenceLogExcel('normal')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+    </div>
     <button type="button" onclick="sendAbsenceWhatsapp('normal')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="absenceLogSelectedCount">0</span>)</button>
   </div>
 
@@ -1454,6 +1458,10 @@
     </div>
     <button type="button" onclick="loadAbsenceLog('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="torailAbsenceLogList"></div>
+    <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
+      <button type="button" onclick="exportAbsenceLogExcel('torail')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+    </div>
     <button type="button" onclick="sendAbsenceWhatsapp('torail')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="torailAbsenceLogSelectedCount">0</span>)</button>
   </div>
 
@@ -2348,6 +2356,109 @@ function sendAbsenceWhatsapp(group) {
   waQueueIndex = 0;
   document.getElementById("waQueueModal").style.display = "flex";
   renderWaQueueStep();
+}
+
+function exportAbsenceLogExcel(group) {
+  const dayDocs = absenceLogDayDocs[group] || [];
+  const rows = [];
+  dayDocs.forEach(day => {
+    const absentIds = Object.keys(day.records || {}).filter(sid => !day.records[sid]);
+    absentIds.forEach(sid => {
+      const student = students.find(s => s.id === sid);
+      rows.push({
+        "التاريخ": day.date,
+        "الاسم": student ? student.name : "(طالب محذوف)",
+        "المرحلة": day.stage || "",
+      });
+    });
+  });
+  if (rows.length === 0) { showError("مفيش بيانات لتصديرها. اعرض السجل الأول."); return; }
+  rows.sort((a, b) => b["التاريخ"].localeCompare(a["التاريخ"]));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "سجل الغياب");
+  const stage = document.getElementById(getAbsenceLogElIds(group).stageSelect).value || "";
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `absence-log-${stage.replace(/[^a-zA-Z0-9]/g, "_")}-${today}.xlsx`);
+}
+
+function printAbsenceLog(group) {
+  const ids = getAbsenceLogElIds(group);
+  const dayDocs = absenceLogDayDocs[group] || [];
+  const rowsWithAbsentees = dayDocs.map(day => {
+    const absentIds = Object.keys(day.records || {}).filter(sid => !day.records[sid]);
+    if (absentIds.length === 0) return null;
+    const names = absentIds.map(sid => {
+      const student = students.find(s => s.id === sid);
+      return student ? student.name : "(طالب محذوف)";
+    });
+    return { date: day.date, names };
+  }).filter(Boolean);
+  if (rowsWithAbsentees.length === 0) { showError("مفيش بيانات لطباعتها. اعرض السجل الأول."); return; }
+
+  const stage = document.getElementById(ids.stageSelect).value || "";
+  const from = document.getElementById(ids.fromInput).value || "";
+  const to = document.getElementById(ids.toInput).value || "";
+  const totalAbsences = rowsWithAbsentees.reduce((sum, r) => sum + r.names.length, 0);
+
+  const daysHtml = rowsWithAbsentees.map(r => `
+    <div class="day-card">
+      <div class="day-card-header">
+        <span class="day-date">📅 ${r.date}</span>
+        <span class="day-count">${r.names.length} غايب</span>
+      </div>
+      <div class="chips">
+        ${r.names.map(n => `<span class="chip">${escapeHtml(n)}</span>`).join("")}
+      </div>
+    </div>`).join("");
+
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>سجل الغياب</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Cairo:wght@400;600;700&display=swap');
+      * { box-sizing: border-box; }
+      @page { size: A4; margin: 12mm; }
+      body { font-family: 'Cairo', Arial, sans-serif; margin: 0; color: #4A2A3A; background: #FFF9FB; }
+      .hero {
+        background: linear-gradient(135deg, #FFD3E0 0%, #FFEAF2 60%, #FFF3F8 100%);
+        border-radius: 18px; padding: 22px 26px; margin-bottom: 20px;
+        border: 2px solid #FFB8CE;
+      }
+      .hero-title { font-family: 'Fraunces', serif; font-size: 22pt; font-weight: 700; color: #C23B72; margin: 0; }
+      .hero-sub { font-size: 11pt; color: #8A4F68; margin-top: 4px; }
+      .stats-row { display: flex; gap: 12px; margin-top: 14px; }
+      .stat-pill {
+        background: #ffffffcc; border: 1.5px solid #FFB8CE; border-radius: 12px;
+        padding: 8px 14px; font-size: 10.5pt; font-weight: 700; color: #C23B72;
+      }
+      .day-card {
+        background: #ffffff; border: 1.5px solid #FFD6E4; border-radius: 14px;
+        padding: 12px 16px; margin-bottom: 12px; page-break-inside: avoid; break-inside: avoid;
+        box-shadow: 0 2px 6px rgba(194,59,114,0.06);
+      }
+      .day-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+      .day-date { font-weight: 700; font-size: 12.5pt; color: #C23B72; }
+      .day-count { background: #FFE3ED; color: #C23B72; font-weight: 700; font-size: 9.5pt; padding: 3px 10px; border-radius: 20px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+      .chip {
+        background: #FFF0F5; border: 1px solid #FFC2D6; color: #7A3B54;
+        font-size: 10pt; padding: 4px 12px; border-radius: 20px;
+      }
+      .footer-note { text-align: center; color: #C79AAE; font-size: 8.5pt; margin-top: 20px; }
+    </style></head>
+    <body>
+      <div class="hero">
+        <div class="hero-title">📋 سجل الغياب</div>
+        <div class="hero-sub">${escapeHtml(TEACHER_NAME)} — المرحلة: ${escapeHtml(stage)}${from || to ? ` — من ${from || "البداية"} إلى ${to || "اليوم"}` : ""}</div>
+        <div class="stats-row">
+          <div class="stat-pill">📆 ${rowsWithAbsentees.length} يوم فيه غياب</div>
+          <div class="stat-pill">🙋 ${totalAbsences} حالة غياب إجمالًا</div>
+        </div>
+      </div>
+      ${daysHtml}
+      <div class="footer-note">تم إنشاء هذا التقرير بتاريخ ${new Date().toLocaleDateString('ar-EG')}</div>
+    </body></html>`;
+  openPrintWindow(html);
 }
 
 // ============ بطاقات QR للحضور ============
