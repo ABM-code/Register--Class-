@@ -753,6 +753,7 @@
         <video id="qrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
         <canvas id="qrCameraCanvas" style="display:none;"></canvas>
       </div>
+      <button type="button" id="qrCameraSwitchBtn" onclick="switchQrCamera('normal')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
       <p id="qrCameraError" style="display:none; color:#C15B3C; font-size:0.82rem; margin-top:0.4rem;"></p>
     </div>
     <div class="field-group">
@@ -762,6 +763,39 @@
     <div id="qrScanFeedback" style="display:none; text-align:center; padding:0.8rem; border-radius:10px; margin-top:0.7rem; font-weight:700;"></div>
     <div class="tools-group-title" style="margin-top:1rem;">✓ الحاضرين بالمسح النهاردة (<span id="qrScanCount">0</span>)</div>
     <div id="qrScanLog"></div>
+  </div>
+
+  <button id="absenceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAbsenceLogSection('normal')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    📋 سجل الغياب
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div id="absenceLogSection" style="display:none;">
+    <div class="field-group">
+      <label>المرحلة</label>
+      <select class="reg-input" id="absenceLogStageSelect">
+          <option value="">— اختر المرحلة —</option>
+          <option value="Prep 1">Prep 1</option>
+          <option value="Prep 2">Prep 2</option>
+          <option value="Prep 3">Prep 3</option>
+          <option value="Sec 1">Sec 1</option>
+          <option value="Sec 2">Sec 2</option>
+          <option value="Sec 3">Sec 3</option>
+        </select>
+    </div>
+    <div style="display:flex; gap:0.6rem;">
+      <div class="field-group" style="flex:1;">
+        <label>من تاريخ</label>
+        <input type="date" class="reg-input" id="absenceLogFromInput">
+      </div>
+      <div class="field-group" style="flex:1;">
+        <label>إلى تاريخ</label>
+        <input type="date" class="reg-input" id="absenceLogToInput">
+      </div>
+    </div>
+    <button type="button" onclick="loadAbsenceLog('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
+    <div id="absenceLogList"></div>
+    <button type="button" onclick="sendAbsenceWhatsapp('normal')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="absenceLogSelectedCount">0</span>)</button>
   </div>
 
   <div id="errorBox"></div>
@@ -1378,6 +1412,7 @@
         <video id="torailQrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
         <canvas id="torailQrCameraCanvas" style="display:none;"></canvas>
       </div>
+      <button type="button" id="torailQrCameraSwitchBtn" onclick="switchQrCamera('torail')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
       <p id="torailQrCameraError" style="display:none; color:#C15B3C; font-size:0.82rem; margin-top:0.4rem;"></p>
     </div>
     <div class="field-group">
@@ -1387,6 +1422,39 @@
     <div id="torailQrScanFeedback" style="display:none; text-align:center; padding:0.8rem; border-radius:10px; margin-top:0.7rem; font-weight:700;"></div>
     <div class="tools-group-title" style="margin-top:1rem;">✓ الحاضرين بالمسح النهاردة (<span id="torailQrScanCount">0</span>)</div>
     <div id="torailQrScanLog"></div>
+  </div>
+
+  <button id="torailAbsenceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAbsenceLogSection('torail')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    📋 سجل الغياب
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
+  </button>
+  <div id="torailAbsenceLogSection" style="display:none;">
+    <div class="field-group">
+      <label>المرحلة</label>
+      <select class="reg-input" id="torailAbsenceLogStageSelect">
+          <option value="">— اختر المرحلة —</option>
+          <option value="Prep 1">Prep 1</option>
+          <option value="Prep 2">Prep 2</option>
+          <option value="Prep 3">Prep 3</option>
+          <option value="Sec 1">Sec 1</option>
+          <option value="Sec 2">Sec 2</option>
+          <option value="Sec 3">Sec 3</option>
+        </select>
+    </div>
+    <div style="display:flex; gap:0.6rem;">
+      <div class="field-group" style="flex:1;">
+        <label>من تاريخ</label>
+        <input type="date" class="reg-input" id="torailAbsenceLogFromInput">
+      </div>
+      <div class="field-group" style="flex:1;">
+        <label>إلى تاريخ</label>
+        <input type="date" class="reg-input" id="torailAbsenceLogToInput">
+      </div>
+    </div>
+    <button type="button" onclick="loadAbsenceLog('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
+    <div id="torailAbsenceLogList"></div>
+    <button type="button" onclick="sendAbsenceWhatsapp('torail')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="torailAbsenceLogSelectedCount">0</span>)</button>
   </div>
 
   <div id="torailErrorBox"></div>
@@ -2145,6 +2213,143 @@ async function loadStudentAttendanceSummary(studentId, stage, group, boxId) {
   }
 }
 
+// ============ سجل الغياب وإبلاغ أولياء الأمور بالواتساب ============
+let absenceLogDayDocs = { normal: [], torail: [] };
+let selectedAbsentees = { normal: new Set(), torail: new Set() }; // مفتاح كل عنصر: "studentId|date"
+
+function getAbsenceLogElIds(group) {
+  const p = group === "torail" ? "torail" : "";
+  return {
+    toggleBtn: p ? "torailAbsenceLogToggleBtn" : "absenceLogToggleBtn",
+    section: p ? "torailAbsenceLogSection" : "absenceLogSection",
+    stageSelect: p ? "torailAbsenceLogStageSelect" : "absenceLogStageSelect",
+    fromInput: p ? "torailAbsenceLogFromInput" : "absenceLogFromInput",
+    toInput: p ? "torailAbsenceLogToInput" : "absenceLogToInput",
+    list: p ? "torailAbsenceLogList" : "absenceLogList",
+    selectedCount: p ? "torailAbsenceLogSelectedCount" : "absenceLogSelectedCount",
+  };
+}
+
+function toggleAbsenceLogSection(group) {
+  const ids = getAbsenceLogElIds(group);
+  const section = document.getElementById(ids.section);
+  const btn = document.getElementById(ids.toggleBtn);
+  const isOpen = section.style.display === "block";
+  section.style.display = isOpen ? "none" : "block";
+  btn.classList.toggle("open", !isOpen);
+  if (!isOpen) {
+    const toInput = document.getElementById(ids.toInput);
+    const fromInput = document.getElementById(ids.fromInput);
+    if (!toInput.value) toInput.value = new Date().toISOString().slice(0, 10);
+    if (!fromInput.value) {
+      const d = new Date();
+      d.setDate(d.getDate() - 30);
+      fromInput.value = d.toISOString().slice(0, 10);
+    }
+  }
+}
+
+async function loadAbsenceLog(group) {
+  const ids = getAbsenceLogElIds(group);
+  const stage = document.getElementById(ids.stageSelect).value;
+  const from = document.getElementById(ids.fromInput).value;
+  const to = document.getElementById(ids.toInput).value;
+  const box = document.getElementById(ids.list);
+  if (!stage) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة الأول.</p>`;
+    return;
+  }
+  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  selectedAbsentees[group] = new Set();
+  updateAbsenceSelectedCount(group);
+  try {
+    // نفس استعلام ملخص الحضور بالظبط (موجود ومُختبر بالفعل)، فبيشتغل بنفس
+    // قواعد الأمان الحالية من غير أي تعديل عليها.
+    const snap = await attendanceCol.where("teacherId", "==", currentTeacherId).where("stage", "==", stage).where("group", "==", group).get();
+    let dayDocs = snap.docs.map(d => d.data());
+    if (from) dayDocs = dayDocs.filter(d => (d.date || "") >= from);
+    if (to) dayDocs = dayDocs.filter(d => (d.date || "") <= to);
+    dayDocs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    absenceLogDayDocs[group] = dayDocs;
+    renderAbsenceLog(group);
+  } catch (err) {
+    console.error("absence log load error", err);
+    box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل السجل. تأكد من اتصالك بالإنترنت.</p>`;
+  }
+}
+
+function renderAbsenceLog(group) {
+  const ids = getAbsenceLogElIds(group);
+  const box = document.getElementById(ids.list);
+  const dayDocs = absenceLogDayDocs[group] || [];
+  const rowsHtml = dayDocs.map(day => {
+    const absentIds = Object.keys(day.records || {}).filter(sid => !day.records[sid]);
+    if (absentIds.length === 0) return "";
+    const studentsHtml = absentIds.map(sid => {
+      const student = students.find(s => s.id === sid);
+      const name = student ? student.name : "(طالب محذوف)";
+      const key = `${sid}|${day.date}`;
+      const checked = selectedAbsentees[group].has(key);
+      return `<label style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0;">
+        <input type="checkbox" ${checked ? "checked" : ""} onchange="toggleAbsenceSelect('${group}', '${sid}', '${day.date}', this.checked)">
+        <span style="font-size:0.88rem;">${escapeHtml(name)}</span>
+      </label>`;
+    }).join("");
+    return `<div class="card" style="background:#F5F1E6; padding:0.9rem; margin-bottom:0.6rem;">
+      <div style="font-weight:700; margin-bottom:0.4rem;">${day.date} — ${absentIds.length} غايب</div>
+      ${studentsHtml}
+    </div>`;
+  }).join("");
+  if (!rowsHtml) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أي غياب مسجّل في الفترة والمرحلة دي.</p>`;
+    return;
+  }
+  box.innerHTML = rowsHtml;
+}
+
+function toggleAbsenceSelect(group, studentId, date, checked) {
+  const key = `${studentId}|${date}`;
+  if (checked) selectedAbsentees[group].add(key);
+  else selectedAbsentees[group].delete(key);
+  updateAbsenceSelectedCount(group);
+}
+
+function updateAbsenceSelectedCount(group) {
+  const el = document.getElementById(getAbsenceLogElIds(group).selectedCount);
+  if (el) el.textContent = selectedAbsentees[group].size;
+}
+
+function sendAbsenceWhatsapp(group) {
+  const keys = Array.from(selectedAbsentees[group]);
+  if (keys.length === 0) { showError("اختار طلاب الأول من السجل عشان تبلّغ أولياء أمورهم."); return; }
+  // بنجمع كل التواريخ المحددة لكل طالب في رسالة واحدة، بدل ما نبعت رسالة منفصلة
+  // لكل يوم لنفس الطالب، وبنعيد استخدام نفس نافذة إرسال الواتساب المتسلسلة
+  // (waQueue) الموجودة بالفعل لتذكيرات الدفع والنتائج، من غير أي تعديل عليها.
+  const byStudent = {};
+  keys.forEach(key => {
+    const idx = key.lastIndexOf("|");
+    const sid = key.slice(0, idx);
+    const date = key.slice(idx + 1);
+    if (!byStudent[sid]) byStudent[sid] = [];
+    byStudent[sid].push(date);
+  });
+  const list = Object.entries(byStudent).map(([sid, dates]) => {
+    const student = students.find(s => s.id === sid);
+    return { name: student ? student.name : "(طالب محذوف)", phone: student ? student.parentPhone : "", dates: dates.sort() };
+  });
+  waQueue = list.map(item => {
+    const waNumber = formatPhoneForWhatsapp(item.phone);
+    const datesText = item.dates.join("، ");
+    const message = item.dates.length > 1
+      ? `تحية طيبة،\nنفيدكم بغياب الطالب/ة ${item.name} في الأيام التالية: ${datesText}.\nبرجاء المتابعة.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`
+      : `تحية طيبة،\nنفيدكم بغياب الطالب/ة ${item.name} بتاريخ ${datesText}.\nبرجاء المتابعة.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`;
+    return { name: item.name, phone: item.phone || "", waNumber, message };
+  });
+  waQueueIndex = 0;
+  document.getElementById("waQueueModal").style.display = "flex";
+  renderWaQueueStep();
+}
+
 // ============ بطاقات QR للحضور ============
 // كل بطاقة بترمّز نص بسيط "CR-ATT:teacherId:studentId" — القارئ بيتحقق إن teacherId
 // مطابق لحساب المعلم الحالي قبل ما يسجّل أي حضور، عشان محدش يمسح كود من تطبيق تاني بالغلط.
@@ -2239,6 +2444,7 @@ function getQrElIds(group) {
     cameraVideo: p ? "torailQrCameraVideo" : "qrCameraVideo",
     cameraCanvas: p ? "torailQrCameraCanvas" : "qrCameraCanvas",
     cameraError: p ? "torailQrCameraError" : "qrCameraError",
+    cameraSwitchBtn: p ? "torailQrCameraSwitchBtn" : "qrCameraSwitchBtn",
     scanInput: p ? "torailQrScanInput" : "qrScanInput",
     feedback: p ? "torailQrScanFeedback" : "qrScanFeedback",
     count: p ? "torailQrScanCount" : "qrScanCount",
@@ -2383,6 +2589,8 @@ async function processAttendanceCode(raw, group) {
 // ============ المسح بكاميرا الجهاز ============
 let qrCameraStream = { normal: null, torail: null };
 let qrCameraRafId = { normal: null, torail: null };
+let qrVideoDevices = { normal: [], torail: [] };
+let qrVideoDeviceIndex = { normal: 0, torail: 0 };
 
 function toggleQrCameraScan(group) {
   if (qrCameraStream[group]) {
@@ -2392,7 +2600,7 @@ function toggleQrCameraScan(group) {
   }
 }
 
-async function startQrCamera(group) {
+async function startQrCamera(group, deviceId) {
   const ids = getQrElIds(group);
   const errEl = document.getElementById(ids.cameraError);
   errEl.style.display = "none";
@@ -2416,9 +2624,16 @@ async function startQrCamera(group) {
     errEl.style.display = "block";
     return;
   }
+  // لو حددنا جهاز كاميرا بعينه (بعد تبديل يدوي)، نستخدمه بالظبط. غير كده،
+  // نطلب الكاميرا الخلفية كأفضلية (ideal مش exact) عشان الطلب ميترفضش تمامًا
+  // على أجهزة مش بتدعم exact match، مع إمكانية التبديل يدويًا بعد كده لو
+  // فتحت الكاميرا الغلط.
+  const constraints = deviceId
+    ? { video: { deviceId: { exact: deviceId } } }
+    : { video: { facingMode: { ideal: "environment" } } };
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
   } catch (err) {
     const messages = {
       NotAllowedError: "تم رفض إذن الكاميرا. افتح إعدادات الموقع في المتصفح وسمح بالوصول للكاميرا، وبعدين حاول تاني.",
@@ -2436,10 +2651,29 @@ async function startQrCamera(group) {
   await video.play();
   document.getElementById(ids.cameraBox).style.display = "block";
   document.getElementById(ids.cameraToggleBtn).textContent = "⏹️ إيقاف الكاميرا";
+
+  // أسماء الكاميرات مايظهروش غير بعد إذن الوصول، فبنجمعهم دلوقتي عشان نظهر
+  // زرار "تبديل الكاميرا" بس لو فعلاً فيه أكتر من كاميرا على الجهاز.
+  try {
+    const allDevices = await navigator.mediaDevices.enumerateDevices();
+    qrVideoDevices[group] = allDevices.filter(d => d.kind === "videoinput");
+  } catch (e) {
+    qrVideoDevices[group] = [];
+  }
+  document.getElementById(ids.cameraSwitchBtn).style.display = qrVideoDevices[group].length > 1 ? "block" : "none";
+
   qrCameraRafId[group] = requestAnimationFrame(() => tickQrCamera(group));
 }
 
-function stopQrCamera(group) {
+function switchQrCamera(group) {
+  if (qrVideoDevices[group].length < 2) return;
+  qrVideoDeviceIndex[group] = (qrVideoDeviceIndex[group] + 1) % qrVideoDevices[group].length;
+  const nextDevice = qrVideoDevices[group][qrVideoDeviceIndex[group]];
+  stopQrCamera(group, true);
+  startQrCamera(group, nextDevice.deviceId);
+}
+
+function stopQrCamera(group, keepOpen) {
   const ids = getQrElIds(group);
   if (qrCameraRafId[group]) cancelAnimationFrame(qrCameraRafId[group]);
   qrCameraRafId[group] = null;
@@ -2447,8 +2681,11 @@ function stopQrCamera(group) {
     qrCameraStream[group].getTracks().forEach(track => track.stop());
     qrCameraStream[group] = null;
   }
-  document.getElementById(ids.cameraBox).style.display = "none";
-  document.getElementById(ids.cameraToggleBtn).textContent = "📷 مسح بكاميرا الجهاز";
+  if (!keepOpen) {
+    document.getElementById(ids.cameraBox).style.display = "none";
+    document.getElementById(ids.cameraToggleBtn).textContent = "📷 مسح بكاميرا الجهاز";
+    document.getElementById(ids.cameraSwitchBtn).style.display = "none";
+  }
 }
 
 function tickQrCamera(group) {
