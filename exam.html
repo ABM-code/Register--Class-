@@ -680,7 +680,40 @@ async function submitExam(isTimeout) {
   }
 }
 
+// ============ صوت ظهور النتيجة (Web Audio API — بدون ملفات خارجية) ============
+let examAudioCtx = null;
+function getExamAudioCtx() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!examAudioCtx) examAudioCtx = new AC();
+  if (examAudioCtx.state === "suspended") examAudioCtx.resume();
+  return examAudioCtx;
+}
+function playExamResultSound() {
+  const ctx = getExamAudioCtx();
+  if (!ctx) return;
+  [
+    { freq: 659.25, start: 0, duration: 0.12 },
+    { freq: 783.99, start: 0.12, duration: 0.12 },
+    { freq: 987.77, start: 0.24, duration: 0.24 },
+  ].forEach(n => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = n.freq;
+    const startAt = ctx.currentTime + n.start;
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(0.22, startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + n.duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + n.duration + 0.02);
+  });
+}
+
 function renderResult(score, total, answerDetails, isFreshSubmission = true, wasTimedOut = false) {
+  if (isFreshSubmission) playExamResultSound();
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
   const content = document.getElementById("content");
   const questions = exam.questions || [];

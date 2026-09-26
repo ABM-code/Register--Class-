@@ -163,7 +163,7 @@ function renderItemRow(it, isExpired) {
   return "";
 }
 
-async function openExam(examId) {
+async function openExam(examId, isFreshSubmission) {
   const content = document.getElementById("content");
   content.innerHTML = `<div class="loading">جاري تحميل الامتحان...</div>`;
   clearError();
@@ -175,7 +175,7 @@ async function openExam(examId) {
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data.error || "load_failed");
     if (data.alreadySubmitted) {
-      renderExamReview(data);
+      renderExamReview(data, !!isFreshSubmission);
       return;
     }
     currentExam = { examId, title: data.title, questions: data.questions };
@@ -244,7 +244,7 @@ async function submitCurrentExam() {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error("submit_failed");
-    openExam(currentExam.examId);
+    openExam(currentExam.examId, true);
   } catch (err) {
     showError("تعذر تسليم الإجابات. حاول تاني.");
     btn.disabled = false;
@@ -252,7 +252,40 @@ async function submitCurrentExam() {
   }
 }
 
-function renderExamReview(data) {
+// ============ صوت ظهور النتيجة (Web Audio API — بدون ملفات خارجية) ============
+let examAudioCtx = null;
+function getExamAudioCtx() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!examAudioCtx) examAudioCtx = new AC();
+  if (examAudioCtx.state === "suspended") examAudioCtx.resume();
+  return examAudioCtx;
+}
+function playExamResultSound() {
+  const ctx = getExamAudioCtx();
+  if (!ctx) return;
+  [
+    { freq: 659.25, start: 0, duration: 0.12 },
+    { freq: 783.99, start: 0.12, duration: 0.12 },
+    { freq: 987.77, start: 0.24, duration: 0.24 },
+  ].forEach(n => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = n.freq;
+    const startAt = ctx.currentTime + n.start;
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(0.22, startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + n.duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + n.duration + 0.02);
+  });
+}
+
+function renderExamReview(data, isFreshSubmission) {
+  if (isFreshSubmission) playExamResultSound();
   const backBtn = `<button class="link-btn" id="backBtn">← رجوع لمحتواي</button>`;
   const questions = data.questions || [];
   const answers = data.answers || [];

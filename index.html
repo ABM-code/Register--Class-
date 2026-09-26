@@ -2861,17 +2861,70 @@ async function handleQrScanInput(inputEl, group) {
 // بيتحدد فعليًا من كود الـQR نفسه (student.group)، والـgroup هنا بس بيحدد
 // شاشة الإدخال اللي المسح جاي منها (لعرض النتيجة في المكان الصح).
 let qrScanProcessing = { normal: new Set(), torail: new Set() };
+// ============ أصوات تنبيه المسح (Web Audio API — بدون أي ملفات صوت خارجية) ============
+let qrAudioCtx = null;
+function getQrAudioCtx() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!qrAudioCtx) qrAudioCtx = new AC();
+  if (qrAudioCtx.state === "suspended") qrAudioCtx.resume();
+  return qrAudioCtx;
+}
+function playToneSequence(notes) {
+  const ctx = getQrAudioCtx();
+  if (!ctx) return;
+  notes.forEach(n => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = n.type || "sine";
+    osc.frequency.value = n.freq;
+    const startAt = ctx.currentTime + n.start;
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(0.22, startAt + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + n.duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + n.duration + 0.02);
+  });
+}
+function playQrSuccessSound() {
+  playToneSequence([
+    { freq: 880, start: 0, duration: 0.1, type: "sine" },
+    { freq: 1318.5, start: 0.1, duration: 0.16, type: "sine" },
+  ]);
+}
+function playQrFailSound() {
+  playToneSequence([
+    { freq: 330, start: 0, duration: 0.16, type: "square" },
+    { freq: 220, start: 0.15, duration: 0.22, type: "square" },
+  ]);
+}
+
+let lastQrScanAttempt = { normal: { raw: null, time: 0 }, torail: { raw: null, time: 0 } };
+const QR_SCAN_COOLDOWN_MS = 2500;
+
 async function processAttendanceCode(raw, group) {
+  // كول داون بسيط لنفس نص الكود بالظبط، عشان لو الكاميرا شايفة نفس الكارت
+  // كذا فريم متتالي (أو حتى لو كان كود غلط)، منكررش نفس التنبيه والصوت كذا
+  // مرة في الثانية الواحدة.
+  const now = Date.now();
+  const last = lastQrScanAttempt[group];
+  if (last.raw === raw && (now - last.time) < QR_SCAN_COOLDOWN_MS) return;
+  lastQrScanAttempt[group] = { raw, time: now };
+
   const ids = getQrElIds(group);
   const dateStr = document.getElementById(ids.dateInput).value || new Date().toISOString().slice(0, 10);
   const studentId = parseAttendanceQrCode(raw);
   if (!studentId) {
     showQrFeedback("كود غير معروف أو تابع لتطبيق تاني — جرب تاني.", true, group);
+    playQrFailSound();
     return;
   }
   const student = students.find(s => s.id === studentId);
   if (!student) {
     showQrFeedback("الطالب ده مش موجود (يمكن اتحذف). جرب كود تاني.", true, group);
+    playQrFailSound();
     return;
   }
   if (qrScanLog[group].some(item => item.id === studentId)) {
@@ -2886,11 +2939,13 @@ async function processAttendanceCode(raw, group) {
     const result = await markQrAttendance(studentId, dateStr);
     if (!result.ok) {
       showQrFeedback("تعذر تسجيل الحضور. تأكد من الاتصال بالإنترنت.", true, group);
+      playQrFailSound();
       return;
     }
     qrScanLog[group].unshift({ id: studentId, name: student.name, stage: student.stage, time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) });
     renderQrScanLog(group);
     showQrFeedback(`✅ تم تسجيل حضور: ${student.name}`, false, group);
+    playQrSuccessSound();
   } finally {
     qrScanProcessing[group].delete(studentId);
   }
