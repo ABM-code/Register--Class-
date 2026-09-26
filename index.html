@@ -793,6 +793,10 @@
         <input type="date" class="reg-input" id="absenceLogToInput">
       </div>
     </div>
+    <div class="field-group">
+      <label>أو اختار شهر كامل مباشرة</label>
+      <input type="month" class="reg-input" id="absenceLogMonthInput" onchange="applyAbsenceLogMonth('normal')">
+    </div>
     <button type="button" onclick="loadAbsenceLog('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="absenceLogList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
@@ -800,6 +804,13 @@
       <button type="button" onclick="printAbsenceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
     <button type="button" onclick="sendAbsenceWhatsapp('normal')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="absenceLogSelectedCount">0</span>)</button>
+
+    <div class="tools-group-title" style="margin-top:1.2rem;">📊 ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
+    <div id="absenceSummaryList"></div>
+    <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
+      <button type="button" onclick="exportAbsenceSummaryExcel('normal')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceSummary('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+    </div>
   </div>
 
   <div id="errorBox"></div>
@@ -1456,6 +1467,10 @@
         <input type="date" class="reg-input" id="torailAbsenceLogToInput">
       </div>
     </div>
+    <div class="field-group">
+      <label>أو اختار شهر كامل مباشرة</label>
+      <input type="month" class="reg-input" id="torailAbsenceLogMonthInput" onchange="applyAbsenceLogMonth('torail')">
+    </div>
     <button type="button" onclick="loadAbsenceLog('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="torailAbsenceLogList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
@@ -1463,6 +1478,13 @@
       <button type="button" onclick="printAbsenceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
     <button type="button" onclick="sendAbsenceWhatsapp('torail')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="torailAbsenceLogSelectedCount">0</span>)</button>
+
+    <div class="tools-group-title" style="margin-top:1.2rem;">📊 ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
+    <div id="torailAbsenceSummaryList"></div>
+    <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
+      <button type="button" onclick="exportAbsenceSummaryExcel('torail')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceSummary('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+    </div>
   </div>
 
   <div id="torailErrorBox"></div>
@@ -2233,8 +2255,10 @@ function getAbsenceLogElIds(group) {
     stageSelect: p ? "torailAbsenceLogStageSelect" : "absenceLogStageSelect",
     fromInput: p ? "torailAbsenceLogFromInput" : "absenceLogFromInput",
     toInput: p ? "torailAbsenceLogToInput" : "absenceLogToInput",
+    monthInput: p ? "torailAbsenceLogMonthInput" : "absenceLogMonthInput",
     list: p ? "torailAbsenceLogList" : "absenceLogList",
     selectedCount: p ? "torailAbsenceLogSelectedCount" : "absenceLogSelectedCount",
+    summaryList: p ? "torailAbsenceSummaryList" : "absenceSummaryList",
   };
 }
 
@@ -2255,6 +2279,18 @@ function toggleAbsenceLogSection(group) {
       fromInput.value = d.toISOString().slice(0, 10);
     }
   }
+}
+
+function applyAbsenceLogMonth(group) {
+  const ids = getAbsenceLogElIds(group);
+  const monthInput = document.getElementById(ids.monthInput);
+  const val = monthInput.value; // بصيغة "YYYY-MM"
+  if (!val) return;
+  const [year, month] = val.split("-").map(Number);
+  const firstDay = new Date(year, month - 1, 1);
+  const lastDay = new Date(year, month, 0); // اليوم صفر من الشهر الجاي = آخر يوم في الشهر الحالي
+  document.getElementById(ids.fromInput).value = firstDay.toISOString().slice(0, 10);
+  document.getElementById(ids.toInput).value = lastDay.toISOString().slice(0, 10);
 }
 
 async function loadAbsenceLog(group) {
@@ -2280,6 +2316,7 @@ async function loadAbsenceLog(group) {
     dayDocs.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
     absenceLogDayDocs[group] = dayDocs;
     renderAbsenceLog(group);
+    renderAbsenceSummary(group);
   } catch (err) {
     console.error("absence log load error", err);
     box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل السجل. تأكد من اتصالك بالإنترنت.</p>`;
@@ -2508,6 +2545,116 @@ function printAbsenceLog(group) {
         </div>
       </div>
       ${daysHtml}
+      <div class="footer-note">تم إنشاء هذا التقرير بتاريخ ${new Date().toLocaleDateString('ar-EG')}</div>
+    </body></html>`;
+  openPrintWindow(html);
+}
+
+// ============ ملخص عدد مرات الغياب في الفترة (تجميع لكل طالب) ============
+function computeAbsenceSummary(group) {
+  const dayDocs = absenceLogDayDocs[group] || [];
+  const stage = document.getElementById(getAbsenceLogElIds(group).stageSelect).value;
+  const counts = {};
+  dayDocs.forEach(day => {
+    const rows = getDayRosterRows(group, stage, day);
+    rows.forEach(r => {
+      if (!r.present) {
+        if (!counts[r.id]) counts[r.id] = { name: r.name, count: 0 };
+        counts[r.id].count++;
+      }
+    });
+  });
+  return Object.values(counts).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "ar"));
+}
+
+function renderAbsenceSummary(group) {
+  const box = document.getElementById(getAbsenceLogElIds(group).summaryList);
+  const summary = computeAbsenceSummary(group);
+  if (summary.length === 0) {
+    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش غياب مسجّل في الفترة دي.</p>`;
+    return;
+  }
+  box.innerHTML = `<div class="card" style="background:#F5F1E6; padding:0.9rem;">
+    ${summary.map(s => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:0.35rem 0; border-bottom:1px solid rgba(0,0,0,0.06);">
+        <span style="font-size:0.88rem;">${escapeHtml(s.name)}</span>
+        <span style="background:#FFE3ED; color:#C23B72; font-weight:700; font-size:0.78rem; padding:0.2rem 0.6rem; border-radius:12px;">${s.count} مرة</span>
+      </div>`).join("")}
+  </div>`;
+}
+
+function exportAbsenceSummaryExcel(group) {
+  const summary = computeAbsenceSummary(group);
+  if (summary.length === 0) { showError("مفيش بيانات لتصديرها. اعرض السجل الأول."); return; }
+  const stage = document.getElementById(getAbsenceLogElIds(group).stageSelect).value || "";
+  const rows = summary.map(s => ({ "الاسم": s.name, "عدد مرات الغياب": s.count, "المرحلة": stage }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "ملخص الغياب");
+  const today = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `absence-summary-${stage.replace(/[^a-zA-Z0-9]/g, "_")}-${today}.xlsx`);
+}
+
+function printAbsenceSummary(group) {
+  const ids = getAbsenceLogElIds(group);
+  const summary = computeAbsenceSummary(group);
+  if (summary.length === 0) { showError("مفيش بيانات لطباعتها. اعرض السجل الأول."); return; }
+
+  const stage = document.getElementById(ids.stageSelect).value || "";
+  const from = document.getElementById(ids.fromInput).value || "";
+  const to = document.getElementById(ids.toInput).value || "";
+  const periodText = from || to ? `من ${from || "البداية"} إلى ${to || "اليوم"}` : "كل الفترة المسجّلة";
+  const totalAbsences = summary.reduce((sum, s) => sum + s.count, 0);
+
+  const rowsHtml = summary.map((s, i) => `
+    <div class="summary-row">
+      <span class="rank">${i + 1}</span>
+      <span class="summary-name">${escapeHtml(s.name)}</span>
+      <span class="summary-count">${s.count} مرة</span>
+    </div>`).join("");
+
+  // مصمّمة عشان تتكدّس في صفحة واحدة قد الإمكان: صفوف مضغوطة وخط صغير نسبيًا،
+  // لكن لو عدد الطلاب كبير جدًا ممكن يمتد لصفحة تانية طبيعيًا عند الطباعة.
+  const html = `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+    <title>ملخص الغياب الشهري</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Cairo:wght@400;600;700&display=swap');
+      * { box-sizing: border-box; }
+      @page { size: A4; margin: 12mm; }
+      body { font-family: 'Cairo', Arial, sans-serif; margin: 0; color: #4A2A3A; background: #FFF9FB; }
+      .hero {
+        background: linear-gradient(135deg, #FFD3E0 0%, #FFEAF2 60%, #FFF3F8 100%);
+        border-radius: 18px; padding: 18px 24px; margin-bottom: 16px;
+        border: 2px solid #FFB8CE;
+      }
+      .hero-title { font-family: 'Fraunces', serif; font-size: 20pt; font-weight: 700; color: #C23B72; margin: 0; }
+      .hero-sub { font-size: 10.5pt; color: #8A4F68; margin-top: 4px; }
+      .stats-row { display: flex; gap: 10px; margin-top: 10px; }
+      .stat-pill {
+        background: #ffffffcc; border: 1.5px solid #FFB8CE; border-radius: 12px;
+        padding: 6px 12px; font-size: 9.5pt; font-weight: 700; color: #C23B72;
+      }
+      .summary-list { background: #fff; border: 1.5px solid #FFD6E4; border-radius: 14px; padding: 6px 16px; }
+      .summary-row {
+        display: flex; align-items: center; gap: 10px; padding: 5px 0;
+        border-bottom: 1px solid #FBEAF0; font-size: 10.5pt;
+      }
+      .summary-row:last-child { border-bottom: none; }
+      .rank { width: 20px; color: #D89AB2; font-weight: 700; font-size: 9pt; }
+      .summary-name { flex: 1; font-weight: 600; }
+      .summary-count { background: #FFE3ED; color: #C23B72; font-weight: 700; font-size: 9pt; padding: 2px 10px; border-radius: 20px; white-space: nowrap; }
+      .footer-note { text-align: center; color: #C79AAE; font-size: 8pt; margin-top: 14px; }
+    </style></head>
+    <body>
+      <div class="hero">
+        <div class="hero-title">📊 ملخص عدد مرات الغياب</div>
+        <div class="hero-sub">${escapeHtml(TEACHER_NAME)} — المرحلة: ${escapeHtml(stage)} — ${periodText}</div>
+        <div class="stats-row">
+          <div class="stat-pill">👥 ${summary.length} طالب غاب مرة على الأقل</div>
+          <div class="stat-pill">🙋 ${totalAbsences} حالة غياب إجمالًا</div>
+        </div>
+      </div>
+      <div class="summary-list">${rowsHtml}</div>
       <div class="footer-note">تم إنشاء هذا التقرير بتاريخ ${new Date().toLocaleDateString('ar-EG')}</div>
     </body></html>`;
   openPrintWindow(html);
