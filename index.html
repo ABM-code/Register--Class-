@@ -530,7 +530,7 @@
     </div>
   </div>
 
-  <button onclick="startOverduePaymentReminderQueue()" style="width:100%; background:#C15B3C; color:#F5F1E6; border:none; border-radius:10px; padding:0.65rem; font-weight:700; cursor:pointer; margin-bottom:0.9rem;">
+  <button onclick="startOverduePaymentReminderQueue()" style="width:100%; background:var(--c-danger); color:var(--c-textonpage); border:none; border-radius:10px; padding:0.65rem; font-weight:700; cursor:pointer; margin-bottom:0.9rem;">
     📤 تذكير واتساب لكل المتأخرين في الدفع
   </button>
 
@@ -831,7 +831,7 @@
       <input type="checkbox" id="studentsSelectAllBox" onchange="toggleSelectAllStudents(this.checked)">
       تحديد الكل
     </label>
-    <button id="deleteSelectedStudentsBtn" onclick="deleteSelectedStudents()" disabled style="background:#C15B3C; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+    <button id="deleteSelectedStudentsBtn" onclick="deleteSelectedStudents()" disabled style="background:var(--c-danger); color:var(--c-textonpage); border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
       حذف المحدد (<span id="selectedStudentsCount">0</span>)
     </button>
   </div>
@@ -943,14 +943,14 @@
 
 <main class="app-content" id="viewExams" style="display:none;">
   <div id="examsListView">
-    <button id="newExamBtn" class="reg-btn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.75rem; font-weight:700; margin-bottom:1rem; cursor:pointer;">+ امتحان جديد</button>
+    <button id="newExamBtn" class="reg-btn" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.75rem; font-weight:700; margin-bottom:1rem; cursor:pointer;">+ امتحان جديد</button>
     <div id="examsStageFilterPills" class="stage-counts"></div>
     <div id="examsByStage"></div>
   </div>
 
   <div id="examBuilderView" style="display:none;">
-    <button onclick="closeExamBuilder()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
-    <h2 id="examBuilderTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;">امتحان جديد</h2>
+    <button onclick="closeExamBuilder()" style="background:none; border:none; color:var(--c-mutedonpage); cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examBuilderTitle" style="font-family:'Fraunces',serif; color:var(--c-textonpage); font-size:1.15rem; margin:0 0 0.8rem;">امتحان جديد</h2>
     <div class="form-card-exam">
       <div class="field-group">
         <label>عنوان الامتحان</label>
@@ -975,7 +975,7 @@
       <div class="field-group">
         <label>آخر موعد لفتح الامتحان (اختياري)</label>
         <input class="reg-input" type="datetime-local" id="examDeadlineInput">
-        <p style="font-size:0.78rem; color:#9FB8AD; margin:0.3rem 0 0;">بعد الموعد ده، الامتحان يقفل تلقائي ومحدش يقدر يفتحه. سيبه فاضي لو مش عايز موعد نهائي.</p>
+        <p style="font-size:0.78rem; color:var(--c-mutedonpage); margin:0.3rem 0 0;">بعد الموعد ده، الامتحان يقفل تلقائي ومحدش يقدر يفتحه. سيبه فاضي لو مش عايز موعد نهائي.</p>
       </div>
       <div class="field-group">
         <label class="checkbox-row">
@@ -988,29 +988,29 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="2"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/></svg>
           <strong style="font-size:0.9rem;">استيراد أسئلة من صورة (AI)</strong>
         </div>
-        <p style="font-size:0.78rem; color:#6B6B60; margin:0 0 0.6rem;">صوّر ورقة الأسئلة وارفعها، وهيحاول الذكاء الاصطناعي يحولها لأسئلة جاهزة تراجعها قبل الحفظ.</p>
+        <p style="font-size:0.78rem; color:var(--c-mutedoncard); margin:0 0 0.6rem;">صوّر ورقة الأسئلة وارفعها، وهيحاول الذكاء الاصطناعي يحولها لأسئلة جاهزة تراجعها قبل الحفظ.</p>
         <input type="file" id="aiImageInput" accept="image/*" style="display:none;">
-        <button id="aiImportBtn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:700; cursor:pointer;">ارفع صورة الأسئلة</button>
+        <button id="aiImportBtn" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:9px; padding:0.65rem; font-weight:700; cursor:pointer;">ارفع صورة الأسئلة</button>
         <div id="aiImportStatus" style="font-size:0.82rem; margin-top:0.5rem; display:none;"></div>
       </div>
       <div id="questionsBuilder"></div>
       <div style="display:flex; gap:0.5rem; margin:0.5rem 0 0.5rem;">
-        <button onclick="addQuestionCard()" style="flex:1; background:#EAEAE4; color:#1B2420; border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">+ ضيف سؤال</button>
-        <button onclick="openQuestionBankPicker()" style="flex:1; background:#FBF3DF; color:#8A6A1F; border:1px dashed #D4A93B; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">📚 من بنك الأسئلة</button>
+        <button onclick="addQuestionCard()" style="flex:1; background:var(--c-cardalt); color:var(--c-textoncard); border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">+ ضيف سؤال</button>
+        <button onclick="openQuestionBankPicker()" style="flex:1; background:#FBF3DF; color:#8A6A1F; border:1px dashed var(--c-accent); border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">📚 من بنك الأسئلة</button>
       </div>
-      <button onclick="saveAllQuestionsToBank()" style="width:100%; background:none; color:#4A5A50; border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.55rem; font-size:0.85rem; font-weight:600; cursor:pointer; margin-bottom:1rem;">💾 احفظ كل أسئلة الامتحان ده في البنك مرة واحدة</button>
-      <button onclick="saveExam()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveExamBtnLabel">حفظ الامتحان</span></button>
+      <button onclick="saveAllQuestionsToBank()" style="width:100%; background:none; color:var(--c-mutedoncard); border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.55rem; font-size:0.85rem; font-weight:600; cursor:pointer; margin-bottom:1rem;">💾 احفظ كل أسئلة الامتحان ده في البنك مرة واحدة</button>
+      <button onclick="saveExam()" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveExamBtnLabel">حفظ الامتحان</span></button>
     </div>
   </div>
 
   <div id="bankPickerModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9997; align-items:center; justify-content:center; padding:1.25rem;">
-    <div style="background:#F5F1E6; border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:85vh; overflow-y:auto;">
+    <div style="background:var(--c-cardbg); border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:85vh; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
         <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">📚 بنك الأسئلة</strong>
         <div style="display:flex; align-items:center; gap:0.6rem;">
-          <span onclick="cleanupDuplicateQuestions()" style="cursor:pointer; font-size:0.75rem; color:#9C4B32; font-weight:600;">🧹 حذف المكرر</span>
+          <span onclick="cleanupDuplicateQuestions()" style="cursor:pointer; font-size:0.75rem; color:var(--c-dangertext); font-weight:600;">🧹 حذف المكرر</span>
           <span onclick="refreshQuestionBankPicker()" style="cursor:pointer; font-size:0.75rem; color:#8A6A1F; font-weight:600;">🔄 تحديث</span>
-          <button onclick="closeQuestionBankPicker()" style="width:auto; background:none; color:#6B6B60; padding:0.2rem 0.5rem;">✕</button>
+          <button onclick="closeQuestionBankPicker()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;">✕</button>
         </div>
       </div>
       <div class="field-row" style="margin-bottom:0.6rem;">
@@ -1036,13 +1036,13 @@
         <span>تحديد الكل (<span id="bankSelectAllCount">0</span>)</span>
       </label>
       <div id="bankPickerList" style="margin-bottom:0.8rem;"></div>
-      <button onclick="addSelectedBankQuestions()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:9px; padding:0.7rem; font-weight:700; cursor:pointer;">أضف المحدد للامتحان</button>
+      <button onclick="addSelectedBankQuestions()" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:9px; padding:0.7rem; font-weight:700; cursor:pointer;">أضف المحدد للامتحان</button>
     </div>
   </div>
 
   <div id="examResultsView" style="display:none;">
-    <button onclick="closeExamResults()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
-    <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;"></h2>
+    <button onclick="closeExamResults()" style="background:none; border:none; color:var(--c-mutedonpage); cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examResultsTitle" style="font-family:'Fraunces',serif; color:var(--c-textonpage); font-size:1.15rem; margin:0 0 0.8rem;"></h2>
 
     <button id="examQuestionStatsToggleBtn" class="tools-toggle-btn" onclick="toggleExamQuestionStats()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
@@ -1066,17 +1066,17 @@
       </button>
     </div>
     <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.7rem; flex-wrap:wrap;">
-      <label style="display:flex; align-items:center; gap:0.4rem; color:#9FB8AD; font-size:0.85rem; cursor:pointer;">
+      <label style="display:flex; align-items:center; gap:0.4rem; color:var(--c-mutedonpage); font-size:0.85rem; cursor:pointer;">
         <input type="checkbox" id="resultsSelectAllBox" onchange="toggleSelectAllResults(this.checked)">
         تحديد الكل
       </label>
-      <button id="deleteSelectedResultsBtn" onclick="deleteSelectedResults()" disabled style="background:#C15B3C; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+      <button id="deleteSelectedResultsBtn" onclick="deleteSelectedResults()" disabled style="background:var(--c-danger); color:var(--c-textonpage); border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
         حذف المحدد (<span id="selectedResultsCount">0</span>)
       </button>
-      <button id="sendSelectedWhatsappBtn" onclick="startWhatsappQueue()" disabled style="background:#3F6B4A; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+      <button id="sendSelectedWhatsappBtn" onclick="startWhatsappQueue()" disabled style="background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
         📤 إرسال واتساب للمحدد
       </button>
-      <button onclick="deleteAllResultsForExam()" style="background:none; color:#C15B3C; border:1px solid #C15B3C; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; margin-right:auto;">
+      <button onclick="deleteAllResultsForExam()" style="background:none; color:var(--c-danger); border:1px solid var(--c-danger); border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; margin-right:auto;">
         حذف كل النتائج
       </button>
     </div>
@@ -1084,15 +1084,15 @@
   </div>
 
   <div id="examMissingView" style="display:none;">
-    <button onclick="closeExamMissing()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
-    <h2 id="examMissingTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.3rem;"></h2>
-    <p style="color:#9FB8AD; font-size:0.85rem; margin:0 0 0.9rem;">الطلاب اللي لسه ما دخلوش الامتحان ده</p>
+    <button onclick="closeExamMissing()" style="background:none; border:none; color:var(--c-mutedonpage); cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة الامتحانات</button>
+    <h2 id="examMissingTitle" style="font-family:'Fraunces',serif; color:var(--c-textonpage); font-size:1.15rem; margin:0 0 0.3rem;"></h2>
+    <p style="color:var(--c-mutedonpage); font-size:0.85rem; margin:0 0 0.9rem;">الطلاب اللي لسه ما دخلوش الامتحان ده</p>
     <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.7rem; flex-wrap:wrap;">
-      <label style="display:flex; align-items:center; gap:0.4rem; color:#9FB8AD; font-size:0.85rem; cursor:pointer;">
+      <label style="display:flex; align-items:center; gap:0.4rem; color:var(--c-mutedonpage); font-size:0.85rem; cursor:pointer;">
         <input type="checkbox" id="missingSelectAllBox" onchange="toggleSelectAllMissing(this.checked)">
         تحديد الكل
       </label>
-      <button id="sendMissingParentsWhatsappBtn" onclick="startMissingParentReminderQueue()" disabled style="background:#3F6B4A; color:#F5F1E6; border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
+      <button id="sendMissingParentsWhatsappBtn" onclick="startMissingParentReminderQueue()" disabled style="background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
         📤 تذكير واتساب لأولياء أمور المحددين (<span id="selectedMissingCount">0</span>)
       </button>
     </div>
