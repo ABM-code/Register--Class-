@@ -748,13 +748,13 @@
       <input type="date" class="reg-input" id="qrAttDateInput">
     </div>
     <div class="field-group">
-      <button type="button" id="qrCameraToggleBtn" onclick="toggleQrCameraScan('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
+      <button type="button" id="qrCameraToggleBtn" onclick="toggleQrCameraScan('normal')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
       <div id="qrCameraBox" style="display:none; margin-top:0.6rem; position:relative; border-radius:10px; overflow:hidden; background:#000;">
         <video id="qrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
         <canvas id="qrCameraCanvas" style="display:none;"></canvas>
       </div>
-      <button type="button" id="qrCameraSwitchBtn" onclick="switchQrCamera('normal')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
-      <p id="qrCameraError" style="display:none; color:#C15B3C; font-size:0.82rem; margin-top:0.4rem;"></p>
+      <button type="button" id="qrCameraSwitchBtn" onclick="switchQrCamera('normal')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
+      <p id="qrCameraError" style="display:none; color:var(--c-danger); font-size:0.82rem; margin-top:0.4rem;"></p>
     </div>
     <div class="field-group">
       <label>أو وجّه جهاز قراءة QR خارجي هنا وامسح كارنيه الطالب (سيب الحقل ده مفعّل طول وقت المسح)</label>
@@ -797,19 +797,19 @@
       <label>أو اختار شهر كامل مباشرة</label>
       <input type="month" class="reg-input" id="absenceLogMonthInput" onchange="applyAbsenceLogMonth('normal')">
     </div>
-    <button type="button" onclick="loadAbsenceLog('normal')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
+    <button type="button" onclick="loadAbsenceLog('normal')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="absenceLogList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceLogExcel('normal')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceLogExcel('normal')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
     <button type="button" onclick="sendAbsenceWhatsapp('normal')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="absenceLogSelectedCount">0</span>)</button>
 
     <div class="tools-group-title" style="margin-top:1.2rem;">📊 ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
     <div id="absenceSummaryList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceSummaryExcel('normal')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceSummary('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceSummaryExcel('normal')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceSummary('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
   </div>
 
@@ -827,7 +827,7 @@
   </button>
 
   <div class="backup-row" style="align-items:center; margin-bottom:0.7rem;">
-    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#4A5A50;">
+    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:var(--c-mutedoncard);">
       <input type="checkbox" id="studentsSelectAllBox" onchange="toggleSelectAllStudents(this.checked)">
       تحديد الكل
     </label>
@@ -1102,14 +1102,14 @@
 
 <main class="app-content" id="viewProducts" style="display:none;">
   <div id="productsListView">
-    <button id="newProductBtn" class="reg-btn" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.75rem; font-weight:700; margin-bottom:1rem; cursor:pointer;" onclick="openProductBuilder()">+ منتج جديد</button>
-    <p style="color:#9FB8AD; font-size:0.85rem; margin:0 0 1rem;">المنتج هو حزمة محتوى (امتحانات و/أو مواد) تقدر تبيعها بكارت كود مطبوع. الطالب اللي يفعّل الكود يفتح الحزمة دي من غير ما يكون مسجّل عندك مسبقًا.</p>
+    <button id="newProductBtn" class="reg-btn" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.75rem; font-weight:700; margin-bottom:1rem; cursor:pointer;" onclick="openProductBuilder()">+ منتج جديد</button>
+    <p style="color:var(--c-mutedonpage); font-size:0.85rem; margin:0 0 1rem;">المنتج هو حزمة محتوى (امتحانات و/أو مواد) تقدر تبيعها بكارت كود مطبوع. الطالب اللي يفعّل الكود يفتح الحزمة دي من غير ما يكون مسجّل عندك مسبقًا.</p>
     <div id="productsList"></div>
   </div>
 
   <div id="productBuilderView" style="display:none;">
-    <button onclick="closeProductBuilder()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة المنتجات</button>
-    <h2 id="productBuilderTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.8rem;">منتج جديد</h2>
+    <button onclick="closeProductBuilder()" style="background:none; border:none; color:var(--c-mutedonpage); cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة المنتجات</button>
+    <h2 id="productBuilderTitle" style="font-family:'Fraunces',serif; color:var(--c-textonpage); font-size:1.15rem; margin:0 0 0.8rem;">منتج جديد</h2>
     <div class="form-card-exam">
       <div class="field-group">
         <label>اسم المنتج</label>
@@ -1128,20 +1128,20 @@
       </div>
       <div class="field-group">
         <label>اختر الامتحانات المضمّنة</label>
-        <div id="productExamsPicker" style="max-height:220px; overflow-y:auto; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:9px; padding:0.5rem 0.7rem;"></div>
+        <div id="productExamsPicker" style="max-height:220px; overflow-y:auto; background:var(--c-white); border:1px solid rgba(0,0,0,0.12); border-radius:9px; padding:0.5rem 0.7rem;"></div>
       </div>
       <div class="field-group">
         <label>اختر المواد التعليمية المضمّنة</label>
-        <div id="productMaterialsPicker" style="max-height:220px; overflow-y:auto; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:9px; padding:0.5rem 0.7rem;"></div>
+        <div id="productMaterialsPicker" style="max-height:220px; overflow-y:auto; background:var(--c-white); border:1px solid rgba(0,0,0,0.12); border-radius:9px; padding:0.5rem 0.7rem;"></div>
       </div>
-      <button onclick="saveProduct()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveProductBtnLabel">حفظ المنتج</span></button>
+      <button onclick="saveProduct()" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveProductBtnLabel">حفظ المنتج</span></button>
     </div>
   </div>
 
   <div id="productDetailView" style="display:none;">
-    <button onclick="closeProductDetail()" style="background:none; border:none; color:#9FB8AD; cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة المنتجات</button>
-    <h2 id="productDetailTitle" style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1.15rem; margin:0 0 0.3rem;"></h2>
-    <p id="productDetailSub" style="color:#9FB8AD; font-size:0.85rem; margin:0 0 1rem;"></p>
+    <button onclick="closeProductDetail()" style="background:none; border:none; color:var(--c-mutedonpage); cursor:pointer; margin-bottom:0.8rem; font-size:0.9rem;">← رجوع لقائمة المنتجات</button>
+    <h2 id="productDetailTitle" style="font-family:'Fraunces',serif; color:var(--c-textonpage); font-size:1.15rem; margin:0 0 0.3rem;"></h2>
+    <p id="productDetailSub" style="color:var(--c-mutedonpage); font-size:0.85rem; margin:0 0 1rem;"></p>
 
     <div class="form-card-exam" style="margin-bottom:1rem;">
       <div class="field-group">
@@ -1155,14 +1155,14 @@
       <div class="field-group">
         <label>آخر موعد للتفعيل الأول (اختياري)</label>
         <input class="reg-input" type="date" id="batchExpiryInput">
-        <p style="font-size:0.78rem; color:#9FB8AD; margin:0.3rem 0 0;">بعد التاريخ ده، أي كود لسه ماتفعلش مايشتغلش. سيبه فاضي لو عايز الأكواد بدون تاريخ انتهاء للتفعيل.</p>
+        <p style="font-size:0.78rem; color:var(--c-mutedonpage); margin:0.3rem 0 0;">بعد التاريخ ده، أي كود لسه ماتفعلش مايشتغلش. سيبه فاضي لو عايز الأكواد بدون تاريخ انتهاء للتفعيل.</p>
       </div>
-      <button onclick="generateCodesForCurrentProduct()" style="width:100%; background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="generateCodesBtnLabel">توليد الأكواد</span></button>
+      <button onclick="generateCodesForCurrentProduct()" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="generateCodesBtnLabel">توليد الأكواد</span></button>
     </div>
 
     <div id="generatedCodesBox" style="display:none; margin-bottom:1rem;"></div>
 
-    <h3 style="font-family:'Fraunces',serif; color:#F5F1E6; font-size:1rem; margin:0 0 0.6rem;">الدفعات السابقة</h3>
+    <h3 style="font-family:'Fraunces',serif; color:var(--c-textonpage); font-size:1rem; margin:0 0 0.6rem;">الدفعات السابقة</h3>
     <div id="productBatchesList"></div>
 
     <div class="form-card-exam" style="margin-top:1rem;">
@@ -1170,7 +1170,7 @@
         <label>تعطيل كود معيّن</label>
         <input class="reg-input code-input-field" id="disableCodeInput" placeholder="XXXX-XXXX-XXXX" oninput="formatCodeInputEl(this)" maxlength="14">
       </div>
-      <button onclick="disableVoucherCodeAction()" style="width:100%; background:#C15B3C; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">تعطيل الكود</button>
+      <button onclick="disableVoucherCodeAction()" style="width:100%; background:var(--c-danger); color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">تعطيل الكود</button>
     </div>
   </div>
 </main>
@@ -1422,13 +1422,13 @@
       <input type="date" class="reg-input" id="torailQrAttDateInput">
     </div>
     <div class="field-group">
-      <button type="button" id="torailQrCameraToggleBtn" onclick="toggleQrCameraScan('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
+      <button type="button" id="torailQrCameraToggleBtn" onclick="toggleQrCameraScan('torail')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
       <div id="torailQrCameraBox" style="display:none; margin-top:0.6rem; position:relative; border-radius:10px; overflow:hidden; background:#000;">
         <video id="torailQrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
         <canvas id="torailQrCameraCanvas" style="display:none;"></canvas>
       </div>
-      <button type="button" id="torailQrCameraSwitchBtn" onclick="switchQrCamera('torail')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
-      <p id="torailQrCameraError" style="display:none; color:#C15B3C; font-size:0.82rem; margin-top:0.4rem;"></p>
+      <button type="button" id="torailQrCameraSwitchBtn" onclick="switchQrCamera('torail')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
+      <p id="torailQrCameraError" style="display:none; color:var(--c-danger); font-size:0.82rem; margin-top:0.4rem;"></p>
     </div>
     <div class="field-group">
       <label>أو وجّه جهاز قراءة QR خارجي هنا وامسح كارنيه الطالب (سيب الحقل ده مفعّل طول وقت المسح)</label>
@@ -1471,19 +1471,19 @@
       <label>أو اختار شهر كامل مباشرة</label>
       <input type="month" class="reg-input" id="torailAbsenceLogMonthInput" onchange="applyAbsenceLogMonth('torail')">
     </div>
-    <button type="button" onclick="loadAbsenceLog('torail')" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
+    <button type="button" onclick="loadAbsenceLog('torail')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="torailAbsenceLogList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceLogExcel('torail')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceLogExcel('torail')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
     <button type="button" onclick="sendAbsenceWhatsapp('torail')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="torailAbsenceLogSelectedCount">0</span>)</button>
 
     <div class="tools-group-title" style="margin-top:1.2rem;">📊 ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
     <div id="torailAbsenceSummaryList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceSummaryExcel('torail')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceSummary('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceSummaryExcel('torail')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
+      <button type="button" onclick="printAbsenceSummary('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
     </div>
   </div>
 
@@ -1784,19 +1784,19 @@ function renderProductsList() {
   const box = document.getElementById("productsList");
   if (!box) return;
   if (products.length === 0) {
-    box.innerHTML = `<div class="card" style="text-align:center; color:#6B6B60; padding:1.5rem;">لسه مفيش منتجات. اضغط "+ منتج جديد" عشان تبدأ.</div>`;
+    box.innerHTML = `<div class="card" style="text-align:center; color:var(--c-mutedoncard); padding:1.5rem;">لسه مفيش منتجات. اضغط "+ منتج جديد" عشان تبدأ.</div>`;
     return;
   }
   box.innerHTML = products.map(p => {
     const itemsCount = (p.items || []).length;
     const durationText = p.accessDurationType === "days" ? `${p.accessDurationDays || 0} يوم من التفعيل` : "دائم";
     return `
-      <div class="card" style="background:#F5F1E6; border-radius:14px; padding:1rem; margin-bottom:0.8rem; cursor:pointer;" onclick="openProductDetail('${p.id}')">
-        <div style="font-family:'Fraunces',serif; font-weight:600; font-size:1.02rem; color:#1B2420;">${escapeHtml(p.title || "")}</div>
-        <div style="font-size:0.8rem; color:#6B6B60; margin-top:0.3rem;">${itemsCount} عنصر — الوصول: ${durationText}${p.archived ? " — 🗄️ مؤرشف" : ""}</div>
+      <div class="card" style="background:var(--c-cardbg); border-radius:14px; padding:1rem; margin-bottom:0.8rem; cursor:pointer;" onclick="openProductDetail('${p.id}')">
+        <div style="font-family:'Fraunces',serif; font-weight:600; font-size:1.02rem; color:var(--c-textoncard);">${escapeHtml(p.title || "")}</div>
+        <div style="font-size:0.8rem; color:var(--c-mutedoncard); margin-top:0.3rem;">${itemsCount} عنصر — الوصول: ${durationText}${p.archived ? " — 🗄️ مؤرشف" : ""}</div>
         <div style="margin-top:0.6rem; display:flex; gap:0.5rem;">
-          <button type="button" onclick="event.stopPropagation(); openProductBuilder('${p.id}')" style="flex:1; width:auto; background:#EAEAE4; color:#1B2420; padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px;">تعديل</button>
-          <button type="button" onclick="event.stopPropagation(); toggleArchiveProduct('${p.id}')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px; box-shadow:none;">${p.archived ? "إلغاء الأرشفة" : "أرشفة"}</button>
+          <button type="button" onclick="event.stopPropagation(); openProductBuilder('${p.id}')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px;">تعديل</button>
+          <button type="button" onclick="event.stopPropagation(); toggleArchiveProduct('${p.id}')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px; box-shadow:none;">${p.archived ? "إلغاء الأرشفة" : "أرشفة"}</button>
         </div>
       </div>`;
   }).join("");
@@ -1812,22 +1812,22 @@ function renderProductPickers(selectedItems) {
   const isSelected = (type, id) => selected.some(it => it.type === type && it.id === id);
   const examsBox = document.getElementById("productExamsPicker");
   if (exams.length === 0) {
-    examsBox.innerHTML = `<p style="font-size:0.82rem; color:#6B6B60; margin:0;">مفيش امتحانات متاحة.</p>`;
+    examsBox.innerHTML = `<p style="font-size:0.82rem; color:var(--c-mutedoncard); margin:0;">مفيش امتحانات متاحة.</p>`;
   } else {
     examsBox.innerHTML = exams.map(e => `
       <label class="checkbox-row" style="margin-bottom:0.4rem;">
         <input type="checkbox" data-item-type="exam" data-item-id="${e.id}" ${isSelected("exam", e.id) ? "checked" : ""}>
-        <span>${escapeHtml(e.title || "")} <span style="color:#9C9C90;">(${escapeHtml(e.stage || "")})</span></span>
+        <span>${escapeHtml(e.title || "")} <span style="color:var(--c-mutedoncard);">(${escapeHtml(e.stage || "")})</span></span>
       </label>`).join("");
   }
   const materialsBox = document.getElementById("productMaterialsPicker");
   if (materials.length === 0) {
-    materialsBox.innerHTML = `<p style="font-size:0.82rem; color:#6B6B60; margin:0;">مفيش مواد تعليمية متاحة.</p>`;
+    materialsBox.innerHTML = `<p style="font-size:0.82rem; color:var(--c-mutedoncard); margin:0;">مفيش مواد تعليمية متاحة.</p>`;
   } else {
     materialsBox.innerHTML = materials.map(m => `
       <label class="checkbox-row" style="margin-bottom:0.4rem;">
         <input type="checkbox" data-item-type="material" data-item-id="${m.id}" ${isSelected("material", m.id) ? "checked" : ""}>
-        <span>${escapeHtml(m.title || "")} <span style="color:#9C9C90;">(${escapeHtml(m.category || "عام")})</span></span>
+        <span>${escapeHtml(m.title || "")} <span style="color:var(--c-mutedoncard);">(${escapeHtml(m.category || "عام")})</span></span>
       </label>`).join("");
   }
 }
@@ -1933,7 +1933,7 @@ function closeProductDetail() {
 
 async function loadBatchesForProduct(productId) {
   const box = document.getElementById("productBatchesList");
-  box.innerHTML = `<p style="color:#9FB8AD; font-size:0.85rem;">جاري التحميل...</p>`;
+  box.innerHTML = `<p style="color:var(--c-mutedonpage); font-size:0.85rem;">جاري التحميل...</p>`;
   try {
     const snapshot = await voucherBatchesCol.where("teacherId", "==", currentTeacherId).where("productId", "==", productId).get();
     currentProductBatches = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1945,22 +1945,22 @@ async function loadBatchesForProduct(productId) {
     renderProductBatchesList();
   } catch (err) {
     console.error("batches load error", err);
-    box.innerHTML = `<p style="color:#C15B3C; font-size:0.85rem;">تعذر تحميل الدفعات.</p>`;
+    box.innerHTML = `<p style="color:var(--c-danger); font-size:0.85rem;">تعذر تحميل الدفعات.</p>`;
   }
 }
 
 function renderProductBatchesList() {
   const box = document.getElementById("productBatchesList");
   if (currentProductBatches.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; font-size:0.85rem;">لسه مفيش دفعات أكواد لهذا المنتج.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); font-size:0.85rem;">لسه مفيش دفعات أكواد لهذا المنتج.</p>`;
     return;
   }
   box.innerHTML = currentProductBatches.map(b => `
-    <div class="card" style="background:#F5F1E6; padding:0.9rem; margin-bottom:0.6rem;">
+    <div class="card" style="background:var(--c-cardbg); padding:0.9rem; margin-bottom:0.6rem;">
       <div style="font-weight:600;">${escapeHtml(b.batchName || "")}</div>
-      <div style="font-size:0.78rem; color:#6B6B60; margin:0.2rem 0 0.5rem;">إجمالي: ${b.count || 0}</div>
-      <div id="batchStats_${b.id}" style="font-size:0.8rem; color:#4A5A50;">
-        <button type="button" onclick="refreshBatchStats('${b.id}')" style="width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:#4A5A50; padding:0.3rem 0.6rem; font-size:0.75rem; border-radius:7px; box-shadow:none;">📊 عرض الإحصائيات</button>
+      <div style="font-size:0.78rem; color:var(--c-mutedoncard); margin:0.2rem 0 0.5rem;">إجمالي: ${b.count || 0}</div>
+      <div id="batchStats_${b.id}" style="font-size:0.8rem; color:var(--c-mutedoncard);">
+        <button type="button" onclick="refreshBatchStats('${b.id}')" style="width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.3rem 0.6rem; font-size:0.75rem; border-radius:7px; box-shadow:none;">📊 عرض الإحصائيات</button>
       </div>
     </div>`).join("");
 }
@@ -1978,7 +1978,7 @@ async function refreshBatchStats(batchId) {
     el.innerHTML = `مولّد: ${data.generated} — مفعّل: ${data.bound} — متبقي: ${data.unused} — معطّل: ${data.disabled}`;
   } catch (err) {
     console.error("batch stats error", err);
-    el.innerHTML = `<span style="color:#C15B3C;">تعذر تحميل الإحصائيات.</span>`;
+    el.innerHTML = `<span style="color:var(--c-danger);">تعذر تحميل الإحصائيات.</span>`;
   }
 }
 
@@ -2019,17 +2019,17 @@ function renderGeneratedCodesBox() {
   if (!lastGeneratedCodes) { box.style.display = "none"; return; }
   const { codes, batchName } = lastGeneratedCodes;
   const listHtml = codes.slice(0, 500).map(c => `<div style="font-family:'Fraunces',serif; padding:0.15rem 0; direction:ltr; text-align:center;">${c}</div>`).join("");
-  const moreNote = codes.length > 500 ? `<p style="font-size:0.75rem; color:#9C9C90; text-align:center;">+ ${codes.length - 500} كود إضافي (متاحين في التصدير والطباعة)</p>` : "";
+  const moreNote = codes.length > 500 ? `<p style="font-size:0.75rem; color:var(--c-mutedoncard); text-align:center;">+ ${codes.length - 500} كود إضافي (متاحين في التصدير والطباعة)</p>` : "";
   box.style.display = "block";
   box.innerHTML = `
-    <div class="card" style="background:#F5F1E6; padding:1rem;">
+    <div class="card" style="background:var(--c-cardbg); padding:1rem;">
       <strong>${escapeHtml(batchName)} — ${codes.length} كود</strong>
-      <p style="font-size:0.78rem; color:#9C4B32; margin:0.4rem 0 0.8rem;">⚠️ هذه هي المرة الوحيدة اللي هتشوف فيها الأكواد بالكامل. صدّرها أو اطبعها دلوقتي.</p>
+      <p style="font-size:0.78rem; color:var(--c-dangertext); margin:0.4rem 0 0.8rem;">⚠️ هذه هي المرة الوحيدة اللي هتشوف فيها الأكواد بالكامل. صدّرها أو اطبعها دلوقتي.</p>
       <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem;">
-        <button type="button" onclick="exportGeneratedCodes()" style="flex:1; width:auto; background:#3F6B4A; color:#F5F1E6; padding:0.6rem; font-size:0.85rem; border-radius:8px;">⬇️ تصدير Excel</button>
-        <button type="button" onclick="printGeneratedCards()" style="flex:1; width:auto; background:#D4A93B; color:#1B2420; padding:0.6rem; font-size:0.85rem; border-radius:8px;">🖨️ طباعة الكروت</button>
+        <button type="button" onclick="exportGeneratedCodes()" style="flex:1; width:auto; background:var(--c-success); color:var(--c-onsuccess); padding:0.6rem; font-size:0.85rem; border-radius:8px;">⬇️ تصدير Excel</button>
+        <button type="button" onclick="printGeneratedCards()" style="flex:1; width:auto; background:var(--c-accent); color:var(--c-onaccent); padding:0.6rem; font-size:0.85rem; border-radius:8px;">🖨️ طباعة الكروت</button>
       </div>
-      <div style="max-height:260px; overflow-y:auto; background:#FFFDF8; border-radius:8px; padding:0.5rem;">${listHtml}${moreNote}</div>
+      <div style="max-height:260px; overflow-y:auto; background:var(--c-white); border-radius:8px; padding:0.5rem;">${listHtml}${moreNote}</div>
     </div>`;
 }
 
@@ -2356,7 +2356,7 @@ function renderAbsenceLog(group) {
     const studentsHtml = rows.map(r => {
       if (r.present) {
         return `<div style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0;">
-          <span style="color:#3F6B4A; font-weight:700; width:1.2rem;">✓</span>
+          <span style="color:var(--c-success); font-weight:700; width:1.2rem;">✓</span>
           <span style="font-size:0.88rem;">${escapeHtml(r.name)}</span>
         </div>`;
       }
@@ -2364,17 +2364,17 @@ function renderAbsenceLog(group) {
       const checked = selectedAbsentees[group].has(key);
       return `<label style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0; cursor:pointer;">
         <input type="checkbox" ${checked ? "checked" : ""} onchange="toggleAbsenceSelect('${group}', '${r.id}', '${day.date}', this.checked)">
-        <span style="color:#C15B3C; font-weight:700; width:1.2rem;">✗</span>
+        <span style="color:var(--c-danger); font-weight:700; width:1.2rem;">✗</span>
         <span style="font-size:0.88rem;">${escapeHtml(r.name)}</span>
       </label>`;
     }).join("");
-    return `<div class="card" style="background:#F5F1E6; padding:0.9rem; margin-bottom:0.6rem;">
+    return `<div class="card" style="background:var(--c-cardbg); padding:0.9rem; margin-bottom:0.6rem;">
       <div style="font-weight:700; margin-bottom:0.4rem;">${fmtDate(day.date)} — ✓ ${presentCount} / ✗ ${absentCount}</div>
       ${studentsHtml}
     </div>`;
   }).join("");
   if (!rowsHtml) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أي سجل حضور مسجّل في الفترة والمرحلة دي.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أي سجل حضور مسجّل في الفترة والمرحلة دي.</p>`;
     return;
   }
   box.innerHTML = rowsHtml;
@@ -2571,10 +2571,10 @@ function renderAbsenceSummary(group) {
   const box = document.getElementById(getAbsenceLogElIds(group).summaryList);
   const summary = computeAbsenceSummary(group);
   if (summary.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش غياب مسجّل في الفترة دي.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش غياب مسجّل في الفترة دي.</p>`;
     return;
   }
-  box.innerHTML = `<div class="card" style="background:#F5F1E6; padding:0.9rem;">
+  box.innerHTML = `<div class="card" style="background:var(--c-cardbg); padding:0.9rem;">
     ${summary.map(s => `
       <div style="display:flex; justify-content:space-between; align-items:center; padding:0.35rem 0; border-bottom:1px solid rgba(0,0,0,0.06);">
         <span style="font-size:0.88rem;">${escapeHtml(s.name)}</span>
@@ -2826,8 +2826,8 @@ function showQrFeedback(message, isError, group) {
   const el = document.getElementById(getQrElIds(group).feedback);
   el.textContent = message;
   el.style.display = "block";
-  el.style.background = isError ? "#F6E7E2" : "#EAF2E7";
-  el.style.color = isError ? "#9C4B32" : "#3F6B4A";
+  el.style.background = isError ? "var(--c-dangerbg)" : "var(--c-successbg)";
+  el.style.color = isError ? "var(--c-dangertext)" : "var(--c-success)";
 }
 
 function renderQrScanLog(group) {
@@ -2838,7 +2838,7 @@ function renderQrScanLog(group) {
   const box = document.getElementById(ids.log);
   if (!box) return;
   if (log.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">لسه محدش اتمسح النهاردة.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">لسه محدش اتمسح النهاردة.</p>`;
     return;
   }
   box.innerHTML = log.map(item => `
