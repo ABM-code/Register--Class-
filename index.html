@@ -51,6 +51,12 @@
   --c-textonpage: #F5F1E6;
   --c-onsuccess: #FFFDF8;
   --c-subtle-rgb: 245,241,230;
+  --c-warnbg: #FBF0DE;
+  --c-warntext: #8A6A1F;
+  --c-warnsolid: #946A26;
+  --c-infobg: #E4EDF6;
+  --c-infotext: #2E5C8A;
+  --c-infosolid: #5B8FC4;
 }
 [data-theme="light"] {
   --c-pagebg: #F6F4EE;
@@ -70,6 +76,12 @@
   --c-textonpage: #1E2B24;
   --c-onsuccess: #FFFFFF;
   --c-subtle-rgb: 30,43,36;
+  --c-warnbg: #FBF0DE;
+  --c-warntext: #8A6A1F;
+  --c-warnsolid: #946A26;
+  --c-infobg: #E4EDF6;
+  --c-infotext: #2E5C8A;
+  --c-infosolid: #5B8FC4;
 }
 .theme-toggle-btn {
   position: absolute; top: 1rem; left: 7rem; background: rgba(var(--c-subtle-rgb),0.08);
@@ -702,7 +714,7 @@
 
     <div class="tools-group-title" style="display:flex; align-items:center; justify-content:space-between;">
       المحتوى الحالي
-      <span onclick="refreshMaterialsList()" style="cursor:pointer; font-size:0.75rem; color:#8A6A1F; font-weight:600;">🔄 تحديث</span>
+      <span onclick="refreshMaterialsList()" style="cursor:pointer; font-size:0.75rem; color:var(--c-warntext); font-weight:600;">🔄 تحديث</span>
     </div>
     <div id="materialsStageFilter" class="category-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem;"></div>
     <div id="materialsListBox"></div>
@@ -854,7 +866,7 @@
     <div class="field-group">
       <label>Name *</label>
       <input class="reg-input" id="fName" placeholder="Full name">
-      <div id="dupNameWarning" style="display:none; font-size:0.8rem; color:#946A26; background:#FBF0DE; padding:0.4rem 0.6rem; border-radius:6px; margin-top:0.4rem;"></div>
+      <div id="dupNameWarning" style="display:none; font-size:0.8rem; color:var(--c-warntext); background:var(--c-warnbg); padding:0.4rem 0.6rem; border-radius:6px; margin-top:0.4rem;"></div>
     </div>
     <div class="field-group">
       <label>المرحلة</label>
@@ -921,7 +933,7 @@
       </div>
     </div>
     <div class="field-group">
-      <div class="checkbox-row" onclick="document.getElementById('fExempt').click()" style="background:#FBF0DE; border-color:var(--c-accent);">
+      <div class="checkbox-row" onclick="document.getElementById('fExempt').click()" style="background:var(--c-warnbg); border-color:var(--c-accent);">
         <input type="checkbox" id="fExempt" onclick="event.stopPropagation()">
         <label for="fExempt" onclick="event.stopPropagation()">معفى من الدفع</label>
       </div>
@@ -996,7 +1008,7 @@
       <div id="questionsBuilder"></div>
       <div style="display:flex; gap:0.5rem; margin:0.5rem 0 0.5rem;">
         <button onclick="addQuestionCard()" style="flex:1; background:var(--c-cardalt); color:var(--c-textoncard); border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">+ ضيف سؤال</button>
-        <button onclick="openQuestionBankPicker()" style="flex:1; background:#FBF3DF; color:#8A6A1F; border:1px dashed var(--c-accent); border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">📚 من بنك الأسئلة</button>
+        <button onclick="openQuestionBankPicker()" style="flex:1; background:var(--c-warnbg); color:var(--c-warntext); border:1px dashed var(--c-accent); border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">📚 من بنك الأسئلة</button>
       </div>
       <button onclick="saveAllQuestionsToBank()" style="width:100%; background:none; color:var(--c-mutedoncard); border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.55rem; font-size:0.85rem; font-weight:600; cursor:pointer; margin-bottom:1rem;">💾 احفظ كل أسئلة الامتحان ده في البنك مرة واحدة</button>
       <button onclick="saveExam()" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveExamBtnLabel">حفظ الامتحان</span></button>
@@ -1009,7 +1021,7 @@
         <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">📚 بنك الأسئلة</strong>
         <div style="display:flex; align-items:center; gap:0.6rem;">
           <span onclick="cleanupDuplicateQuestions()" style="cursor:pointer; font-size:0.75rem; color:var(--c-dangertext); font-weight:600;">🧹 حذف المكرر</span>
-          <span onclick="refreshQuestionBankPicker()" style="cursor:pointer; font-size:0.75rem; color:#8A6A1F; font-weight:600;">🔄 تحديث</span>
+          <span onclick="refreshQuestionBankPicker()" style="cursor:pointer; font-size:0.75rem; color:var(--c-warntext); font-weight:600;">🔄 تحديث</span>
           <button onclick="closeQuestionBankPicker()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;">✕</button>
         </div>
       </div>
@@ -1517,7 +1529,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v72 — تحديث التصميم (المرحلة 1): توحيد الألوان مع الثيم الفاتح/الغامق في شاشة الدخول والنوافذ وكروت الامتحانات والطلاب — 28 سبتمبر 2026";
+const APP_VERSION = "v73 — تحديث التصميم (المرحلة 1 مكتملة): توحيد كل الألوان الثابتة المتبقية مع الثيم الفاتح/الغامق — 29 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -2235,7 +2247,7 @@ async function loadStudentAttendanceSummary(studentId, stage, group, boxId) {
     const presentCount = relevant.filter(d => d.records[studentId]).length;
     const pct = Math.round((presentCount / relevant.length) * 100);
     const recentSorted = [...relevant].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10);
-    const dotsHtml = recentSorted.map(d => `<span title="${d.date}${d.records[studentId] ? ' - حاضر' : ' - غايب'}" style="display:inline-block; width:11px; height:11px; border-radius:50%; margin-left:4px; background:${d.records[studentId] ? '#5E9468' : 'var(--c-danger)'};"></span>`).join("");
+    const dotsHtml = recentSorted.map(d => `<span title="${d.date}${d.records[studentId] ? ' - حاضر' : ' - غايب'}" style="display:inline-block; width:11px; height:11px; border-radius:50%; margin-left:4px; background:${d.records[studentId] ? 'var(--c-success)' : 'var(--c-danger)'};"></span>`).join("");
     box.innerHTML = `<div style="font-size:0.85rem; margin-bottom:0.4rem;">نسبة الحضور: <strong>${pct}%</strong> (${presentCount} من ${relevant.length} يوم مسجّل)</div><div>${dotsHtml}</div>`;
   } catch (err) {
     console.error("attendance summary error", err);
@@ -3913,7 +3925,7 @@ function renderSmartSearchResults() {
       <div class="tools-group-title">طلاب</div>
       ${matchedStudents.map(s => `
         <div class="result-row" style="cursor:pointer;" onclick="smartSearchGoToStudent('${s.id}')">
-          <div class="result-row-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}${s.group === 'torail' ? ' <span class="mini-badge" style="background:#FBF0DE;color:#8A6A1F;">توريل</span>' : ''}</div>
+          <div class="result-row-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}${s.group === 'torail' ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>' : ''}</div>
         </div>`).join("")}
     `);
   }
@@ -4447,8 +4459,8 @@ function renderMaterialsList() {
     if (!stagesPresent.includes(activeMaterialsStageFilter)) activeMaterialsStageFilter = "الكل";
     filterBox.innerHTML = stagesPresent.map(s => `
       <div onclick="setMaterialsStageFilter('${s}')" style="cursor:pointer; padding:0.35rem 0.85rem; border-radius:999px; font-size:0.8rem; font-weight:600;
-        background:${s === activeMaterialsStageFilter ? '#D4A93B' : 'rgba(0,0,0,0.06)'};
-        color:${s === activeMaterialsStageFilter ? '#1B2420' : '#4A5A50'};">${escapeHtml(s)}</div>
+        background:${s === activeMaterialsStageFilter ? 'var(--c-accent)' : 'rgba(var(--c-subtle-rgb),0.08)'};
+        color:${s === activeMaterialsStageFilter ? 'var(--c-onaccent)' : 'var(--c-mutedoncard)'};">${escapeHtml(s)}</div>
     `).join("");
   }
 
@@ -4638,7 +4650,7 @@ function renderExamsList() {
       const statusBadge = isClosed
         ? `<span class="mini-badge" style="background:var(--c-dangerbg);color:var(--c-dangertext);">🔒 مقفول${deadlinePassed && !ex.closedManually ? ' (انتهى الموعد)' : ''}</span>`
         : (ex.deadline ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">🔓 مفتوح — يقفل ${deadlineText}</span>` : "");
-      const paidBadge = ex.paidOnly ? `<span class="mini-badge" style="background:#FBF3DF;color:#8A6A1F;">💰 مدفوع — مش مجاني لطلاب الـPIN</span>` : "";
+      const paidBadge = ex.paidOnly ? `<span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">💰 مدفوع — مش مجاني لطلاب الـPIN</span>` : "";
       return `
       <div class="exam-card">
         <div class="exam-card-title">${escapeHtml(ex.title)}${newBadgeHtml}</div>
@@ -4648,10 +4660,10 @@ function renderExamsList() {
           <button style="background:var(--c-accent); color:var(--c-onaccent);" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
           <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="editExam('${ex.id}')">تعديل</button>
           <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="viewExamResults('${ex.id}')">النتائج</button>
-          <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش ${isOldUnloadedExam ? '(دوس لعرض العدد)' : '(' + missingCount + '/' + stageStudentCount + ')'}</button>
-          <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamQuestionsPdf('${ex.id}')">طباعة الأسئلة</button>
+          <button style="background:var(--c-warnbg); color:var(--c-warntext);" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش ${isOldUnloadedExam ? '(دوس لعرض العدد)' : '(' + missingCount + '/' + stageStudentCount + ')'}</button>
+          <button style="background:var(--c-infobg); color:var(--c-infotext);" onclick="printExamQuestionsPdf('${ex.id}')">طباعة الأسئلة</button>
           <button style="background:var(--c-successbg); color:var(--c-success);" onclick="printExamAnswersPdf('${ex.id}')">طباعة نموذج الإجابة</button>
-          <button style="background:none; border:1px dashed var(--c-accent); color:#8A6A1F;" onclick="saveExamQuestionsToBank('${ex.id}')">💾 كل الأسئلة للبنك</button>
+          <button style="background:none; border:1px dashed var(--c-accent); color:var(--c-warntext);" onclick="saveExamQuestionsToBank('${ex.id}')">💾 كل الأسئلة للبنك</button>
           <button style="background:${isClosed ? 'var(--c-successbg)' : 'var(--c-dangerbg)'}; color:${isClosed ? 'var(--c-success)' : 'var(--c-dangertext)'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '🔓 فتح الامتحان تاني' : '🔒 قفل الامتحان الآن'}</button>
           <button style="background:var(--c-dangerbg); color:var(--c-dangertext);" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
@@ -5971,19 +5983,19 @@ function renderExamResultsList() {
           <div style="display:flex; align-items:center; gap:0.6rem;">
             <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
             <div>
-              <div class="result-row-name">${escapeHtml(r.studentName)}${isResultTorail(r) ? ' <span class="mini-badge" style="background:#FBF0DE;color:#8A6A1F;">توريل</span>' : ''}${r.manual ? ' <span class="mini-badge" style="background:#E4EDF6;color:#2E5C8A;">غير مسجل</span>' : ''}</div>
+              <div class="result-row-name">${escapeHtml(r.studentName)}${isResultTorail(r) ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>' : ''}${r.manual ? ' <span class="mini-badge" style="background:var(--c-infobg);color:var(--c-infotext);">غير مسجل</span>' : ''}</div>
               <div class="result-row-date">${dateStr}</div>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
             <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
-            ${r.studentId ? `<button class="wa-send-btn" style="background:#5B8FC4;" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
+            ${r.studentId ? `<button class="wa-send-btn" style="background:var(--c-infosolid);" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
             ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
             ${r.studentId ? (() => {
               const alreadyAllowed = !!(ex && ex.allowRetake && ex.allowRetake[r.studentId]);
               return alreadyAllowed
                 ? `<button class="wa-send-btn" style="background:var(--c-success);" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">✓ مسموح بالإعادة</button>`
-                : `<button class="wa-send-btn" style="background:#946A26;" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">🔄 سماح بإعادة المحاولة</button>`;
+                : `<button class="wa-send-btn" style="background:var(--c-warnsolid);" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">🔄 سماح بإعادة المحاولة</button>`;
             })() : ""}
           </div>
         </div>
@@ -6174,7 +6186,7 @@ function renderMissingStudentsList() {
     <div class="result-row">
       <div style="display:flex; align-items:center; gap:0.6rem;">
         <input type="checkbox" onchange="toggleMissingSelect('${s.id}', this.checked)" ${selectedMissingIds.has(s.id) ? "checked" : ""}>
-        <div class="result-row-name">${escapeHtml(s.name)}${s.group === "torail" ? ' <span class="mini-badge" style="background:#FBF0DE;color:#8A6A1F;">توريل</span>' : ''}</div>
+        <div class="result-row-name">${escapeHtml(s.name)}${s.group === "torail" ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>' : ''}</div>
       </div>
       <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
         ${s.studentPhone ? `<button class="wa-send-btn" onclick='sendExamReminderWhatsapp(${JSON.stringify(s).replace(/'/g,"&apos;")}, ${JSON.stringify(ex.title)}, "student")'>تذكير للطالب</button>` : ""}
