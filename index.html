@@ -362,27 +362,27 @@
 <body>
 
 <div id="waQueueModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9998; align-items:center; justify-content:center; padding:1.25rem;">
-  <div style="background:#F5F1E6; border-radius:14px; padding:1.5rem; max-width:400px; width:100%; text-align:center;">
-    <div id="waQueueProgress" style="color:#6B6B60; font-size:0.85rem; margin-bottom:0.5rem;"></div>
+  <div style="background:var(--c-cardbg); border-radius:14px; padding:1.5rem; max-width:400px; width:100%; text-align:center;">
+    <div id="waQueueProgress" style="color:var(--c-mutedoncard); font-size:0.85rem; margin-bottom:0.5rem;"></div>
     <div id="waQueueName" style="font-family:'Fraunces',serif; font-weight:700; font-size:1.15rem; margin-bottom:0.3rem;"></div>
-    <div id="waQueuePhone" style="color:#6B6B60; font-size:0.85rem; margin-bottom:1rem;"></div>
+    <div id="waQueuePhone" style="color:var(--c-mutedoncard); font-size:0.85rem; margin-bottom:1rem;"></div>
     <button id="waQueueOpenBtn" onclick="waQueueOpenCurrent()" style="background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.75rem 1rem; font-weight:700; font-size:0.95rem; cursor:pointer; width:100%; margin-bottom:0.6rem;">
       📤 افتح واتساب وابعت
     </button>
-    <button onclick="waQueueNext()" style="background:#D4A93B; color:#1B2420; border:none; border-radius:10px; padding:0.7rem 1rem; font-weight:700; font-size:0.9rem; cursor:pointer; width:100%; margin-bottom:0.5rem;">
+    <button onclick="waQueueNext()" style="background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.7rem 1rem; font-weight:700; font-size:0.9rem; cursor:pointer; width:100%; margin-bottom:0.5rem;">
       التالي ⬅️
     </button>
-    <button onclick="waQueueClose()" style="background:none; color:#9C4B32; border:1px solid #C15B3C; border-radius:10px; padding:0.6rem 1rem; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%;">
+    <button onclick="waQueueClose()" style="background:none; color:var(--c-dangertext); border:1px solid var(--c-danger); border-radius:10px; padding:0.6rem 1rem; font-weight:600; font-size:0.85rem; cursor:pointer; width:100%;">
       إغلاق
     </button>
   </div>
 </div>
 
 <div id="smartSearchModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9995; align-items:flex-start; justify-content:center; padding:1.25rem;">
-  <div style="background:#F5F1E6; border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:88vh; overflow-y:auto; margin-top:2rem;">
+  <div style="background:var(--c-cardbg); border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:88vh; overflow-y:auto; margin-top:2rem;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
       <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">🔍 بحث شامل</strong>
-      <button onclick="closeSmartSearch()" style="width:auto; background:none; color:#6B6B60; padding:0.2rem 0.5rem;">✕</button>
+      <button onclick="closeSmartSearch()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;">✕</button>
     </div>
     <input class="reg-input" id="smartSearchInput" placeholder="دوّر على طالب، امتحان، سؤال، أو نتيجة..." oninput="renderSmartSearchResults()" style="margin-bottom:0.9rem;">
     <div id="smartSearchResults"></div>
@@ -390,10 +390,10 @@
 </div>
 
 <div id="brandSettingsModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9996; align-items:center; justify-content:center; padding:1.25rem;">
-  <div style="background:#F5F1E6; border-radius:14px; padding:1.5rem; max-width:420px; width:100%; max-height:85vh; overflow-y:auto;">
+  <div style="background:var(--c-cardbg); border-radius:14px; padding:1.5rem; max-width:420px; width:100%; max-height:85vh; overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
       <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">🏷️ إعدادات الهوية</strong>
-      <button onclick="closeBrandSettings()" style="width:auto; background:none; color:#6B6B60; padding:0.2rem 0.5rem;">✕</button>
+      <button onclick="closeBrandSettings()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;">✕</button>
     </div>
     <div class="field-group">
       <label>اسم السنتر / المركز (اختياري)</label>
@@ -407,23 +407,23 @@
       <label>فوتر اختياري (هيظهر أسفل التطبيق)</label>
       <input class="reg-input" id="brandFooterInput" placeholder="مثال: جميع الحقوق محفوظة لمركز النخبة">
     </div>
-    <button id="brandSettingsSaveBtn" onclick="saveBrandSettings()" style="width:100%; background:#3F6B4A; color:#F5F1E6; border:none; border-radius:9px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.5rem;">حفظ</button>
+    <button id="brandSettingsSaveBtn" onclick="saveBrandSettings()" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:9px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.5rem;">حفظ</button>
   </div>
 </div>
 
-<div id="lockScreen" style="position:fixed;inset:0;background:#16302B;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.9rem;padding:1.5rem;text-align:center;">
+<div id="lockScreen" style="position:fixed;inset:0;background:var(--c-pagebg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0.9rem;padding:1.5rem;text-align:center;">
   <div id="lockCheckingState" style="display:flex; flex-direction:column; align-items:center; gap:0.9rem;">
-    <div style="width:30px; height:30px; border-radius:50%; border:3px solid rgba(212,169,59,0.25); border-top-color:#D4A93B; animation:bootSpin 0.8s linear infinite;"></div>
-    <p style="color:#9FB8AD; font-size:0.85rem; margin:0;">جاري التحقق من تسجيل الدخول...</p>
+    <div style="width:30px; height:30px; border-radius:50%; border:3px solid rgba(212,169,59,0.25); border-top-color:var(--c-accent); animation:bootSpin 0.8s linear infinite;"></div>
+    <p style="color:var(--c-mutedonpage); font-size:0.85rem; margin:0;">جاري التحقق من تسجيل الدخول...</p>
   </div>
   <div id="lockFormContent" style="display:none; flex-direction:column; align-items:center; gap:0.9rem;">
     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#D4A93B" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    <h2 style="font-family:'Fraunces',serif;color:#F5F1E6;margin:0;font-size:1.2rem;">دخول المدرس</h2>
+    <h2 style="font-family:'Fraunces',serif;color:var(--c-textonpage);margin:0;font-size:1.2rem;">دخول المدرس</h2>
     <input id="lockEmailInput" type="email" placeholder="البريد الإلكتروني" autocomplete="username" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
     <input id="lockPasswordInput" type="password" placeholder="كلمة المرور" autocomplete="current-password" style="width:100%;max-width:260px;padding:0.7rem 0.9rem;border-radius:10px;border:1px solid rgba(var(--c-subtle-rgb),0.25);background:rgba(var(--c-subtle-rgb),0.08);color:var(--c-textonpage);font-size:0.95rem;text-align:center;">
-    <button id="lockUnlockBtn" style="background:#D4A93B;color:#1B2420;border:none;border-radius:10px;padding:0.65rem 1.6rem;font-weight:600;font-size:0.92rem;cursor:pointer;">دخول</button>
-    <span onclick="handleForgotPassword()" style="color:#9FB8AD; font-size:0.82rem; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;">نسيت كلمة المرور؟</span>
-    <p id="lockErrorMsg" style="color:#C15B3C;font-size:0.85rem;display:none;margin:0;"></p>
+    <button id="lockUnlockBtn" style="background:var(--c-accent);color:var(--c-onaccent);border:none;border-radius:10px;padding:0.65rem 1.6rem;font-weight:600;font-size:0.92rem;cursor:pointer;">دخول</button>
+    <span onclick="handleForgotPassword()" style="color:var(--c-mutedonpage); font-size:0.82rem; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;">نسيت كلمة المرور؟</span>
+    <p id="lockErrorMsg" style="color:var(--c-danger);font-size:0.85rem;display:none;margin:0;"></p>
   </div>
 </div>
 <style>@keyframes bootSpin { to { transform: rotate(360deg); } }</style>
@@ -436,10 +436,10 @@
         🔔
         <span id="notifCenterBadge" class="badge-dot" style="display:none; position:absolute; top:-4px; left:-4px;">0</span>
       </button>
-      <div id="notifCenterPanel" style="display:none; position:absolute; top:calc(100% + 8px); left:0; width:300px; max-width:80vw; max-height:380px; overflow-y:auto; background:#F5F1E6; border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,0.28); z-index:60; padding:0.7rem;">
+      <div id="notifCenterPanel" style="display:none; position:absolute; top:calc(100% + 8px); left:0; width:300px; max-width:80vw; max-height:380px; overflow-y:auto; background:var(--c-cardbg); border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,0.28); z-index:60; padding:0.7rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-          <strong style="font-family:'Fraunces',serif; font-size:0.95rem; color:#1B2420;">الإشعارات</strong>
-          <span onclick="markAllNotificationsSeen()" style="cursor:pointer; font-size:0.72rem; color:#4A5A50; font-weight:600;">تعليم الكل كمقروء</span>
+          <strong style="font-family:'Fraunces',serif; font-size:0.95rem; color:var(--c-textoncard);">الإشعارات</strong>
+          <span onclick="markAllNotificationsSeen()" style="cursor:pointer; font-size:0.72rem; color:var(--c-mutedoncard); font-weight:600;">تعليم الكل كمقروء</span>
         </div>
         <div id="notifCenterList"></div>
       </div>
@@ -921,7 +921,7 @@
       </div>
     </div>
     <div class="field-group">
-      <div class="checkbox-row" onclick="document.getElementById('fExempt').click()" style="background:#FBF0DE; border-color:#D4A93B;">
+      <div class="checkbox-row" onclick="document.getElementById('fExempt').click()" style="background:#FBF0DE; border-color:var(--c-accent);">
         <input type="checkbox" id="fExempt" onclick="event.stopPropagation()">
         <label for="fExempt" onclick="event.stopPropagation()">معفى من الدفع</label>
       </div>
@@ -1501,7 +1501,7 @@
   </button>
 
   <div class="backup-row" style="align-items:center; margin-bottom:0.7rem;">
-    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:#4A5A50;">
+    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.85rem; color:var(--c-mutedoncard);">
       <input type="checkbox" id="torailStudentsSelectAllBox" onchange="toggleSelectAllTorailStudents(this.checked)">
       تحديد الكل
     </label>
@@ -1517,7 +1517,7 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v71 — نظام بيع محتوى بالأكواد + كاميرا QR للحضور + سجل حضور/غياب موحّد + بداية تحديث التصميم — 28 سبتمبر 2026";
+const APP_VERSION = "v72 — تحديث التصميم (المرحلة 1): توحيد الألوان مع الثيم الفاتح/الغامق في شاشة الدخول والنوافذ وكروت الامتحانات والطلاب — 28 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -2142,15 +2142,15 @@ async function loadAttendanceDayView(group) {
   const date = document.getElementById(ids.dateInput).value;
   const box = document.getElementById(ids.list);
   if (!stage || !date) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة والتاريخ عشان تسجّل الحضور.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة والتاريخ عشان تسجّل الحضور.</p>`;
     return;
   }
-  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
   const stageStudents = students
     .filter(s => s.stage === stage && (group === "torail" ? s.group === "torail" : s.group !== "torail"))
     .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   if (stageStudents.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش طلاب في المرحلة دي.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش طلاب في المرحلة دي.</p>`;
     return;
   }
   const docId = `${currentTeacherId}_${group}_${stage}_${date}`;
@@ -2178,7 +2178,7 @@ function renderAttendanceStudentsList(group, stageStudents) {
       <div class="result-row-name">${escapeHtml(s.name)}</div>
       <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
         <input type="checkbox" ${records[s.id] ? "checked" : ""} onchange="toggleAttendanceRecord('${group}', '${s.id}', this.checked)">
-        <span id="attStatusLabel_${group}_${s.id}" style="font-size:0.85rem; font-weight:700; color:${records[s.id] ? '#3F6B4A' : '#C15B3C'};">${records[s.id] ? 'حاضر' : 'غايب'}</span>
+        <span id="attStatusLabel_${group}_${s.id}" style="font-size:0.85rem; font-weight:700; color:${records[s.id] ? 'var(--c-success)' : 'var(--c-danger)'};">${records[s.id] ? 'حاضر' : 'غايب'}</span>
       </label>
     </div>
   `).join("");
@@ -2235,7 +2235,7 @@ async function loadStudentAttendanceSummary(studentId, stage, group, boxId) {
     const presentCount = relevant.filter(d => d.records[studentId]).length;
     const pct = Math.round((presentCount / relevant.length) * 100);
     const recentSorted = [...relevant].sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 10);
-    const dotsHtml = recentSorted.map(d => `<span title="${d.date}${d.records[studentId] ? ' - حاضر' : ' - غايب'}" style="display:inline-block; width:11px; height:11px; border-radius:50%; margin-left:4px; background:${d.records[studentId] ? '#5E9468' : '#C15B3C'};"></span>`).join("");
+    const dotsHtml = recentSorted.map(d => `<span title="${d.date}${d.records[studentId] ? ' - حاضر' : ' - غايب'}" style="display:inline-block; width:11px; height:11px; border-radius:50%; margin-left:4px; background:${d.records[studentId] ? '#5E9468' : 'var(--c-danger)'};"></span>`).join("");
     box.innerHTML = `<div style="font-size:0.85rem; margin-bottom:0.4rem;">نسبة الحضور: <strong>${pct}%</strong> (${presentCount} من ${relevant.length} يوم مسجّل)</div><div>${dotsHtml}</div>`;
   } catch (err) {
     console.error("attendance summary error", err);
@@ -2300,10 +2300,10 @@ async function loadAbsenceLog(group) {
   const to = document.getElementById(ids.toInput).value;
   const box = document.getElementById(ids.list);
   if (!stage) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة الأول.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة الأول.</p>`;
     return;
   }
-  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
   selectedAbsentees[group] = new Set();
   updateAbsenceSelectedCount(group);
   try {
@@ -2319,7 +2319,7 @@ async function loadAbsenceLog(group) {
     renderAbsenceSummary(group);
   } catch (err) {
     console.error("absence log load error", err);
-    box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل السجل. تأكد من اتصالك بالإنترنت.</p>`;
+    box.innerHTML = `<p style="color:var(--c-danger); text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل السجل. تأكد من اتصالك بالإنترنت.</p>`;
   }
 }
 
@@ -3801,10 +3801,10 @@ function renderNotificationCenter() {
   if (panel && panel.style.display === "block") {
     list.innerHTML = notifications.length
       ? notifications.map(n => `
-          <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:#1B2420;">
+          <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
             ${n.html}
           </div>`).join("")
-      : `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش إشعارات جديدة 🎉</p>`;
+      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش إشعارات جديدة 🎉</p>`;
   }
 }
 
@@ -3882,7 +3882,7 @@ function renderSmartSearchResults() {
   try {
     const rawQuery = document.getElementById("smartSearchInput").value.trim();
     if (rawQuery.length < 2) {
-      box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">اكتب حرفين على الأقل عشان تبدأ البحث.</p>`;
+      box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">اكتب حرفين على الأقل عشان تبدأ البحث.</p>`;
       return;
     }
     const normQuery = normalizeArabic(rawQuery);
@@ -3959,10 +3959,10 @@ function renderSmartSearchResults() {
 
   box.innerHTML = sections.length
     ? sections.join("")
-    : `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش نتائج مطابقة.</p>`;
+    : `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش نتائج مطابقة.</p>`;
   } catch (err) {
     console.error("smart search error", err);
-    box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">حصل خطأ في البحث: ${escapeHtml(String(err && err.message ? err.message : err))}</p>`;
+    box.innerHTML = `<p style="color:var(--c-danger); text-align:center; padding:1rem 0; font-size:0.85rem;">حصل خطأ في البحث: ${escapeHtml(String(err && err.message ? err.message : err))}</p>`;
   }
 }
 
@@ -4066,19 +4066,19 @@ function renderStudentPerfSearchResults() {
   list = sortByStageThenName(list);
 
   if (!rawQuery && !stage) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">ابحث بالاسم أو اختار المرحلة عشان تشوف الطلاب.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">ابحث بالاسم أو اختار المرحلة عشان تشوف الطلاب.</p>`;
     return;
   }
   if (list.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب مطابقين للبحث.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب مطابقين للبحث.</p>`;
     return;
   }
   const limited = list.slice(0, 20);
   box.innerHTML = limited.map(s => `
-    <div class="result-row" style="cursor:pointer; ${selectedStudentPerfId === s.id ? 'box-shadow:0 0 0 2px #D4A93B inset;' : ''}" onclick="selectStudentPerf('${s.id}')">
+    <div class="result-row" style="cursor:pointer; ${selectedStudentPerfId === s.id ? 'box-shadow:0 0 0 2px var(--c-accent) inset;' : ''}" onclick="selectStudentPerf('${s.id}')">
       <div class="result-row-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
     </div>
-  `).join("") + (list.length > limited.length ? `<p style="color:#9FB8AD; text-align:center; padding:0.4rem 0; font-size:0.78rem;">فيه ${list.length - limited.length} نتيجة تانية، ضيّق البحث أكتر.</p>` : "");
+  `).join("") + (list.length > limited.length ? `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.4rem 0; font-size:0.78rem;">فيه ${list.length - limited.length} نتيجة تانية، ضيّق البحث أكتر.</p>` : "");
 }
 
 function selectStudentPerf(studentId) {
@@ -4256,7 +4256,7 @@ function toggleMaterialsSection() {
     if (materialsLoaded) {
       renderMaterialsList();
     } else {
-      document.getElementById("materialsListBox").innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+      document.getElementById("materialsListBox").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
       loadMaterialsOnce();
     }
   }
@@ -4264,7 +4264,7 @@ function toggleMaterialsSection() {
 
 function refreshMaterialsList() {
   const box = document.getElementById("materialsListBox");
-  if (box) box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
+  if (box) box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
   loadMaterialsOnce(true);
 }
 
@@ -4432,7 +4432,7 @@ function renderMaterialPreview(m) {
     return `<img src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}" style="width:100%; border-radius:9px; margin-top:0.6rem; display:block;">`;
   }
   if (m.type === "pdf") {
-    return `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener" style="display:block; text-align:center; background:#3F6B4A; color:#F5F1E6; text-decoration:none; padding:0.65rem; border-radius:9px; font-weight:600; font-size:0.85rem; margin-top:0.6rem;">📄 افتح ملف الـPDF</a>`;
+    return `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener" style="display:block; text-align:center; background:var(--c-success); color:var(--c-onsuccess); text-decoration:none; padding:0.65rem; border-radius:9px; font-weight:600; font-size:0.85rem; margin-top:0.6rem;">📄 افتح ملف الـPDF</a>`;
   }
   return "";
 }
@@ -4455,7 +4455,7 @@ function renderMaterialsList() {
   const list = activeMaterialsStageFilter === "الكل" ? materials : materials.filter(m => (m.stage || "") === activeMaterialsStageFilter);
 
   if (list.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش محتوى مُضاف.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش محتوى مُضاف.</p>`;
     return;
   }
   const typeLabels = { video: "🎬 فيديو", image: "🖼 صورة", pdf: "📄 PDF" };
@@ -4464,14 +4464,14 @@ function renderMaterialsList() {
       <div class="result-row" style="cursor:pointer;" onclick="toggleMaterialPreview('${m.id}')">
         <div>
           <div class="result-row-name">
-            <span style="background:#3F6B4A; color:#F5F1E6; border-radius:6px; padding:0.1rem 0.5rem; font-size:0.75rem; margin-left:0.4rem;">${escapeHtml(m.stage || "")}</span>
+            <span style="background:var(--c-success); color:var(--c-onsuccess); border-radius:6px; padding:0.1rem 0.5rem; font-size:0.75rem; margin-left:0.4rem;">${escapeHtml(m.stage || "")}</span>
             ${escapeHtml(m.title || "")}
           </div>
           <div class="result-row-date">${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — 💰 مدفوع" : ""}</div>
         </div>
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
           <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="event.stopPropagation(); editMaterial('${m.id}')">تعديل</button>
-          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="event.stopPropagation(); deleteMaterial('${m.id}')">حذف</button>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:var(--c-dangerbg); color:var(--c-dangertext);" onclick="event.stopPropagation(); deleteMaterial('${m.id}')">حذف</button>
         </div>
       </div>
       ${expandedMaterialId === m.id ? `<div style="padding:0 0.2rem 0.8rem;">${renderMaterialPreview(m)}</div>` : ""}
@@ -4519,11 +4519,11 @@ async function toggleAutoBackupsList(boxId = "autoBackupsList") {
 
 async function loadAutoBackupsList(boxId = "autoBackupsList") {
   const box = document.getElementById(boxId);
-  box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
   try {
     const snap = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).get();
     if (snap.empty) {
-      box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p>`;
+      box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p>`;
       return;
     }
     const sortedDocs = snap.docs.slice().sort((a, b) => {
@@ -4544,7 +4544,7 @@ async function loadAutoBackupsList(boxId = "autoBackupsList") {
         </div>`;
     }).join("");
   } catch (err) {
-    box.innerHTML = `<p style="color:#C15B3C; text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل النسخ الاحتياطية.</p>`;
+    box.innerHTML = `<p style="color:var(--c-danger); text-align:center; padding:1rem 0; font-size:0.85rem;">تعذر تحميل النسخ الاحتياطية.</p>`;
   }
 }
 
@@ -4601,12 +4601,12 @@ function renderExamsList() {
   renderExamsStageFilterPills();
   const container = document.getElementById("examsByStage");
   if (exams.length === 0) {
-    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:2rem 0; font-size:0.9rem;">لسه مفيش امتحانات. دوس "+ امتحان جديد" عشان تبدأ.</p>`;
+    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:2rem 0; font-size:0.9rem;">لسه مفيش امتحانات. دوس "+ امتحان جديد" عشان تبدأ.</p>`;
     return;
   }
   const visibleExams = examsStageFilter ? exams.filter(ex => (ex.stage || "بدون مرحلة") === examsStageFilter) : exams;
   if (visibleExams.length === 0) {
-    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:2rem 0; font-size:0.9rem;">مفيش امتحانات في المرحلة دي.</p>`;
+    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:2rem 0; font-size:0.9rem;">مفيش امتحانات في المرحلة دي.</p>`;
     return;
   }
   const grouped = {};
@@ -4636,8 +4636,8 @@ function renderExamsList() {
       const isClosed = !!ex.closedManually || deadlinePassed;
       const deadlineText = ex.deadline ? new Date(ex.deadline).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "";
       const statusBadge = isClosed
-        ? `<span class="mini-badge" style="background:#F6E7E2;color:#9C4B32;">🔒 مقفول${deadlinePassed && !ex.closedManually ? ' (انتهى الموعد)' : ''}</span>`
-        : (ex.deadline ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">🔓 مفتوح — يقفل ${deadlineText}</span>` : "");
+        ? `<span class="mini-badge" style="background:var(--c-dangerbg);color:var(--c-dangertext);">🔒 مقفول${deadlinePassed && !ex.closedManually ? ' (انتهى الموعد)' : ''}</span>`
+        : (ex.deadline ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">🔓 مفتوح — يقفل ${deadlineText}</span>` : "");
       const paidBadge = ex.paidOnly ? `<span class="mini-badge" style="background:#FBF3DF;color:#8A6A1F;">💰 مدفوع — مش مجاني لطلاب الـPIN</span>` : "";
       return `
       <div class="exam-card">
@@ -4645,15 +4645,15 @@ function renderExamsList() {
         <div class="exam-card-stage">${(ex.questions||[]).length} سؤال — ${isOldUnloadedExam ? 'دوس "النتائج" لعرض العدد' : resultCount + ' إجابة مسجلة'}${ex.timeLimitMinutes ? ' — ⏱ ' + ex.timeLimitMinutes + ' دقيقة' : ''}</div>
         ${statusBadge || paidBadge ? `<div style="margin-bottom:0.6rem; display:flex; gap:0.4rem; flex-wrap:wrap;">${statusBadge}${paidBadge}</div>` : ""}
         <div class="exam-card-actions">
-          <button style="background:#D4A93B; color:#1B2420;" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
-          <button style="background:#EAEAE4; color:#1B2420;" onclick="editExam('${ex.id}')">تعديل</button>
-          <button style="background:#EAEAE4; color:#1B2420;" onclick="viewExamResults('${ex.id}')">النتائج</button>
+          <button style="background:var(--c-accent); color:var(--c-onaccent);" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
+          <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="editExam('${ex.id}')">تعديل</button>
+          <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="viewExamResults('${ex.id}')">النتائج</button>
           <button style="background:#FBF0DE; color:#946A26;" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش ${isOldUnloadedExam ? '(دوس لعرض العدد)' : '(' + missingCount + '/' + stageStudentCount + ')'}</button>
           <button style="background:#E4EDF6; color:#2E5C8A;" onclick="printExamQuestionsPdf('${ex.id}')">طباعة الأسئلة</button>
-          <button style="background:#EAF2E7; color:#3F6B4A;" onclick="printExamAnswersPdf('${ex.id}')">طباعة نموذج الإجابة</button>
-          <button style="background:none; border:1px dashed #D4A93B; color:#8A6A1F;" onclick="saveExamQuestionsToBank('${ex.id}')">💾 كل الأسئلة للبنك</button>
-          <button style="background:${isClosed ? '#EAF2E7' : '#F6E7E2'}; color:${isClosed ? '#3F6B4A' : '#9C4B32'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '🔓 فتح الامتحان تاني' : '🔒 قفل الامتحان الآن'}</button>
-          <button style="background:#F6E7E2; color:#9C4B32;" onclick="deleteExam('${ex.id}')">حذف</button>
+          <button style="background:var(--c-successbg); color:var(--c-success);" onclick="printExamAnswersPdf('${ex.id}')">طباعة نموذج الإجابة</button>
+          <button style="background:none; border:1px dashed var(--c-accent); color:#8A6A1F;" onclick="saveExamQuestionsToBank('${ex.id}')">💾 كل الأسئلة للبنك</button>
+          <button style="background:${isClosed ? 'var(--c-successbg)' : 'var(--c-dangerbg)'}; color:${isClosed ? 'var(--c-success)' : 'var(--c-dangertext)'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '🔓 فتح الامتحان تاني' : '🔒 قفل الامتحان الآن'}</button>
+          <button style="background:var(--c-dangerbg); color:var(--c-dangertext);" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
       </div>`;
     }).join("")}
@@ -5134,14 +5134,14 @@ function openQuestionBankPicker() {
   if (questionBankLoaded) {
     renderQuestionBankPicker();
   } else {
-    document.getElementById("bankPickerList").innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+    document.getElementById("bankPickerList").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
     loadQuestionBankOnce();
   }
 }
 
 function refreshQuestionBankPicker() {
   const box = document.getElementById("bankPickerList");
-  if (box) box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
+  if (box) box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
   loadQuestionBankOnce(true);
 }
 
@@ -5230,7 +5230,7 @@ function renderQuestionBankPicker() {
   const typeLabels = { mcq: "اختياري", translation_mcq: "ترجمة", complete: "إكمال", rewrite: "صياغة", correct: "تصحيح", dialogue: "محادثة", essay: "مقالي" };
 
   if (list.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أسئلة في البنك مطابقة للفلتر ده.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أسئلة في البنك مطابقة للفلتر ده.</p>`;
     updateBankSelectAllUI();
     return;
   }
@@ -5239,7 +5239,7 @@ function renderQuestionBankPicker() {
       <input type="checkbox" onchange="toggleBankQuestionSelect('${q.id}', this.checked)" ${selectedBankQuestionIds.has(q.id) ? "checked" : ""}>
       <div>
         <div style="font-weight:600; font-size:0.88rem;">${escapeHtml(q.prompt)}</div>
-        <div style="font-size:0.75rem; color:#6B6B60;">${escapeHtml(q.stage || "")} — ${typeLabels[q.type] || q.type}${(q.tags||[]).length ? " — " + q.tags.map(escapeHtml).join(", ") : ""}</div>
+        <div style="font-size:0.75rem; color:var(--c-mutedoncard);">${escapeHtml(q.stage || "")} — ${typeLabels[q.type] || q.type}${(q.tags||[]).length ? " — " + q.tags.map(escapeHtml).join(", ") : ""}</div>
       </div>
     </label>
   `).join("");
@@ -5274,7 +5274,7 @@ function renderQuestionsBuilder() {
       <div class="question-card-head">
         <strong>سؤال ${i+1}</strong>
         <div style="display:flex; gap:0.4rem;">
-          <button class="remove-q-btn" style="color:#4A5A50;" onclick="saveQuestionToBank('${q.id}')">💾 احفظ في البنك</button>
+          <button class="remove-q-btn" style="color:var(--c-mutedoncard);" onclick="saveQuestionToBank('${q.id}')">💾 احفظ في البنك</button>
           <button class="remove-q-btn" onclick="removeQuestionCard('${q.id}')">حذف السؤال</button>
         </div>
       </div>
@@ -5514,7 +5514,7 @@ async function viewExamResults(examId) {
   document.getElementById("examQuestionStatsSection").style.display = "none";
   document.getElementById("examQuestionStatsToggleBtn").classList.remove("open");
   if (!loadedExamResultIds.has(examId)) {
-    document.getElementById("examResultsList").innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">جاري التحميل...</p>`;
+    document.getElementById("examResultsList").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">جاري التحميل...</p>`;
   }
   await ensureExamResultsLoaded(examId);
   renderExamResultsList();
@@ -5798,7 +5798,7 @@ function renderDeletedStudentsList() {
         </div>
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
           <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="restoreStudent('${s.id}')">استرجاع</button>
-          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="permanentlyDeleteStudent('${s.id}')">حذف نهائي</button>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:var(--c-dangerbg); color:var(--c-dangertext);" onclick="permanentlyDeleteStudent('${s.id}')">حذف نهائي</button>
         </div>
       </div>`;
   }
@@ -5806,12 +5806,12 @@ function renderDeletedStudentsList() {
   if (mainBox) {
     mainBox.innerHTML = mainList.length
       ? mainList.map(rowHtml).join("")
-      : `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
+      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
   }
   if (torailBox) {
     torailBox.innerHTML = torailList.length
       ? torailList.map(rowHtml).join("")
-      : `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
+      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
   }
   updateDeletedBadge("deletedStudentsBadge", mainList.length);
   updateDeletedBadge("torailDeletedStudentsBadge", torailList.length);
@@ -5841,7 +5841,7 @@ function renderDeletedResultsList() {
   if (!box) return;
   updateDeletedBadge("deletedResultsBadge", deletedExamResults.length);
   if (deletedExamResults.length === 0) {
-    box.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش نتائج محذوفة حاليًا.</p>`;
+    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش نتائج محذوفة حاليًا.</p>`;
     return;
   }
   box.innerHTML = deletedExamResults.map(r => {
@@ -5854,7 +5854,7 @@ function renderDeletedResultsList() {
         </div>
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
           <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="restoreResult('${r.id}')">استرجاع</button>
-          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:#F6E7E2; color:#9C4B32;" onclick="permanentlyDeleteResult('${r.id}')">حذف نهائي</button>
+          <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem; background:var(--c-dangerbg); color:var(--c-dangertext);" onclick="permanentlyDeleteResult('${r.id}')">حذف نهائي</button>
         </div>
       </div>`;
   }).join("");
@@ -5916,7 +5916,7 @@ function renderExamResultsList() {
   const container = document.getElementById("examResultsList");
   if (list.length === 0) {
     const msg = resultsTorailOnly ? "لسه محدش من طلاب توريل سلّم الامتحان ده." : (rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.");
-    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
+    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
     updateResultsSelectionUI();
     return;
   }
@@ -5982,7 +5982,7 @@ function renderExamResultsList() {
             ${r.studentId ? (() => {
               const alreadyAllowed = !!(ex && ex.allowRetake && ex.allowRetake[r.studentId]);
               return alreadyAllowed
-                ? `<button class="wa-send-btn" style="background:#3F6B4A;" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">✓ مسموح بالإعادة</button>`
+                ? `<button class="wa-send-btn" style="background:var(--c-success);" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">✓ مسموح بالإعادة</button>`
                 : `<button class="wa-send-btn" style="background:#946A26;" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">🔄 سماح بإعادة المحاولة</button>`;
             })() : ""}
           </div>
@@ -6096,7 +6096,7 @@ async function viewMissingStudents(examId) {
   document.getElementById("examResultsView").style.display = "none";
   document.getElementById("examMissingView").style.display = "block";
   if (!loadedExamResultIds.has(examId)) {
-    document.getElementById("examMissingList").innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">جاري التحميل...</p>`;
+    document.getElementById("examMissingList").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">جاري التحميل...</p>`;
   }
   await ensureExamResultsLoaded(examId);
   renderMissingStudentsList();
@@ -6161,12 +6161,12 @@ function renderMissingStudentsList() {
   const missing = getMissingStudentsList();
 
   if (stageStudents.length === 0) {
-    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p>`;
+    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p>`;
     updateMissingSelectionUI();
     return;
   }
   if (missing.length === 0) {
-    container.innerHTML = `<p style="color:#9FB8AD; text-align:center; padding:1.5rem 0; font-size:0.9rem;">كل الطلاب دخلوا الامتحان ✓</p>`;
+    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">كل الطلاب دخلوا الامتحان ✓</p>`;
     updateMissingSelectionUI();
     return;
   }
@@ -6389,7 +6389,7 @@ function render() {
     return `
       <div class="card-row" data-student-id="${s.id}">
         <div class="card-head" onclick="toggleExpand('${s.id}')">
-          <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleStudentSelect('${s.id}', this.checked)" ${selectedStudentIds.has(s.id) ? "checked" : ""} style="width:18px; height:18px; flex-shrink:0; accent-color:#3F6B4A;">
+          <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleStudentSelect('${s.id}', this.checked)" ${selectedStudentIds.has(s.id) ? "checked" : ""} style="width:18px; height:18px; flex-shrink:0; accent-color:var(--c-success);">
           <div style="min-width:0;flex:1;">
             <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
             <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
@@ -6403,18 +6403,18 @@ function render() {
           <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}${s.studentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','student')">واتساب</button>` : ""}</span></div>
           <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}${s.parentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','parent')">واتساب</button>` : ""}</span></div>
           <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
-            <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
-            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${s.term1Paid ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${s.term1Paid ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${(s.term1Received ?? s.term1) ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
           </span></div>
           <div class="detail-row"><span class="detail-label">مذكرة ترم تاني</span><span class="detail-value" style="display:flex;gap:0.4rem;">
-            <span class="mini-badge" style="background:${s.term2Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term2Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
-            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term2Received ?? s.term2) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${s.term2Paid ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${s.term2Paid ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${(s.term2Received ?? s.term2) ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
           </span></div>
           ${s.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${escapeHtml(s.notes)}</span></div>` : ""}
           <div class="detail-row"><span class="detail-label">رمز الامتحان</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem;">
             ${s.pin
-              ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
-              : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
+              ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مفعّل</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
+              : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">لسه ما اتحددش</span>`}
           </span></div>
 
           <div class="payments-section">
@@ -6582,7 +6582,7 @@ function renderTorail() {
     return `
       <div class="card-row" data-student-id="${s.id}">
         <div class="card-head" onclick="toggleTorailExpand('${s.id}')">
-          <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleTorailStudentSelect('${s.id}', this.checked)" ${selectedTorailStudentIds.has(s.id) ? "checked" : ""} style="width:18px; height:18px; flex-shrink:0; accent-color:#3F6B4A;">
+          <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleTorailStudentSelect('${s.id}', this.checked)" ${selectedTorailStudentIds.has(s.id) ? "checked" : ""} style="width:18px; height:18px; flex-shrink:0; accent-color:var(--c-success);">
           <div style="min-width:0;flex:1;">
             <div class="card-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
             <div class="card-entry">Entered ${fmtDate(s.entryDate)}</div>
@@ -6596,18 +6596,18 @@ function renderTorail() {
           <div class="detail-row"><span class="detail-label">Student</span><span class="detail-value">${escapeHtml(s.studentPhone) || "—"}${s.studentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','student')">واتساب</button>` : ""}</span></div>
           <div class="detail-row"><span class="detail-label">Parent</span><span class="detail-value">${escapeHtml(s.parentPhone) || "—"}${s.parentPhone ? `<button type="button" class="wa-send-btn" style="margin-right:0.5rem;" onclick="event.stopPropagation(); openWhatsappFor('${s.id}','parent')">واتساب</button>` : ""}</span></div>
           <div class="detail-row"><span class="detail-label">مذكرة ترم أول</span><span class="detail-value" style="display:flex;gap:0.4rem;">
-            <span class="mini-badge" style="background:${s.term1Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term1Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
-            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term1Received ?? s.term1) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${s.term1Paid ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${s.term1Paid ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">دفع ${s.term1Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term1Received ?? s.term1) ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${(s.term1Received ?? s.term1) ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">استلم ${(s.term1Received ?? s.term1) ? '\u2713' : '\u2717'}</span>
           </span></div>
           <div class="detail-row"><span class="detail-label">مذكرة ترم تاني</span><span class="detail-value" style="display:flex;gap:0.4rem;">
-            <span class="mini-badge" style="background:${s.term2Paid ? '#EAF2E7' : '#EAEAE4'};color:${s.term2Paid ? '#3F6B4A' : '#6B6B60'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
-            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? '#EAF2E7' : '#EAEAE4'};color:${(s.term2Received ?? s.term2) ? '#3F6B4A' : '#6B6B60'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${s.term2Paid ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${s.term2Paid ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">دفع ${s.term2Paid ? '\u2713' : '\u2717'}</span>
+            <span class="mini-badge" style="background:${(s.term2Received ?? s.term2) ? 'var(--c-successbg)' : 'var(--c-cardalt)'};color:${(s.term2Received ?? s.term2) ? 'var(--c-success)' : 'var(--c-mutedoncard)'};">استلم ${(s.term2Received ?? s.term2) ? '\u2713' : '\u2717'}</span>
           </span></div>
           ${s.notes ? `<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${escapeHtml(s.notes)}</span></div>` : ""}
           <div class="detail-row"><span class="detail-label">رمز الامتحان</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem;">
             ${s.pin
-              ? `<span class="mini-badge" style="background:#EAF2E7;color:#3F6B4A;">مفعّل</span><button class="wa-send-btn" style="background:#C15B3C;" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
-              : `<span class="mini-badge" style="background:#EAEAE4;color:#6B6B60;">لسه ما اتحددش</span>`}
+              ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مفعّل</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
+              : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">لسه ما اتحددش</span>`}
           </span></div>
 
           <div class="payments-section">
