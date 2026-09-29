@@ -363,6 +363,36 @@
   .add-payment-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
   .add-payment-row input { font-size: 0.85rem; padding: 0.5rem 0.6rem; }
   .add-pay-btn { background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 8px; padding: 0 0.85rem; font-size: 0.83rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  /* ===== المرحلة 3: الداشبورد + الامتحانات + النتائج + حالات فاضية ===== */
+  .stats-row { flex-wrap: wrap; }
+  .stats-row .stat-card { min-width: 105px; padding: 0.8rem 0.85rem 0.7rem; border-radius: 14px; border-top: 3px solid var(--sc, var(--c-accent)); }
+  .stats-row .stat-card:nth-child(1) { --sc: var(--c-accent); }
+  .stats-row .stat-card:nth-child(2) { --sc: var(--c-success); }
+  .stats-row .stat-card:nth-child(3) { --sc: var(--c-danger); }
+  .stats-row .stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+  .stat-label { font-size: 0.72rem; font-weight: 600; }
+  .stat-value { font-size: 1.2rem; }
+  .stat-section-title { display: flex; align-items: center; gap: 0.55rem; }
+  .stat-section-title::before { content: ""; width: 4px; height: 1.1em; border-radius: 4px; background: var(--c-accent); }
+  .stat-card-box { border-radius: 14px; border: 1px solid rgba(var(--c-subtle-rgb),0.08); box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .stat-card-box:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+  .chart-box { border-radius: 14px; border: 1px solid rgba(var(--c-subtle-rgb),0.08); box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .bar-track { height: 12px; border-radius: 8px; }
+  .bar-fill { border-radius: 8px; }
+  .bar-fill.green { background: var(--c-success); }
+  .bar-fill.blue { background: var(--c-infosolid); }
+  .exam-card { border-radius: 16px; border: 1px solid rgba(var(--c-subtle-rgb),0.08); transition: box-shadow 0.15s ease, transform 0.15s ease; }
+  .exam-card:hover { transform: translateY(-1px); }
+  .exam-card-title { font-size: 1.05rem; }
+  .exam-card-actions button { border-radius: 10px; }
+  .result-row { border: 1px solid rgba(var(--c-subtle-rgb),0.06); border-radius: 14px; }
+  .result-row-score { padding: 0.15rem 0.65rem; border-radius: 999px; font-size: 0.85rem; white-space: nowrap; background: var(--c-successbg); color: var(--c-success); }
+  .result-row-score.sc-mid { background: var(--c-warnbg); color: var(--c-warntext); }
+  .result-row-score.sc-low { background: var(--c-dangerbg); color: var(--c-dangertext); }
+  .empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; text-align: center; padding: 1.6rem 1rem; color: var(--c-mutedonpage); }
+  .empty-state .ic { box-sizing: content-box; width: 1.9rem; height: 1.9rem; padding: 0.7rem; stroke-width: 1.5; opacity: 0.7; background: rgba(var(--c-subtle-rgb),0.08); border-radius: 50%; }
+  .empty-state p { margin: 0; font-size: 0.88rem; line-height: 1.7; max-width: 26rem; }
+  .chart-empty .ic { display: block; margin: 0 auto 0.5rem; width: 1.8rem; height: 1.8rem; opacity: 0.5; stroke-width: 1.5; }
   .ic { width:1.15em; height:1.15em; vertical-align:-0.2em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; pointer-events:none; }
   .eye-icon .ic { width:1em; height:1em; }
 </style>
@@ -374,7 +404,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-unlock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></symbol><symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol><symbol id="i-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol><symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-unlock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></symbol><symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol><symbol id="i-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol><symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol></svg>
 
 <div id="waQueueModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9998; align-items:center; justify-content:center; padding:1.25rem;">
   <div style="background:var(--c-cardbg); border-radius:14px; padding:1.5rem; max-width:400px; width:100%; text-align:center;">
@@ -1533,7 +1563,7 @@
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v74 — تحديث التصميم (المرحلة 2): استبدال الإيموجي بأيقونات SVG حديثة في الأزرار والتابات والنوافذ — 29 سبتمبر 2026";
+const APP_VERSION = "v75 — تصحيح زرار نسبة الحضور + تحديث التصميم (المرحلة 3): الداشبورد، كروت الامتحانات، شارات النتائج، وحالات مفيش بيانات — 29 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -2158,15 +2188,15 @@ async function loadAttendanceDayView(group) {
   const date = document.getElementById(ids.dateInput).value;
   const box = document.getElementById(ids.list);
   if (!stage || !date) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة والتاريخ عشان تسجّل الحضور.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><p>اختر المرحلة والتاريخ عشان تسجّل الحضور.</p></div>`;
     return;
   }
-  box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحميل...</p></div>`;
   const stageStudents = students
     .filter(s => s.stage === stage && (group === "torail" ? s.group === "torail" : s.group !== "torail"))
     .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   if (stageStudents.length === 0) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش طلاب في المرحلة دي.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><p>مفيش طلاب في المرحلة دي.</p></div>`;
     return;
   }
   const docId = `${currentTeacherId}_${group}_${stage}_${date}`;
@@ -2233,7 +2263,8 @@ async function saveAttendanceDay(group) {
 
 async function loadStudentAttendanceSummary(studentId, stage, group, boxId) {
   const box = document.getElementById(boxId);
-  if (!box || !stage) return;
+  if (!box) return;
+  if (!stage) { box.innerHTML = `<p class="no-payments">مفيش مرحلة مسجّلة للطالب ده — عدّل بياناته وحدد المرحلة الأول.</p>`; return; }
   box.innerHTML = `<p class="no-payments">جاري التحميل...</p>`;
   const cacheKey = `${group}|${stage}`;
   try {
@@ -2316,10 +2347,10 @@ async function loadAbsenceLog(group) {
   const to = document.getElementById(ids.toInput).value;
   const box = document.getElementById(ids.list);
   if (!stage) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">اختر المرحلة الأول.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>اختر المرحلة الأول.</p></div>`;
     return;
   }
-  box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحميل...</p></div>`;
   selectedAbsentees[group] = new Set();
   updateAbsenceSelectedCount(group);
   try {
@@ -2390,7 +2421,7 @@ function renderAbsenceLog(group) {
     </div>`;
   }).join("");
   if (!rowsHtml) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أي سجل حضور مسجّل في الفترة والمرحلة دي.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><p>مفيش أي سجل حضور مسجّل في الفترة والمرحلة دي.</p></div>`;
     return;
   }
   box.innerHTML = rowsHtml;
@@ -2587,7 +2618,7 @@ function renderAbsenceSummary(group) {
   const box = document.getElementById(getAbsenceLogElIds(group).summaryList);
   const summary = computeAbsenceSummary(group);
   if (summary.length === 0) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش غياب مسجّل في الفترة دي.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><p>مفيش غياب مسجّل في الفترة دي.</p></div>`;
     return;
   }
   box.innerHTML = `<div class="card" style="background:var(--c-cardbg); padding:0.9rem;">
@@ -2854,7 +2885,7 @@ function renderQrScanLog(group) {
   const box = document.getElementById(ids.log);
   if (!box) return;
   if (log.length === 0) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">لسه محدش اتمسح النهاردة.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>لسه محدش اتمسح النهاردة.</p></div>`;
     return;
   }
   box.innerHTML = log.map(item => `
@@ -3820,7 +3851,7 @@ function renderNotificationCenter() {
           <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
             ${n.html}
           </div>`).join("")
-      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش إشعارات جديدة <svg class="ic" aria-hidden="true"><use href="#i-sparkle"/></svg></p>`;
+      : `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><p>مفيش إشعارات جديدة <svg class="ic" aria-hidden="true"><use href="#i-sparkle"/></svg></p></div>`;
   }
 }
 
@@ -3898,7 +3929,7 @@ function renderSmartSearchResults() {
   try {
     const rawQuery = document.getElementById("smartSearchInput").value.trim();
     if (rawQuery.length < 2) {
-      box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">اكتب حرفين على الأقل عشان تبدأ البحث.</p>`;
+      box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>اكتب حرفين على الأقل عشان تبدأ البحث.</p></div>`;
       return;
     }
     const normQuery = normalizeArabic(rawQuery);
@@ -3966,7 +3997,7 @@ function renderSmartSearchResults() {
           <div class="result-row-name">${escapeHtml(r.studentName)}</div>
           <div style="display:flex; align-items:center; gap:0.5rem;">
             <span class="result-row-date">${escapeHtml(ex ? ex.title : (r.examTitle || ""))}</span>
-            <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+            <span class="result-row-score ${pct >= 85 ? 'sc-high' : pct >= 50 ? 'sc-mid' : 'sc-low'}">${r.score}/${r.total} (${pct}%)</span>
           </div>
         </div>`;
       }).join("")}
@@ -3975,7 +4006,7 @@ function renderSmartSearchResults() {
 
   box.innerHTML = sections.length
     ? sections.join("")
-    : `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش نتائج مطابقة.</p>`;
+    : `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><p>مفيش نتائج مطابقة.</p></div>`;
   } catch (err) {
     console.error("smart search error", err);
     box.innerHTML = `<p style="color:var(--c-danger); text-align:center; padding:1rem 0; font-size:0.85rem;">حصل خطأ في البحث: ${escapeHtml(String(err && err.message ? err.message : err))}</p>`;
@@ -3985,7 +4016,7 @@ function renderSmartSearchResults() {
 function renderBarChart(containerId, rows, colorClass) {
   const container = document.getElementById(containerId);
   if (!rows.length) {
-    container.innerHTML = `<div class="chart-empty">مفيش بيانات كفاية لعرضها لسه</div>`;
+    container.innerHTML = `<div class="chart-empty"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> مفيش بيانات كفاية لعرضها لسه</div>`;
     return;
   }
   const maxVal = Math.max(...rows.map(r => r.value), 1);
@@ -4082,11 +4113,11 @@ function renderStudentPerfSearchResults() {
   list = sortByStageThenName(list);
 
   if (!rawQuery && !stage) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">ابحث بالاسم أو اختار المرحلة عشان تشوف الطلاب.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><p>ابحث بالاسم أو اختار المرحلة عشان تشوف الطلاب.</p></div>`;
     return;
   }
   if (list.length === 0) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب مطابقين للبحث.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><p>مفيش طلاب مطابقين للبحث.</p></div>`;
     return;
   }
   const limited = list.slice(0, 20);
@@ -4094,7 +4125,7 @@ function renderStudentPerfSearchResults() {
     <div class="result-row" style="cursor:pointer; ${selectedStudentPerfId === s.id ? 'box-shadow:0 0 0 2px var(--c-accent) inset;' : ''}" onclick="selectStudentPerf('${s.id}')">
       <div class="result-row-name">${escapeHtml(s.name)}${s.stage ? ` <span class="stage-tag">${escapeHtml(s.stage)}</span>` : ''}</div>
     </div>
-  `).join("") + (list.length > limited.length ? `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.4rem 0; font-size:0.78rem;">فيه ${list.length - limited.length} نتيجة تانية، ضيّق البحث أكتر.</p>` : "");
+  `).join("") + (list.length > limited.length ? `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>فيه ${list.length - limited.length} نتيجة تانية، ضيّق البحث أكتر.</p></div>` : "");
 }
 
 function selectStudentPerf(studentId) {
@@ -4108,7 +4139,7 @@ function renderStudentPerformance() {
   if (!container) return;
   const studentId = selectedStudentPerfId;
   if (!studentId) {
-    container.innerHTML = `<div class="chart-empty">اختر طالب من نتائج البحث فوق عشان تشوف أداءه عبر الوقت</div>`;
+    container.innerHTML = `<div class="chart-empty"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> اختر طالب من نتائج البحث فوق عشان تشوف أداءه عبر الوقت</div>`;
     return;
   }
   const results = examResults
@@ -4120,7 +4151,7 @@ function renderStudentPerformance() {
       return at - bt;
     });
   if (results.length === 0) {
-    container.innerHTML = `<div class="chart-empty">الطالب ده لسه ما دخلش أي امتحان</div>`;
+    container.innerHTML = `<div class="chart-empty"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> الطالب ده لسه ما دخلش أي امتحان</div>`;
     return;
   }
   const rows = results.map(r => {
@@ -4149,7 +4180,7 @@ function renderExamQuestionDifficulty() {
   const questions = ex.questions || [];
   const results = examResults.filter(r => r.examId === viewingExamId);
   if (questions.length === 0 || results.length === 0) {
-    container.innerHTML = `<div class="chart-empty">مفيش بيانات كفاية لعرضها لسه</div>`;
+    container.innerHTML = `<div class="chart-empty"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> مفيش بيانات كفاية لعرضها لسه</div>`;
     return;
   }
   const rows = questions.map((q, qi) => {
@@ -4167,7 +4198,7 @@ function renderExamQuestionDifficulty() {
     return { label: `س${qi + 1}: ${shortPrompt}`, value: wrongPct, display: wrongPct + "% خطأ" };
   }).filter(Boolean);
   if (rows.length === 0) {
-    container.innerHTML = `<div class="chart-empty">مفيش بيانات كفاية لعرضها لسه</div>`;
+    container.innerHTML = `<div class="chart-empty"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> مفيش بيانات كفاية لعرضها لسه</div>`;
     return;
   }
   rows.sort((a, b) => b.value - a.value);
@@ -4272,7 +4303,7 @@ function toggleMaterialsSection() {
     if (materialsLoaded) {
       renderMaterialsList();
     } else {
-      document.getElementById("materialsListBox").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+      document.getElementById("materialsListBox").innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحميل...</p></div>`;
       loadMaterialsOnce();
     }
   }
@@ -4280,7 +4311,7 @@ function toggleMaterialsSection() {
 
 function refreshMaterialsList() {
   const box = document.getElementById("materialsListBox");
-  if (box) box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
+  if (box) box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحديث...</p></div>`;
   loadMaterialsOnce(true);
 }
 
@@ -4471,7 +4502,7 @@ function renderMaterialsList() {
   const list = activeMaterialsStageFilter === "الكل" ? materials : materials.filter(m => (m.stage || "") === activeMaterialsStageFilter);
 
   if (list.length === 0) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش محتوى مُضاف.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg><p>لسه مفيش محتوى مُضاف.</p></div>`;
     return;
   }
   const typeLabels = { video: icon("video") + " فيديو", image: icon("image") + " صورة", pdf: icon("file") + " PDF" };
@@ -4535,11 +4566,11 @@ async function toggleAutoBackupsList(boxId = "autoBackupsList") {
 
 async function loadAutoBackupsList(boxId = "autoBackupsList") {
   const box = document.getElementById(boxId);
-  box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+  box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحميل...</p></div>`;
   try {
     const snap = await db.collection("autoBackups").where("teacherId", "==", currentTeacherId).get();
     if (snap.empty) {
-      box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p>`;
+      box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-archive"/></svg><p>لسه مفيش نسخ تلقائية اتعملت. هتتعمل أول نسخة تلقائيًا خلال أيام من استخدامك للتطبيق.</p></div>`;
       return;
     }
     const sortedDocs = snap.docs.slice().sort((a, b) => {
@@ -4617,12 +4648,12 @@ function renderExamsList() {
   renderExamsStageFilterPills();
   const container = document.getElementById("examsByStage");
   if (exams.length === 0) {
-    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:2rem 0; font-size:0.9rem;">لسه مفيش امتحانات. دوس "+ امتحان جديد" عشان تبدأ.</p>`;
+    container.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><p>لسه مفيش امتحانات. دوس "+ امتحان جديد" عشان تبدأ.</p></div>`;
     return;
   }
   const visibleExams = examsStageFilter ? exams.filter(ex => (ex.stage || "بدون مرحلة") === examsStageFilter) : exams;
   if (visibleExams.length === 0) {
-    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:2rem 0; font-size:0.9rem;">مفيش امتحانات في المرحلة دي.</p>`;
+    container.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><p>مفيش امتحانات في المرحلة دي.</p></div>`;
     return;
   }
   const grouped = {};
@@ -5150,14 +5181,14 @@ function openQuestionBankPicker() {
   if (questionBankLoaded) {
     renderQuestionBankPicker();
   } else {
-    document.getElementById("bankPickerList").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحميل...</p>`;
+    document.getElementById("bankPickerList").innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحميل...</p></div>`;
     loadQuestionBankOnce();
   }
 }
 
 function refreshQuestionBankPicker() {
   const box = document.getElementById("bankPickerList");
-  if (box) box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">جاري التحديث...</p>`;
+  if (box) box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحديث...</p></div>`;
   loadQuestionBankOnce(true);
 }
 
@@ -5246,7 +5277,7 @@ function renderQuestionBankPicker() {
   const typeLabels = { mcq: "اختياري", translation_mcq: "ترجمة", complete: "إكمال", rewrite: "صياغة", correct: "تصحيح", dialogue: "محادثة", essay: "مقالي" };
 
   if (list.length === 0) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش أسئلة في البنك مطابقة للفلتر ده.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><p>مفيش أسئلة في البنك مطابقة للفلتر ده.</p></div>`;
     updateBankSelectAllUI();
     return;
   }
@@ -5530,7 +5561,7 @@ async function viewExamResults(examId) {
   document.getElementById("examQuestionStatsSection").style.display = "none";
   document.getElementById("examQuestionStatsToggleBtn").classList.remove("open");
   if (!loadedExamResultIds.has(examId)) {
-    document.getElementById("examResultsList").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">جاري التحميل...</p>`;
+    document.getElementById("examResultsList").innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحميل...</p></div>`;
   }
   await ensureExamResultsLoaded(examId);
   renderExamResultsList();
@@ -5822,12 +5853,12 @@ function renderDeletedStudentsList() {
   if (mainBox) {
     mainBox.innerHTML = mainList.length
       ? mainList.map(rowHtml).join("")
-      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
+      : `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><p>مفيش طلاب محذوفين حاليًا.</p></div>`;
   }
   if (torailBox) {
     torailBox.innerHTML = torailList.length
       ? torailList.map(rowHtml).join("")
-      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش طلاب محذوفين حاليًا.</p>`;
+      : `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><p>مفيش طلاب محذوفين حاليًا.</p></div>`;
   }
   updateDeletedBadge("deletedStudentsBadge", mainList.length);
   updateDeletedBadge("torailDeletedStudentsBadge", torailList.length);
@@ -5857,7 +5888,7 @@ function renderDeletedResultsList() {
   if (!box) return;
   updateDeletedBadge("deletedResultsBadge", deletedExamResults.length);
   if (deletedExamResults.length === 0) {
-    box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:0.8rem 0; font-size:0.85rem;">مفيش نتائج محذوفة حاليًا.</p>`;
+    box.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><p>مفيش نتائج محذوفة حاليًا.</p></div>`;
     return;
   }
   box.innerHTML = deletedExamResults.map(r => {
@@ -5932,7 +5963,7 @@ function renderExamResultsList() {
   const container = document.getElementById("examResultsList");
   if (list.length === 0) {
     const msg = resultsTorailOnly ? "لسه محدش من طلاب توريل سلّم الامتحان ده." : (rawQuery ? "مفيش نتائج مطابقة للبحث." : "لسه محدش سلّم الامتحان ده.");
-    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">${msg}</p>`;
+    container.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>${msg}</p></div>`;
     updateResultsSelectionUI();
     return;
   }
@@ -5992,7 +6023,7 @@ function renderExamResultsList() {
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-            <span class="result-row-score">${r.score}/${r.total} (${pct}%)</span>
+            <span class="result-row-score ${pct >= 85 ? 'sc-high' : pct >= 50 ? 'sc-mid' : 'sc-low'}">${r.score}/${r.total} (${pct}%)</span>
             ${r.studentId ? `<button class="wa-send-btn" style="background:var(--c-infosolid);" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
             ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
             ${r.studentId ? (() => {
@@ -6112,7 +6143,7 @@ async function viewMissingStudents(examId) {
   document.getElementById("examResultsView").style.display = "none";
   document.getElementById("examMissingView").style.display = "block";
   if (!loadedExamResultIds.has(examId)) {
-    document.getElementById("examMissingList").innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">جاري التحميل...</p>`;
+    document.getElementById("examMissingList").innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-inbox"/></svg><p>جاري التحميل...</p></div>`;
   }
   await ensureExamResultsLoaded(examId);
   renderMissingStudentsList();
@@ -6177,12 +6208,12 @@ function renderMissingStudentsList() {
   const missing = getMissingStudentsList();
 
   if (stageStudents.length === 0) {
-    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p>`;
+    container.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-users"/></svg><p>مفيش طلاب مسجلين في مرحلة "${escapeHtml(ex.stage)}" أصلًا.</p></div>`;
     updateMissingSelectionUI();
     return;
   }
   if (missing.length === 0) {
-    container.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1.5rem 0; font-size:0.9rem;">كل الطلاب دخلوا الامتحان ✓</p>`;
+    container.innerHTML = `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg><p>كل الطلاب دخلوا الامتحان ✓</p></div>`;
     updateMissingSelectionUI();
     return;
   }
@@ -6436,7 +6467,7 @@ function render() {
           <div class="payments-section">
             <div class="payments-title">الحضور</div>
             <div id="attSummaryTrigger_${s.id}">
-              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'normal', 'attSummaryTrigger_${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg> عرض نسبة الحضور</button>
+              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${escapeHtml(JSON.stringify(s.stage || ""))}, 'normal', 'attSummaryTrigger_${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg> عرض نسبة الحضور</button>
             </div>
             <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة كارنيه QR للحضور</button>
           </div>
@@ -6629,7 +6660,7 @@ function renderTorail() {
           <div class="payments-section">
             <div class="payments-title">الحضور</div>
             <div id="attSummaryTrigger_${s.id}">
-              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'torail', 'attSummaryTrigger_${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg> عرض نسبة الحضور</button>
+              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${escapeHtml(JSON.stringify(s.stage || ""))}, 'torail', 'attSummaryTrigger_${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg> عرض نسبة الحضور</button>
             </div>
             <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة كارنيه QR للحضور</button>
           </div>
