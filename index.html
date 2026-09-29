@@ -363,6 +363,8 @@
   .add-payment-row { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
   .add-payment-row input { font-size: 0.85rem; padding: 0.5rem 0.6rem; }
   .add-pay-btn { background: var(--c-success); color: var(--c-onsuccess); border: none; border-radius: 8px; padding: 0 0.85rem; font-size: 0.83rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .ic { width:1.15em; height:1.15em; vertical-align:-0.2em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; pointer-events:none; }
+  .eye-icon .ic { width:1em; height:1em; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -372,6 +374,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-unlock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></symbol><symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol><symbol id="i-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol><symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol></svg>
 
 <div id="waQueueModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9998; align-items:center; justify-content:center; padding:1.25rem;">
   <div style="background:var(--c-cardbg); border-radius:14px; padding:1.5rem; max-width:400px; width:100%; text-align:center;">
@@ -379,7 +382,7 @@
     <div id="waQueueName" style="font-family:'Fraunces',serif; font-weight:700; font-size:1.15rem; margin-bottom:0.3rem;"></div>
     <div id="waQueuePhone" style="color:var(--c-mutedoncard); font-size:0.85rem; margin-bottom:1rem;"></div>
     <button id="waQueueOpenBtn" onclick="waQueueOpenCurrent()" style="background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.75rem 1rem; font-weight:700; font-size:0.95rem; cursor:pointer; width:100%; margin-bottom:0.6rem;">
-      📤 افتح واتساب وابعت
+      <svg class="ic" aria-hidden="true"><use href="#i-send"/></svg> افتح واتساب وابعت
     </button>
     <button onclick="waQueueNext()" style="background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.7rem 1rem; font-weight:700; font-size:0.9rem; cursor:pointer; width:100%; margin-bottom:0.5rem;">
       التالي ⬅️
@@ -393,8 +396,8 @@
 <div id="smartSearchModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9995; align-items:flex-start; justify-content:center; padding:1.25rem;">
   <div style="background:var(--c-cardbg); border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:88vh; overflow-y:auto; margin-top:2rem;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
-      <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">🔍 بحث شامل</strong>
-      <button onclick="closeSmartSearch()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;">✕</button>
+      <strong style="font-family:'Fraunces',serif; font-size:1.05rem;"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg> بحث شامل</strong>
+      <button onclick="closeSmartSearch()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <input class="reg-input" id="smartSearchInput" placeholder="دوّر على طالب، امتحان، سؤال، أو نتيجة..." oninput="renderSmartSearchResults()" style="margin-bottom:0.9rem;">
     <div id="smartSearchResults"></div>
@@ -404,8 +407,8 @@
 <div id="brandSettingsModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9996; align-items:center; justify-content:center; padding:1.25rem;">
   <div style="background:var(--c-cardbg); border-radius:14px; padding:1.5rem; max-width:420px; width:100%; max-height:85vh; overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-      <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">🏷️ إعدادات الهوية</strong>
-      <button onclick="closeBrandSettings()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;">✕</button>
+      <strong style="font-family:'Fraunces',serif; font-size:1.05rem;"><svg class="ic" aria-hidden="true"><use href="#i-tag"/></svg> إعدادات الهوية</strong>
+      <button onclick="closeBrandSettings()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
     </div>
     <div class="field-group">
       <label>اسم السنتر / المركز (اختياري)</label>
@@ -442,10 +445,10 @@
 
 <header class="app-content">
   <div style="max-width:640px; margin:0 auto 1rem; display:flex; gap:0.5rem; flex-wrap:wrap; justify-content:flex-end; position:relative;">
-    <button class="logout-btn" id="smartSearchBtn" onclick="openSmartSearch()" title="بحث شامل" style="position:static;">🔍</button>
+    <button class="logout-btn" id="smartSearchBtn" onclick="openSmartSearch()" title="بحث شامل" style="position:static;"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg></button>
     <div style="position:relative;">
       <button class="logout-btn" id="notifCenterBtn" onclick="toggleNotificationCenter()" title="مركز الإشعارات" style="position:static;">
-        🔔
+        <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
         <span id="notifCenterBadge" class="badge-dot" style="display:none; position:absolute; top:-4px; left:-4px;">0</span>
       </button>
       <div id="notifCenterPanel" style="display:none; position:absolute; top:calc(100% + 8px); left:0; width:300px; max-width:80vw; max-height:380px; overflow-y:auto; background:var(--c-cardbg); border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,0.28); z-index:60; padding:0.7rem;">
@@ -456,7 +459,7 @@
         <div id="notifCenterList"></div>
       </div>
     </div>
-    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="تبديل الألوان" style="position:static;">🎨</button>
+    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="تبديل الألوان" style="position:static;"><svg class="ic" aria-hidden="true"><use href="#i-palette"/></svg></button>
     <button class="logout-btn" id="brandSettingsBtn" onclick="openBrandSettings()" title="إعدادات الهوية والعلامة" style="position:static;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41 11 3.83A2 2 0 0 0 9.59 3.24L4 3a1 1 0 0 0-1 1l.24 5.59a2 2 0 0 0 .59 1.41l9.58 9.59a2 2 0 0 0 2.83 0l4.35-4.35a2 2 0 0 0 0-2.83z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
       الهوية
@@ -473,7 +476,7 @@
   <div class="header-inner">
     <div class="avatar-wrap" onclick="document.getElementById('avatarFileInput').click()" title="اضغط لتغيير الصورة">
       <img class="avatar" id="teacherAvatarImg" src="data:image/jpeg;base64,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" alt="Mr. Abd El Rahman Moneer">
-      <div class="avatar-edit-badge">✎</div>
+      <div class="avatar-edit-badge"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></div>
     </div>
     <input type="file" id="avatarFileInput" accept="image/*" style="display:none;" onchange="handleAvatarChange(this.files[0])">
     <div style="min-width:0;">
@@ -529,11 +532,11 @@
 
   <div class="stats-row">
     <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('statMonth')">
-      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="statMonth_eye">👁</span></div>
+      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="statMonth_eye"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></span></div>
       <div class="stat-value" id="statMonth" data-real="0 جنيه">••••••</div>
     </div>
     <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('statTotal')">
-      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="statTotal_eye">👁</span></div>
+      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="statTotal_eye"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></span></div>
       <div class="stat-value" id="statTotal" data-real="0 جنيه">••••••</div>
     </div>
     <div class="stat-card overdue-card" id="overduePill">
@@ -543,7 +546,7 @@
   </div>
 
   <button onclick="startOverduePaymentReminderQueue()" style="width:100%; background:var(--c-danger); color:var(--c-textonpage); border:none; border-radius:10px; padding:0.65rem; font-weight:700; cursor:pointer; margin-bottom:0.9rem;">
-    📤 تذكير واتساب لكل المتأخرين في الدفع
+    <svg class="ic" aria-hidden="true"><use href="#i-send"/></svg> تذكير واتساب لكل المتأخرين في الدفع
   </button>
 
   <button id="filterPillsToggleBtn" class="tools-toggle-btn" onclick="toggleFilterPillsSection()">
@@ -709,12 +712,12 @@
     </div>
 
     <button id="copyMaterialsLinkBtn" class="backup-btn" onclick="copyMaterialsPageLink()" style="margin-bottom:1rem;">
-      📋 نسخ رابط المكتبة للطلاب
+      <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> نسخ رابط المكتبة للطلاب
     </button>
 
     <div class="tools-group-title" style="display:flex; align-items:center; justify-content:space-between;">
       المحتوى الحالي
-      <span onclick="refreshMaterialsList()" style="cursor:pointer; font-size:0.75rem; color:var(--c-warntext); font-weight:600;">🔄 تحديث</span>
+      <span onclick="refreshMaterialsList()" style="cursor:pointer; font-size:0.75rem; color:var(--c-warntext); font-weight:600;"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> تحديث</span>
     </div>
     <div id="materialsStageFilter" class="category-pills" style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:0.7rem;"></div>
     <div id="materialsListBox"></div>
@@ -722,7 +725,7 @@
 
   <button id="attendanceToggleBtn" class="tools-toggle-btn" onclick="toggleAttendanceSection('normal')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 تسجيل الحضور
+    <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> تسجيل الحضور
     <svg id="attendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="attendanceSection" style="display:none;">
@@ -745,13 +748,13 @@
       </div>
     </div>
     <div id="attendanceStudentsList"></div>
-    <button onclick="saveAttendanceDay('normal')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.7rem;">💾 حفظ الحضور</button>
-    <button onclick="printStageQrCards(document.getElementById('attStageSelect').value, 'normal')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;">🖨️ طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
+    <button onclick="saveAttendanceDay('normal')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.7rem;"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> حفظ الحضور</button>
+    <button onclick="printStageQrCards(document.getElementById('attStageSelect').value, 'normal')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
   </div>
 
   <button id="qrAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleQrAttendanceSection('normal')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14h.01M14 21h.01M21 21h.01"/></svg>
-    📷 تسجيل حضور بمسح QR
+    <svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> تسجيل حضور بمسح QR
     <svg id="qrAttendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="qrAttendanceSection" style="display:none;">
@@ -760,12 +763,12 @@
       <input type="date" class="reg-input" id="qrAttDateInput">
     </div>
     <div class="field-group">
-      <button type="button" id="qrCameraToggleBtn" onclick="toggleQrCameraScan('normal')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
+      <button type="button" id="qrCameraToggleBtn" onclick="toggleQrCameraScan('normal')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> مسح بكاميرا الجهاز</button>
       <div id="qrCameraBox" style="display:none; margin-top:0.6rem; position:relative; border-radius:10px; overflow:hidden; background:#000;">
         <video id="qrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
         <canvas id="qrCameraCanvas" style="display:none;"></canvas>
       </div>
-      <button type="button" id="qrCameraSwitchBtn" onclick="switchQrCamera('normal')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
+      <button type="button" id="qrCameraSwitchBtn" onclick="switchQrCamera('normal')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> تبديل الكاميرا (أمامية/خلفية)</button>
       <p id="qrCameraError" style="display:none; color:var(--c-danger); font-size:0.82rem; margin-top:0.4rem;"></p>
     </div>
     <div class="field-group">
@@ -779,7 +782,7 @@
 
   <button id="absenceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAbsenceLogSection('normal')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 سجل الحضور والغياب
+    <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> سجل الحضور والغياب
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="absenceLogSection" style="display:none;">
@@ -812,16 +815,16 @@
     <button type="button" onclick="loadAbsenceLog('normal')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="absenceLogList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceLogExcel('normal')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceLogExcel('normal')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> تصدير Excel</button>
+      <button type="button" onclick="printAbsenceLog('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة PDF</button>
     </div>
-    <button type="button" onclick="sendAbsenceWhatsapp('normal')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="absenceLogSelectedCount">0</span>)</button>
+    <button type="button" onclick="sendAbsenceWhatsapp('normal')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;"><svg class="ic" aria-hidden="true"><use href="#i-message"/></svg> إرسال واتساب لأولياء أمور المحددين (<span id="absenceLogSelectedCount">0</span>)</button>
 
-    <div class="tools-group-title" style="margin-top:1.2rem;">📊 ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
+    <div class="tools-group-title" style="margin-top:1.2rem;"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
     <div id="absenceSummaryList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceSummaryExcel('normal')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceSummary('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceSummaryExcel('normal')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> تصدير Excel</button>
+      <button type="button" onclick="printAbsenceSummary('normal')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة PDF</button>
     </div>
   </div>
 
@@ -992,7 +995,7 @@
       <div class="field-group">
         <label class="checkbox-row">
           <input type="checkbox" id="examPaidOnlyInput">
-          <span>🔒 امتحان مدفوع — يتطلب شراء كود وصول (مش هيفتح مجانًا لطلابك بالـPIN)</span>
+          <span><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg> امتحان مدفوع — يتطلب شراء كود وصول (مش هيفتح مجانًا لطلابك بالـPIN)</span>
         </label>
       </div>
       <div class="ai-import-box" id="aiImportBox">
@@ -1008,9 +1011,9 @@
       <div id="questionsBuilder"></div>
       <div style="display:flex; gap:0.5rem; margin:0.5rem 0 0.5rem;">
         <button onclick="addQuestionCard()" style="flex:1; background:var(--c-cardalt); color:var(--c-textoncard); border:none; border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">+ ضيف سؤال</button>
-        <button onclick="openQuestionBankPicker()" style="flex:1; background:var(--c-warnbg); color:var(--c-warntext); border:1px dashed var(--c-accent); border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;">📚 من بنك الأسئلة</button>
+        <button onclick="openQuestionBankPicker()" style="flex:1; background:var(--c-warnbg); color:var(--c-warntext); border:1px dashed var(--c-accent); border-radius:9px; padding:0.65rem; font-weight:600; cursor:pointer;"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg> من بنك الأسئلة</button>
       </div>
-      <button onclick="saveAllQuestionsToBank()" style="width:100%; background:none; color:var(--c-mutedoncard); border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.55rem; font-size:0.85rem; font-weight:600; cursor:pointer; margin-bottom:1rem;">💾 احفظ كل أسئلة الامتحان ده في البنك مرة واحدة</button>
+      <button onclick="saveAllQuestionsToBank()" style="width:100%; background:none; color:var(--c-mutedoncard); border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.55rem; font-size:0.85rem; font-weight:600; cursor:pointer; margin-bottom:1rem;"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> احفظ كل أسئلة الامتحان ده في البنك مرة واحدة</button>
       <button onclick="saveExam()" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.75rem; font-weight:700; cursor:pointer;"><span id="saveExamBtnLabel">حفظ الامتحان</span></button>
     </div>
   </div>
@@ -1018,11 +1021,11 @@
   <div id="bankPickerModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9997; align-items:center; justify-content:center; padding:1.25rem;">
     <div style="background:var(--c-cardbg); border-radius:14px; padding:1.25rem; max-width:480px; width:100%; max-height:85vh; overflow-y:auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
-        <strong style="font-family:'Fraunces',serif; font-size:1.05rem;">📚 بنك الأسئلة</strong>
+        <strong style="font-family:'Fraunces',serif; font-size:1.05rem;"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg> بنك الأسئلة</strong>
         <div style="display:flex; align-items:center; gap:0.6rem;">
-          <span onclick="cleanupDuplicateQuestions()" style="cursor:pointer; font-size:0.75rem; color:var(--c-dangertext); font-weight:600;">🧹 حذف المكرر</span>
-          <span onclick="refreshQuestionBankPicker()" style="cursor:pointer; font-size:0.75rem; color:var(--c-warntext); font-weight:600;">🔄 تحديث</span>
-          <button onclick="closeQuestionBankPicker()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;">✕</button>
+          <span onclick="cleanupDuplicateQuestions()" style="cursor:pointer; font-size:0.75rem; color:var(--c-dangertext); font-weight:600;"><svg class="ic" aria-hidden="true"><use href="#i-eraser"/></svg> حذف المكرر</span>
+          <span onclick="refreshQuestionBankPicker()" style="cursor:pointer; font-size:0.75rem; color:var(--c-warntext); font-weight:600;"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> تحديث</span>
+          <button onclick="closeQuestionBankPicker()" style="width:auto; background:none; color:var(--c-mutedoncard); padding:0.2rem 0.5rem;"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
         </div>
       </div>
       <div class="field-row" style="margin-bottom:0.6rem;">
@@ -1086,7 +1089,7 @@
         حذف المحدد (<span id="selectedResultsCount">0</span>)
       </button>
       <button id="sendSelectedWhatsappBtn" onclick="startWhatsappQueue()" disabled style="background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
-        📤 إرسال واتساب للمحدد
+        <svg class="ic" aria-hidden="true"><use href="#i-send"/></svg> إرسال واتساب للمحدد
       </button>
       <button onclick="deleteAllResultsForExam()" style="background:none; color:var(--c-danger); border:1px solid var(--c-danger); border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; margin-right:auto;">
         حذف كل النتائج
@@ -1105,7 +1108,7 @@
         تحديد الكل
       </label>
       <button id="sendMissingParentsWhatsappBtn" onclick="startMissingParentReminderQueue()" disabled style="background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:8px; padding:0.5rem 0.9rem; font-size:0.82rem; font-weight:600; cursor:pointer; opacity:0.5;">
-        📤 تذكير واتساب لأولياء أمور المحددين (<span id="selectedMissingCount">0</span>)
+        <svg class="ic" aria-hidden="true"><use href="#i-send"/></svg> تذكير واتساب لأولياء أمور المحددين (<span id="selectedMissingCount">0</span>)
       </button>
     </div>
     <div id="examMissingList"></div>
@@ -1197,7 +1200,7 @@
     <button id="enableNotifBtn" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:9px; padding:0.6rem; font-weight:700; cursor:pointer;">تفعيل الإشعارات</button>
   </div>
 
-  <p style="color:var(--c-mutedonpage); font-size:0.78rem; margin:0 0 0.9rem; text-align:center;">📊 الإحصائيات هنا محسوبة من نتائج آخر 3 شهور بس (تحديث فوري وأخف على الأداء)</p>
+  <p style="color:var(--c-mutedonpage); font-size:0.78rem; margin:0 0 0.9rem; text-align:center;"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> الإحصائيات هنا محسوبة من نتائج آخر 3 شهور بس (تحديث فوري وأخف على الأداء)</p>
 
   <div class="stat-section-title">نظرة عامة</div>
   <div class="stats-grid">
@@ -1281,11 +1284,11 @@
 
   <div class="stats-row">
     <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('torailStatMonth')">
-      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="torailStatMonth_eye">👁</span></div>
+      <div class="stat-label">إجمالي هذا الشهر <span class="eye-icon" id="torailStatMonth_eye"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></span></div>
       <div class="stat-value" id="torailStatMonth" data-real="0 جنيه">••••••</div>
     </div>
     <div class="stat-card money-hide-card" onclick="toggleMoneyReveal('torailStatTotal')">
-      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="torailStatTotal_eye">👁</span></div>
+      <div class="stat-label">الإجمالي الكلي <span class="eye-icon" id="torailStatTotal_eye"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></span></div>
       <div class="stat-value" id="torailStatTotal" data-real="0 جنيه">••••••</div>
     </div>
     <div class="stat-card overdue-card" id="torailOverduePill">
@@ -1295,7 +1298,7 @@
   </div>
 
   <button onclick="startOverdueTorailPaymentReminderQueue()" style="width:100%; background:var(--c-danger); color:var(--c-textonpage); border:none; border-radius:10px; padding:0.65rem; font-weight:700; cursor:pointer; margin-bottom:0.9rem;">
-    📤 تذكير واتساب لكل المتأخرين في الدفع
+    <svg class="ic" aria-hidden="true"><use href="#i-send"/></svg> تذكير واتساب لكل المتأخرين في الدفع
   </button>
 
   <button id="torailFilterPillsToggleBtn" class="tools-toggle-btn" onclick="toggleTorailFilterPillsSection()">
@@ -1396,7 +1399,7 @@
 
   <button id="torailAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleAttendanceSection('torail')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 تسجيل الحضور
+    <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> تسجيل الحضور
     <svg id="torailAttendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="torailAttendanceSection" style="display:none;">
@@ -1419,13 +1422,13 @@
       </div>
     </div>
     <div id="torailAttendanceStudentsList"></div>
-    <button onclick="saveAttendanceDay('torail')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.7rem;">💾 حفظ الحضور</button>
-    <button onclick="printStageQrCards(document.getElementById('torailAttStageSelect').value, 'torail')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;">🖨️ طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
+    <button onclick="saveAttendanceDay('torail')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.7rem;"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> حفظ الحضور</button>
+    <button onclick="printStageQrCards(document.getElementById('torailAttStageSelect').value, 'torail')" style="width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.6rem; font-weight:600; cursor:pointer; margin-top:0.6rem; font-size:0.85rem;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة بطاقات QR لكل طلاب المرحلة المختارة</button>
   </div>
 
   <button id="torailQrAttendanceToggleBtn" class="tools-toggle-btn" onclick="toggleQrAttendanceSection('torail')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM21 14h.01M14 21h.01M21 21h.01"/></svg>
-    📷 تسجيل حضور بمسح QR
+    <svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> تسجيل حضور بمسح QR
     <svg id="torailQrAttendanceToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="torailQrAttendanceSection" style="display:none;">
@@ -1434,12 +1437,12 @@
       <input type="date" class="reg-input" id="torailQrAttDateInput">
     </div>
     <div class="field-group">
-      <button type="button" id="torailQrCameraToggleBtn" onclick="toggleQrCameraScan('torail')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;">📷 مسح بكاميرا الجهاز</button>
+      <button type="button" id="torailQrCameraToggleBtn" onclick="toggleQrCameraScan('torail')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer;"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg> مسح بكاميرا الجهاز</button>
       <div id="torailQrCameraBox" style="display:none; margin-top:0.6rem; position:relative; border-radius:10px; overflow:hidden; background:#000;">
         <video id="torailQrCameraVideo" playsinline muted style="width:100%; display:block; max-height:280px; object-fit:cover;"></video>
         <canvas id="torailQrCameraCanvas" style="display:none;"></canvas>
       </div>
-      <button type="button" id="torailQrCameraSwitchBtn" onclick="switchQrCamera('torail')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;">🔄 تبديل الكاميرا (أمامية/خلفية)</button>
+      <button type="button" id="torailQrCameraSwitchBtn" onclick="switchQrCamera('torail')" style="display:none; width:100%; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); border-radius:10px; padding:0.5rem; font-weight:600; cursor:pointer; margin-top:0.5rem; font-size:0.82rem;"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> تبديل الكاميرا (أمامية/خلفية)</button>
       <p id="torailQrCameraError" style="display:none; color:var(--c-danger); font-size:0.82rem; margin-top:0.4rem;"></p>
     </div>
     <div class="field-group">
@@ -1453,7 +1456,7 @@
 
   <button id="torailAbsenceLogToggleBtn" class="tools-toggle-btn" onclick="toggleAbsenceLogSection('torail')">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-    📋 سجل الحضور والغياب
+    <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> سجل الحضور والغياب
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:auto; transition:transform 0.2s;"><path d="m6 9 6 6 6-6"/></svg>
   </button>
   <div id="torailAbsenceLogSection" style="display:none;">
@@ -1486,16 +1489,16 @@
     <button type="button" onclick="loadAbsenceLog('torail')" style="width:100%; background:var(--c-success); color:var(--c-onsuccess); border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-bottom:0.8rem;">عرض السجل</button>
     <div id="torailAbsenceLogList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceLogExcel('torail')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceLogExcel('torail')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> تصدير Excel</button>
+      <button type="button" onclick="printAbsenceLog('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة PDF</button>
     </div>
-    <button type="button" onclick="sendAbsenceWhatsapp('torail')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;">📲 إرسال واتساب لأولياء أمور المحددين (<span id="torailAbsenceLogSelectedCount">0</span>)</button>
+    <button type="button" onclick="sendAbsenceWhatsapp('torail')" style="width:100%; background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.7rem; font-weight:700; cursor:pointer; margin-top:0.8rem;"><svg class="ic" aria-hidden="true"><use href="#i-message"/></svg> إرسال واتساب لأولياء أمور المحددين (<span id="torailAbsenceLogSelectedCount">0</span>)</button>
 
-    <div class="tools-group-title" style="margin-top:1.2rem;">📊 ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
+    <div class="tools-group-title" style="margin-top:1.2rem;"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> ملخص عدد مرات الغياب في الفترة (صفحة واحدة)</div>
     <div id="torailAbsenceSummaryList"></div>
     <div style="display:flex; gap:0.5rem; margin-top:0.6rem;">
-      <button type="button" onclick="exportAbsenceSummaryExcel('torail')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;">⬇️ تصدير Excel</button>
-      <button type="button" onclick="printAbsenceSummary('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;">🖨️ طباعة PDF</button>
+      <button type="button" onclick="exportAbsenceSummaryExcel('torail')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> تصدير Excel</button>
+      <button type="button" onclick="printAbsenceSummary('torail')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.6rem; font-size:0.82rem; font-weight:600; border-radius:8px; box-shadow:none;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة PDF</button>
     </div>
   </div>
 
@@ -1529,7 +1532,8 @@
 <div class="app-content app-version-footer">Class Register — <span id="appVersionText">v1</span></div>
 
 <script>
-const APP_VERSION = "v73 — تحديث التصميم (المرحلة 1 مكتملة): توحيد كل الألوان الثابتة المتبقية مع الثيم الفاتح/الغامق — 29 سبتمبر 2026";
+function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+const APP_VERSION = "v74 — تحديث التصميم (المرحلة 2): استبدال الإيموجي بأيقونات SVG حديثة في الأزرار والتابات والنوافذ — 29 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1574,7 +1578,7 @@ function toggleMoneyReveal(elId) {
   const el = document.getElementById(elId);
   const eye = document.getElementById(elId + "_eye");
   if (el) el.textContent = moneyRevealed[elId] ? el.getAttribute("data-real") : "••••••";
-  if (eye) eye.textContent = moneyRevealed[elId] ? "🙈" : "👁";
+  if (eye) eye.innerHTML = icon(moneyRevealed[elId] ? "eye-off" : "eye");
 }
 
 let students = [];
@@ -1805,7 +1809,7 @@ function renderProductsList() {
     return `
       <div class="card" style="background:var(--c-cardbg); border-radius:14px; padding:1rem; margin-bottom:0.8rem; cursor:pointer;" onclick="openProductDetail('${p.id}')">
         <div style="font-family:'Fraunces',serif; font-weight:600; font-size:1.02rem; color:var(--c-textoncard);">${escapeHtml(p.title || "")}</div>
-        <div style="font-size:0.8rem; color:var(--c-mutedoncard); margin-top:0.3rem;">${itemsCount} عنصر — الوصول: ${durationText}${p.archived ? " — 🗄️ مؤرشف" : ""}</div>
+        <div style="font-size:0.8rem; color:var(--c-mutedoncard); margin-top:0.3rem;">${itemsCount} عنصر — الوصول: ${durationText}${p.archived ? " — " + icon("archive") + " مؤرشف" : ""}</div>
         <div style="margin-top:0.6rem; display:flex; gap:0.5rem;">
           <button type="button" onclick="event.stopPropagation(); openProductBuilder('${p.id}')" style="flex:1; width:auto; background:var(--c-cardalt); color:var(--c-textoncard); padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px;">تعديل</button>
           <button type="button" onclick="event.stopPropagation(); toggleArchiveProduct('${p.id}')" style="flex:1; width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.45rem; font-size:0.8rem; font-weight:600; border-radius:8px; box-shadow:none;">${p.archived ? "إلغاء الأرشفة" : "أرشفة"}</button>
@@ -1972,7 +1976,7 @@ function renderProductBatchesList() {
       <div style="font-weight:600;">${escapeHtml(b.batchName || "")}</div>
       <div style="font-size:0.78rem; color:var(--c-mutedoncard); margin:0.2rem 0 0.5rem;">إجمالي: ${b.count || 0}</div>
       <div id="batchStats_${b.id}" style="font-size:0.8rem; color:var(--c-mutedoncard);">
-        <button type="button" onclick="refreshBatchStats('${b.id}')" style="width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.3rem 0.6rem; font-size:0.75rem; border-radius:7px; box-shadow:none;">📊 عرض الإحصائيات</button>
+        <button type="button" onclick="refreshBatchStats('${b.id}')" style="width:auto; background:none; border:1px solid rgba(0,0,0,0.15); color:var(--c-mutedoncard); padding:0.3rem 0.6rem; font-size:0.75rem; border-radius:7px; box-shadow:none;"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> عرض الإحصائيات</button>
       </div>
     </div>`).join("");
 }
@@ -2036,10 +2040,10 @@ function renderGeneratedCodesBox() {
   box.innerHTML = `
     <div class="card" style="background:var(--c-cardbg); padding:1rem;">
       <strong>${escapeHtml(batchName)} — ${codes.length} كود</strong>
-      <p style="font-size:0.78rem; color:var(--c-dangertext); margin:0.4rem 0 0.8rem;">⚠️ هذه هي المرة الوحيدة اللي هتشوف فيها الأكواد بالكامل. صدّرها أو اطبعها دلوقتي.</p>
+      <p style="font-size:0.78rem; color:var(--c-dangertext); margin:0.4rem 0 0.8rem;"><svg class="ic" aria-hidden="true"><use href="#i-alert"/></svg> هذه هي المرة الوحيدة اللي هتشوف فيها الأكواد بالكامل. صدّرها أو اطبعها دلوقتي.</p>
       <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem;">
-        <button type="button" onclick="exportGeneratedCodes()" style="flex:1; width:auto; background:var(--c-success); color:var(--c-onsuccess); padding:0.6rem; font-size:0.85rem; border-radius:8px;">⬇️ تصدير Excel</button>
-        <button type="button" onclick="printGeneratedCards()" style="flex:1; width:auto; background:var(--c-accent); color:var(--c-onaccent); padding:0.6rem; font-size:0.85rem; border-radius:8px;">🖨️ طباعة الكروت</button>
+        <button type="button" onclick="exportGeneratedCodes()" style="flex:1; width:auto; background:var(--c-success); color:var(--c-onsuccess); padding:0.6rem; font-size:0.85rem; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> تصدير Excel</button>
+        <button type="button" onclick="printGeneratedCards()" style="flex:1; width:auto; background:var(--c-accent); color:var(--c-onaccent); padding:0.6rem; font-size:0.85rem; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة الكروت</button>
       </div>
       <div style="max-height:260px; overflow-y:auto; background:var(--c-white); border-radius:8px; padding:0.5rem;">${listHtml}${moreNote}</div>
     </div>`;
@@ -2956,7 +2960,7 @@ async function processAttendanceCode(raw, group) {
     }
     qrScanLog[group].unshift({ id: studentId, name: student.name, stage: student.stage, time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) });
     renderQrScanLog(group);
-    showQrFeedback(`✅ تم تسجيل حضور: ${student.name}`, false, group);
+    showQrFeedback(`✓ تم تسجيل حضور: ${student.name}`, false, group);
     playQrSuccessSound();
   } finally {
     qrScanProcessing[group].delete(studentId);
@@ -3060,7 +3064,7 @@ function stopQrCamera(group, keepOpen) {
   }
   if (!keepOpen) {
     document.getElementById(ids.cameraBox).style.display = "none";
-    document.getElementById(ids.cameraToggleBtn).textContent = "📷 مسح بكاميرا الجهاز";
+    document.getElementById(ids.cameraToggleBtn).innerHTML = icon("camera") + " مسح بكاميرا الجهاز";
     document.getElementById(ids.cameraSwitchBtn).style.display = "none";
   }
 }
@@ -3145,8 +3149,8 @@ function checkDuplicateName() {
     const isExact = matches.some(m => normalizeArabic(m.name) === targetNorm);
     const namesList = matches.slice(0, 3).map(m => `"${m.name}"${m.stage ? " (" + m.stage + ")" : ""}`).join("، ") + (matches.length > 3 ? " وغيرهم" : "");
     warningBox.textContent = isExact
-      ? `⚠️ يوجد طالب بنفس الاسم بالفعل: ${namesList} — تقدر تكمل عادي لو ده طالب مختلف فعلاً.`
-      : `⚠️ فيه أسامي قريبة من اللي كتبته: ${namesList} — تأكد إنك مش بتضيف نفس الطالب مرتين.`;
+      ? `يوجد طالب بنفس الاسم بالفعل: ${namesList} — تقدر تكمل عادي لو ده طالب مختلف فعلاً.`
+      : `فيه أسامي قريبة من اللي كتبته: ${namesList} — تأكد إنك مش بتضيف نفس الطالب مرتين.`;
     warningBox.style.display = "block";
   } else {
     warningBox.style.display = "none";
@@ -3336,7 +3340,7 @@ async function resetAllStudentPins() {
   const confirmed = confirm(
     `هيتم مسح رمز الدخول (PIN) بتاع ${withPin.length} طالب نهائيًا.\n` +
     `بعد كده، أول رقم من 4 أرقام يكتبه كل طالب في أول محاولة دخول هيبقى رمزه الجديد تلقائيًا (زي أول مرة يستخدم فيها التطبيق).\n` +
-    `⚠️ ده معناه إن أي حد يجرب قبل الطالب الحقيقي ممكن ياخد الرمز الجديد بدل منه — قول لكل الطلاب يدخلوا بسرعة بعد التصفير.\n` +
+    `ده معناه إن أي حد يجرب قبل الطالب الحقيقي ممكن ياخد الرمز الجديد بدل منه — قول لكل الطلاب يدخلوا بسرعة بعد التصفير.\n` +
     `متأكد إنك عايز تكمل؟`
   );
   if (!confirmed) return;
@@ -3788,7 +3792,7 @@ function computeNotifications() {
             kind: "deadline",
             examId: ex.id,
             sortKey: 1000000000000 - msLeft,
-            html: `⏰ امتحان "${escapeHtml(ex.title)}" هيقفل خلال ${hoursLeft} ساعة، و${missingCount} طالب لسه ما دخلش`,
+            html: `<svg class="ic" aria-hidden="true"><use href="#i-alarm"/></svg> امتحان "${escapeHtml(ex.title)}" هيقفل خلال ${hoursLeft} ساعة، و${missingCount} طالب لسه ما دخلش`,
           });
         }
       }
@@ -3816,7 +3820,7 @@ function renderNotificationCenter() {
           <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
             ${n.html}
           </div>`).join("")
-      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش إشعارات جديدة 🎉</p>`;
+      : `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">مفيش إشعارات جديدة <svg class="ic" aria-hidden="true"><use href="#i-sparkle"/></svg></p>`;
   }
 }
 
@@ -4287,9 +4291,9 @@ let activeMaterialsStageFilter = "الكل";
 function copyMaterialsPageLink() {
   const btn = document.getElementById("copyMaterialsLinkBtn");
   const done = () => {
-    const original = btn.textContent;
+    const original = btn.innerHTML;
     btn.textContent = "✓ اتنسخ الرابط";
-    setTimeout(() => { btn.textContent = original; }, 2000);
+    setTimeout(() => { btn.innerHTML = original; }, 2000);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(MATERIALS_PAGE_URL).then(done).catch(() => {
@@ -4444,7 +4448,7 @@ function renderMaterialPreview(m) {
     return `<img src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}" style="width:100%; border-radius:9px; margin-top:0.6rem; display:block;">`;
   }
   if (m.type === "pdf") {
-    return `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener" style="display:block; text-align:center; background:var(--c-success); color:var(--c-onsuccess); text-decoration:none; padding:0.65rem; border-radius:9px; font-weight:600; font-size:0.85rem; margin-top:0.6rem;">📄 افتح ملف الـPDF</a>`;
+    return `<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener" style="display:block; text-align:center; background:var(--c-success); color:var(--c-onsuccess); text-decoration:none; padding:0.65rem; border-radius:9px; font-weight:600; font-size:0.85rem; margin-top:0.6rem;"><svg class="ic" aria-hidden="true"><use href="#i-file"/></svg> افتح ملف الـPDF</a>`;
   }
   return "";
 }
@@ -4470,7 +4474,7 @@ function renderMaterialsList() {
     box.innerHTML = `<p style="color:var(--c-mutedonpage); text-align:center; padding:1rem 0; font-size:0.85rem;">لسه مفيش محتوى مُضاف.</p>`;
     return;
   }
-  const typeLabels = { video: "🎬 فيديو", image: "🖼 صورة", pdf: "📄 PDF" };
+  const typeLabels = { video: icon("video") + " فيديو", image: icon("image") + " صورة", pdf: icon("file") + " PDF" };
   box.innerHTML = list.map(m => `
     <div class="result-row-wrap">
       <div class="result-row" style="cursor:pointer;" onclick="toggleMaterialPreview('${m.id}')">
@@ -4479,7 +4483,7 @@ function renderMaterialsList() {
             <span style="background:var(--c-success); color:var(--c-onsuccess); border-radius:6px; padding:0.1rem 0.5rem; font-size:0.75rem; margin-left:0.4rem;">${escapeHtml(m.stage || "")}</span>
             ${escapeHtml(m.title || "")}
           </div>
-          <div class="result-row-date">${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — 💰 مدفوع" : ""}</div>
+          <div class="result-row-date">${escapeHtml(m.category || "")} — ${typeLabels[m.type] || m.type}${m.subscriberOnly ? " — " + icon("banknote") + " مدفوع" : ""}</div>
         </div>
         <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
           <button class="backup-btn" style="flex:none; padding:0.4rem 0.7rem;" onclick="event.stopPropagation(); editMaterial('${m.id}')">تعديل</button>
@@ -4642,15 +4646,15 @@ function renderExamsList() {
       const link = window.location.origin + window.location.pathname.replace(/index\\.html$/, "") + "exam.html?examId=" + ex.id;
       const examLastSeen = getExamLastSeen(ex.id);
       const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
-      const newBadgeHtml = newCount > 0 ? `<span class="exam-new-badge">🔔 ${newCount} جديد</span>` : "";
+      const newBadgeHtml = newCount > 0 ? `<span class="exam-new-badge"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg> ${newCount} جديد</span>` : "";
       const now = new Date();
       const deadlinePassed = !!(ex.deadline && new Date(ex.deadline) < now);
       const isClosed = !!ex.closedManually || deadlinePassed;
       const deadlineText = ex.deadline ? new Date(ex.deadline).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "";
       const statusBadge = isClosed
-        ? `<span class="mini-badge" style="background:var(--c-dangerbg);color:var(--c-dangertext);">🔒 مقفول${deadlinePassed && !ex.closedManually ? ' (انتهى الموعد)' : ''}</span>`
-        : (ex.deadline ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">🔓 مفتوح — يقفل ${deadlineText}</span>` : "");
-      const paidBadge = ex.paidOnly ? `<span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">💰 مدفوع — مش مجاني لطلاب الـPIN</span>` : "";
+        ? `<span class="mini-badge" style="background:var(--c-dangerbg);color:var(--c-dangertext);"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg> مقفول${deadlinePassed && !ex.closedManually ? ' (انتهى الموعد)' : ''}</span>`
+        : (ex.deadline ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);"><svg class="ic" aria-hidden="true"><use href="#i-unlock"/></svg> مفتوح — يقفل ${deadlineText}</span>` : "");
+      const paidBadge = ex.paidOnly ? `<span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);"><svg class="ic" aria-hidden="true"><use href="#i-banknote"/></svg> مدفوع — مش مجاني لطلاب الـPIN</span>` : "";
       return `
       <div class="exam-card">
         <div class="exam-card-title">${escapeHtml(ex.title)}${newBadgeHtml}</div>
@@ -4663,8 +4667,8 @@ function renderExamsList() {
           <button style="background:var(--c-warnbg); color:var(--c-warntext);" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش ${isOldUnloadedExam ? '(دوس لعرض العدد)' : '(' + missingCount + '/' + stageStudentCount + ')'}</button>
           <button style="background:var(--c-infobg); color:var(--c-infotext);" onclick="printExamQuestionsPdf('${ex.id}')">طباعة الأسئلة</button>
           <button style="background:var(--c-successbg); color:var(--c-success);" onclick="printExamAnswersPdf('${ex.id}')">طباعة نموذج الإجابة</button>
-          <button style="background:none; border:1px dashed var(--c-accent); color:var(--c-warntext);" onclick="saveExamQuestionsToBank('${ex.id}')">💾 كل الأسئلة للبنك</button>
-          <button style="background:${isClosed ? 'var(--c-successbg)' : 'var(--c-dangerbg)'}; color:${isClosed ? 'var(--c-success)' : 'var(--c-dangertext)'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '🔓 فتح الامتحان تاني' : '🔒 قفل الامتحان الآن'}</button>
+          <button style="background:none; border:1px dashed var(--c-accent); color:var(--c-warntext);" onclick="saveExamQuestionsToBank('${ex.id}')"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> كل الأسئلة للبنك</button>
+          <button style="background:${isClosed ? 'var(--c-successbg)' : 'var(--c-dangerbg)'}; color:${isClosed ? 'var(--c-success)' : 'var(--c-dangertext)'};" onclick="toggleExamManualClose('${ex.id}', ${!isClosed})">${isClosed ? '<svg class="ic" aria-hidden="true"><use href="#i-unlock"/></svg> فتح الامتحان تاني' : '<svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg> قفل الامتحان الآن'}</button>
           <button style="background:var(--c-dangerbg); color:var(--c-dangertext);" onclick="deleteExam('${ex.id}')">حذف</button>
         </div>
       </div>`;
@@ -5286,7 +5290,7 @@ function renderQuestionsBuilder() {
       <div class="question-card-head">
         <strong>سؤال ${i+1}</strong>
         <div style="display:flex; gap:0.4rem;">
-          <button class="remove-q-btn" style="color:var(--c-mutedoncard);" onclick="saveQuestionToBank('${q.id}')">💾 احفظ في البنك</button>
+          <button class="remove-q-btn" style="color:var(--c-mutedoncard);" onclick="saveQuestionToBank('${q.id}')"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> احفظ في البنك</button>
           <button class="remove-q-btn" onclick="removeQuestionCard('${q.id}')">حذف السؤال</button>
         </div>
       </div>
@@ -5610,7 +5614,7 @@ async function aiRegrade(resultId, examId, studentId) {
     alert("خطأ في الجافاسكريبت قبل ما الطلب يخلص:\n" + (err && err.message ? err.message : String(err)));
     showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. تأكد من الاتصال بالإنترنت.");
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = "🔄 إعادة تصحيح بالذكاء الاصطناعي"; }
+    if (btn) { btn.disabled = false; btn.innerHTML = icon("refresh") + " إعادة تصحيح بالذكاء الاصطناعي"; }
   }
 }
 let resultsTorailOnly = false;
@@ -5971,9 +5975,9 @@ function renderExamResultsList() {
     }).join("");
     const regradeBarHtml = isOpen ? `
       <div class="regrade-bar">
-        <button type="button" class="explain-btn" id="aiRegradeBtn_${r.id}" onclick="event.stopPropagation(); aiRegrade('${r.id}', '${r.examId}', '${r.studentId}')">🔄 إعادة تصحيح بالذكاء الاصطناعي</button>
+        <button type="button" class="explain-btn" id="aiRegradeBtn_${r.id}" onclick="event.stopPropagation(); aiRegrade('${r.id}', '${r.examId}', '${r.studentId}')"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> إعادة تصحيح بالذكاء الاصطناعي</button>
         ${hasEdits ? `
-          <button type="button" class="save-regrade-btn" onclick="event.stopPropagation(); saveManualRegrade('${r.id}')">💾 حفظ التصحيح</button>
+          <button type="button" class="save-regrade-btn" onclick="event.stopPropagation(); saveManualRegrade('${r.id}')"><svg class="ic" aria-hidden="true"><use href="#i-save"/></svg> حفظ التصحيح</button>
           <button type="button" class="explain-btn" onclick="event.stopPropagation(); cancelManualEdits('${r.id}')">إلغاء التعديل</button>
         ` : ""}
       </div>` : "";
@@ -5995,7 +5999,7 @@ function renderExamResultsList() {
               const alreadyAllowed = !!(ex && ex.allowRetake && ex.allowRetake[r.studentId]);
               return alreadyAllowed
                 ? `<button class="wa-send-btn" style="background:var(--c-success);" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">✓ مسموح بالإعادة</button>`
-                : `<button class="wa-send-btn" style="background:var(--c-warnsolid);" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')">🔄 سماح بإعادة المحاولة</button>`;
+                : `<button class="wa-send-btn" style="background:var(--c-warnsolid);" onclick="event.stopPropagation(); allowStudentRetake('${r.examId}', '${r.studentId}', '${escapeHtml(r.studentName).replace(/'/g,"&apos;")}')"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> سماح بإعادة المحاولة</button>`;
             })() : ""}
           </div>
         </div>
@@ -6072,7 +6076,7 @@ function renderWaQueueStep() {
   document.getElementById("waQueueProgress").textContent = `طالب ${waQueueIndex + 1} من ${waQueue.length}`;
   document.getElementById("waQueueName").textContent = item.name;
   if (!item.waNumber) {
-    document.getElementById("waQueuePhone").textContent = "⚠️ مفيش رقم ولي أمر مسجل — تم التخطي تلقائيًا";
+    document.getElementById("waQueuePhone").textContent = "مفيش رقم ولي أمر مسجل — تم التخطي تلقائيًا";
     document.getElementById("waQueueOpenBtn").style.display = "none";
   } else {
     document.getElementById("waQueuePhone").textContent = item.phone;
@@ -6432,9 +6436,9 @@ function render() {
           <div class="payments-section">
             <div class="payments-title">الحضور</div>
             <div id="attSummaryTrigger_${s.id}">
-              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'normal', 'attSummaryTrigger_${s.id}')">📅 عرض نسبة الحضور</button>
+              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'normal', 'attSummaryTrigger_${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg> عرض نسبة الحضور</button>
             </div>
-            <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')">🖨️ طباعة كارنيه QR للحضور</button>
+            <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة كارنيه QR للحضور</button>
           </div>
 
           <div class="payments-section">
@@ -6625,9 +6629,9 @@ function renderTorail() {
           <div class="payments-section">
             <div class="payments-title">الحضور</div>
             <div id="attSummaryTrigger_${s.id}">
-              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'torail', 'attSummaryTrigger_${s.id}')">📅 عرض نسبة الحضور</button>
+              <button class="backup-btn" style="padding:0.5rem;" onclick="loadStudentAttendanceSummary('${s.id}', ${JSON.stringify(s.stage || "")}, 'torail', 'attSummaryTrigger_${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg> عرض نسبة الحضور</button>
             </div>
-            <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')">🖨️ طباعة كارنيه QR للحضور</button>
+            <button class="backup-btn" style="margin-top:0.5rem; padding:0.5rem; background:none; border:1px solid rgba(0,0,0,0.15);" onclick="printStudentQrCard('${s.id}')"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة كارنيه QR للحضور</button>
           </div>
 
           <div class="payments-section">
@@ -6986,7 +6990,7 @@ function applyTheme(theme) {
     document.documentElement.removeAttribute("data-theme");
   }
   const btn = document.getElementById("themeToggleBtn");
-  if (btn) btn.textContent = theme === "light" ? "🌙" : "🎨";
+  if (btn) btn.innerHTML = icon(theme === "light" ? "moon" : "palette");
 }
 function toggleTheme() {
   const current = localStorage.getItem("appTheme") || "dark";
