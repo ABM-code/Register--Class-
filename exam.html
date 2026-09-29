@@ -2,93 +2,123 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#16302B">
 <title>امتحان</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --accent: #D4A93B; --accent-rgb: 212,169,59;
+    --c-page: #16302B; --c-card: #F5F1E6; --c-cardalt: #EAEAE4; --c-field: #FFFDF8; --c-soft: #EFF5F0;
+    --c-text: #1B2420; --c-muted: #6B6B60; --c-onpage: #F5F1E6; --c-mutedonpage: #9FB8AD;
+    --c-success: #3F6B4A; --c-successbg: #E4EEE5; --c-successsolid: #5E9468;
+    --c-danger: #C15B3C; --c-dangertext: #9C4B32; --c-dangerbg: #F6E7E2;
+    --c-warnbg: #FBF0DE; --c-warntext: #8A6A1F; --c-warnsolid: #C99A2B;
+  }
+  @property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
   * { box-sizing: border-box; }
-  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; }
-  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
-  .timer-bar {
-    position: sticky; top: 0; z-index: 50; background: #16302B; border-bottom: 1px solid rgba(245,241,230,0.15);
-    padding: 0.6rem 1.25rem; margin: -1.75rem -1.25rem 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-  }
-  .timer-bar .timer-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.1rem; color: var(--accent); }
-  .timer-bar.timer-warning .timer-value { color: #C15B3C; }
-  h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
-  p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
-  .card { background: #F5F1E6; border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
-  label { display: block; font-size: 0.82rem; color: #6B6B60; margin-bottom: 0.4rem; font-weight: 500; }
-  select, input[type=text] {
-    width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15);
-    background: #FFFDF8; font-size: 0.95rem; color: #1B2420; font-family: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18); }
-  button {
-    font-family: inherit; background: var(--accent); color: #1B2420; border: none; border-radius: 12px;
-    padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%;
-    transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(var(--accent-rgb),0.3);
-  }
-  button:hover:not(:disabled) { filter: brightness(1.05); }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--c-page); color: var(--c-text); min-height: 100vh; }
+  h1 { font-family: 'Fraunces', serif; color: var(--c-onpage); font-size: 1.4rem; margin: 0 0 0.3rem; }
+  p.sub { color: var(--c-mutedonpage); font-size: 0.88rem; margin: 0 0 1.5rem; }
+  .ic { width: 1.15em; height: 1.15em; vertical-align: -0.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; pointer-events: none; }
+  .card { background: var(--c-card); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+  label { display: block; font-size: 0.82rem; color: var(--c-muted); margin-bottom: 0.4rem; font-weight: 500; }
+  select, input[type=text], input[type=email], input[type=password], textarea { width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15); background: var(--c-field); font-size: 0.95rem; color: var(--c-text); font-family: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18); }
+  button, .btn-primary { font-family: inherit; background: var(--accent); color: var(--c-text); border: none; border-radius: 12px; padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%; transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(var(--accent-rgb),0.3); }
+  .btn-primary { display: flex; align-items: center; justify-content: center; gap: 0.45rem; text-decoration: none; }
+  button:hover:not(:disabled), .btn-primary:hover { filter: brightness(1.05); }
   button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
   button:active:not(:disabled) { transform: scale(0.98); }
-  .passage { background: #EAEAE4; border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; font-size: 0.9rem; line-height: 1.6; color: #3a3a34; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; }
-  .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.7rem; unicode-bidi: plaintext; text-align: start; }
-  .q-num { color: #6B6B60; font-size: 0.8rem; margin-bottom: 0.2rem; }
-  .option-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.8rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; margin-bottom: 0.5rem; cursor: pointer; background: #FFFDF8; transition: border-color 0.15s ease, background 0.15s ease; }
-  .option-row:hover { border-color: rgba(var(--accent-rgb),0.5); }
-  .option-row span { unicode-bidi: plaintext; text-align: start; flex: 1; }
-  .option-row input { accent-color: #3F6B4A; width: 17px; height: 17px; flex-shrink: 0; }
-  .option-row.selected { border-color: var(--accent); background: #FBF3DF; }
-  #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 9px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
-  .result-score { font-family: 'Fraunces', serif; font-size: 2.4rem; font-weight: 700; color: #3F6B4A; text-align: center; margin: 0.4rem 0; }
-  .result-label { text-align: center; color: #6B6B60; font-size: 0.9rem; }
-  .review-card { border-right: 4px solid transparent; }
-  .review-correct { border-right-color: #5E9468; }
-  .review-wrong { border-right-color: #C15B3C; }
-  .review-row { display: flex; align-items: baseline; gap: 0.4rem; font-size: 0.88rem; margin-top: 0.4rem; flex-wrap: wrap; }
-  .review-icon { font-weight: 700; }
-  .review-correct .review-row .review-icon { color: #3F6B4A; }
-  .review-wrong .review-row .review-icon { color: #C15B3C; }
-  .review-label { color: #6B6B60; }
-  .review-value { color: #1B2420; font-weight: 600; unicode-bidi: plaintext; }
-  .review-correct-text { color: #3F6B4A; }
-  .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
+  button:focus-visible, .btn-primary:focus-visible, .page-link:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-green { background: var(--c-success); color: var(--c-card); box-shadow: none; }
+  .link-btn { display: flex; align-items: center; justify-content: center; gap: 0.4rem; background: none; box-shadow: none; color: var(--c-mutedonpage); font-weight: 600; font-size: 0.85rem; padding: 0.5rem; }
+  .page-link { display: flex; align-items: center; justify-content: center; gap: 0.45rem; color: var(--c-onpage); font-size: 0.9rem; text-decoration: none; padding: 0.6rem; margin-top: 0.4rem; }
+  #errorBox { display: none; align-items: flex-start; gap: 0.5rem; background: var(--c-dangerbg); color: var(--c-dangertext); padding: 0.65rem 0.9rem; border-radius: 10px; font-size: 0.88rem; margin-bottom: 1rem; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; text-align: center; padding: 2rem 1.25rem; color: var(--c-muted); }
+  .empty-state > .ic { box-sizing: content-box; width: 1.9rem; height: 1.9rem; padding: 0.8rem; stroke-width: 1.5; background: rgba(0,0,0,0.06); border-radius: 50%; }
+  .empty-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--c-text); }
+  .empty-state p { margin: 0 0 0.4rem; font-size: 0.88rem; line-height: 1.7; }
+  .spinner { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 2px solid rgba(159,184,173,0.35); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading { display: flex; align-items: center; justify-content: center; gap: 0.6rem; color: var(--c-mutedonpage); padding: 2rem 0; }
   .student-suggestions { margin-top: 0.4rem; border-radius: 10px; overflow: hidden; display: none; box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
-  .student-suggestion-item {
-    display: block; width: 100%; text-align: right; background: #FFFDF8; color: #1B2420;
-    border: 1px solid rgba(0,0,0,0.12); border-top: none; padding: 0.65rem 0.8rem;
-    font-size: 0.92rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: background 0.12s ease;
-  }
+  .student-suggestion-item { display: block; width: 100%; text-align: right; background: var(--c-field); color: var(--c-text); border: 1px solid rgba(0,0,0,0.12); border-top: none; padding: 0.7rem 0.8rem; font-size: 0.92rem; font-weight: 500; cursor: pointer; border-radius: 0; box-shadow: none; transition: background 0.12s ease; }
   .student-suggestion-item:first-child { border-top: 1px solid rgba(0,0,0,0.12); border-radius: 10px 10px 0 0; }
   .student-suggestion-item:last-child { border-radius: 0 0 10px 10px; }
-  .student-suggestion-item:hover { background: #FBF3DF; }
-  .student-suggestion-item:active { background: #FBF3DF; }
-  .student-suggestion-empty { padding: 0.65rem 0.8rem; font-size: 0.85rem; color: #9C4B32; background: #F6E7E2; border-radius: 10px; }
+  .student-suggestion-item:hover, .student-suggestion-item:active { background: var(--c-warnbg); filter: none; }
+  .student-suggestion-empty { padding: 0.65rem 0.8rem; font-size: 0.85rem; color: var(--c-dangertext); background: var(--c-dangerbg); border-radius: 10px; }
+  @media (pointer: coarse) { select, input[type=text], input[type=email], input[type=password], textarea { font-size: 16px; } }
+  @media (prefers-reduced-motion: reduce) { .spinner, .score-ring.animate { animation: none; } .exam-progress-fill { transition: none; } }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+  textarea { resize: vertical; }
+  .who { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; padding: 0.9rem 1.25rem; }
+  .who .ic { color: var(--c-muted); }
+  .exam-bar { position: sticky; top: 0; z-index: 50; background: var(--c-page); border-bottom: 1px solid rgba(245,241,230,0.15); padding: 0.6rem 1.25rem 0.7rem; margin: 0 -1.25rem 1.25rem; }
+  .exam-bar-top { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; color: var(--c-mutedonpage); font-size: 0.82rem; margin-bottom: 0.4rem; min-height: 1.5rem; }
+  .timer-chip { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .timer-chip .ic { color: var(--accent); }
+  .timer-value { font-family: 'Fraunces', serif; font-weight: 700; font-size: 1.05rem; color: var(--accent); }
+  .timer-chip.timer-warning .timer-value, .timer-chip.timer-warning .ic { color: var(--c-danger); }
+  .exam-progress-track { height: 8px; border-radius: 8px; background: rgba(159,184,173,0.25); overflow: hidden; }
+  .exam-progress-fill { height: 100%; width: 0; border-radius: 8px; background: var(--accent); transition: width 0.25s ease; }
+  .restored { display: flex; align-items: center; gap: 0.5rem; background: var(--c-soft); padding: 0.6rem 0.9rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--c-success); }
+  .note-card { border-right: 4px solid transparent; }
+  .note-card.ok { border-right-color: var(--c-success); } .note-card.bad { border-right-color: var(--c-danger); }
+  .note-card strong { display: flex; align-items: center; gap: 0.45rem; }
+  .note-card p { margin: 0.4rem 0 0.7rem; color: var(--c-muted); font-size: 0.88rem; }
+  .q-card { border-right: 4px solid transparent; transition: border-color 0.2s ease; }
+  .q-card.answered { border-right-color: var(--accent); }
+  .q-head { display: flex; align-items: flex-start; gap: 0.65rem; margin-bottom: 0.8rem; }
+  .q-num { min-width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center; font-size: 0.85rem; font-weight: 700; background: rgba(0,0,0,0.07); transition: background 0.2s ease; }
+  .q-card.answered .q-num { background: var(--accent); }
+  .q-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; line-height: 1.55; margin-top: 0.15rem; unicode-bidi: plaintext; text-align: start; }
+  .passage { background: var(--c-cardalt); border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 0.8rem; font-size: 0.9rem; line-height: 1.7; color: #3a3a34; white-space: pre-wrap; unicode-bidi: plaintext; text-align: start; }
+  .option-row { display: flex; align-items: center; gap: 0.7rem; min-height: 48px; padding: 0.65rem 0.85rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 12px; margin-bottom: 0.5rem; cursor: pointer; background: var(--c-field); transition: border-color 0.15s ease, background 0.15s ease; }
+  .option-row:hover { border-color: rgba(var(--accent-rgb),0.5); }
+  .option-row:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .option-row span { unicode-bidi: plaintext; text-align: start; flex: 1; }
+  .option-row input { accent-color: var(--c-success); width: 1.05rem; height: 1.05rem; margin: 0; flex-shrink: 0; }
+  .option-row.selected { border-color: var(--accent); background: var(--c-warnbg); box-shadow: inset 0 0 0 1px var(--accent); }
+  .submit-hint { display: flex; align-items: center; justify-content: center; gap: 0.4rem; color: var(--c-mutedonpage); font-size: 0.84rem; margin: 0.4rem 0 0.7rem; }
+  .submit-hint.pending { color: var(--accent); }
+  #submitBtn { padding: 0.85rem; }
+  .result-card { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1.6rem 1.25rem; }
+  .score-ring { --tier: var(--c-success); width: 132px; height: 132px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--tier) calc(var(--p) * 1%), rgba(0,0,0,0.08) 0); }
+  .score-ring.mid { --tier: var(--c-warnsolid); } .score-ring.low { --tier: var(--c-danger); }
+  .score-ring.animate { animation: ringFill 1s ease-out both; }
+  @keyframes ringFill { from { --p: 0; } }
+  .score-ring-inner { width: 100px; height: 100px; border-radius: 50%; background: var(--c-card); display: grid; place-items: center; }
+  .score-pct { font-family: 'Fraunces', serif; font-size: 1.7rem; font-weight: 700; }
+  .result-score { font-family: 'Fraunces', serif; font-size: 1.15rem; font-weight: 600; color: var(--c-muted); text-align: center; margin: 0; }
+  .tier-chip { font-weight: 600; font-size: 0.86rem; padding: 0.3rem 0.9rem; border-radius: 999px; background: var(--c-successbg); color: var(--c-success); }
+  .tier-chip.mid { background: var(--c-warnbg); color: var(--c-warntext); } .tier-chip.low { background: var(--c-dangerbg); color: var(--c-dangertext); }
+  .result-counts { display: flex; gap: 0.6rem; margin-top: 0.3rem; }
+  .mini { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; font-weight: 600; padding: 0.2rem 0.65rem; border-radius: 999px; }
+  .mini.ok { background: var(--c-successbg); color: var(--c-success); } .mini.bad { background: var(--c-dangerbg); color: var(--c-dangertext); }
+  .result-msg { color: var(--c-mutedonpage); text-align: center; font-size: 0.85rem; margin: 0 0 1rem; }
+  .review-correct { border-right-color: var(--c-successsolid); }
+  .review-wrong { border-right-color: var(--c-danger); }
+  .review-row { display: flex; align-items: flex-start; gap: 0.45rem; font-size: 0.88rem; margin-top: 0.4rem; flex-wrap: wrap; }
+  .review-row.ok .ic { color: var(--c-success); } .review-row.bad .ic { color: var(--c-danger); }
+  .review-label { color: var(--c-muted); }
+  .review-value { color: var(--c-text); font-weight: 600; unicode-bidi: plaintext; }
+  .review-correct-text { color: var(--c-success); }
   .explain-actions { display: flex; gap: 0.5rem; margin-top: 0.7rem; flex-wrap: wrap; }
-  .explain-btn {
-    background: none; border: 1px solid rgba(0,0,0,0.15); color: #4A5A50; border-radius: 9px;
-    padding: 0.4rem 0.75rem; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;
-    width: auto; box-shadow: none; transition: background 0.15s ease, border-color 0.15s ease;
-  }
-  .explain-btn:hover { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.25); }
-  .explain-btn:active { background: rgba(0,0,0,0.05); }
+  .explain-btn { background: none; border: 1px solid rgba(0,0,0,0.15); color: #4A5A50; border-radius: 9px; padding: 0.45rem 0.75rem; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; width: auto; box-shadow: none; transition: background 0.15s ease, border-color 0.15s ease; }
+  .explain-btn:hover { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.25); filter: none; }
   .explain-btn[disabled] { opacity: 0.5; cursor: default; }
-  .explain-box {
-    margin-top: 0.6rem; background: #EFF5F0; border-radius: 10px; padding: 0.7rem 0.85rem;
-    font-size: 0.85rem; line-height: 1.6; color: #3a3a34; unicode-bidi: plaintext; text-align: start;
-  }
+  .explain-box { margin-top: 0.6rem; background: var(--c-soft); border-radius: 10px; padding: 0.7rem 0.85rem; font-size: 0.85rem; line-height: 1.6; color: #3a3a34; unicode-bidi: plaintext; text-align: start; }
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol><symbol id="i-key" viewBox="0 0 24 24"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol></svg>
 <div class="wrap">
   <h1 id="examTitle">جاري التحميل…</h1>
   <p class="sub" id="examSub"></p>
   <div id="errorBox"></div>
-  <div id="content"></div>
-  <p id="brandFooterText" style="text-align:center; color:#9FB8AD; font-size:0.75rem; opacity:0.8; margin:2rem 0 0; display:none;"></p>
+  <div id="content"><div class="loading"><span class="spinner"></span>جاري التحميل...</div></div>
+  <p id="brandFooterText" style="text-align:center; color:var(--c-mutedonpage); font-size:0.75rem; opacity:0.8; margin:2rem 0 0; display:none;"></p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -162,10 +192,13 @@ function normalizeArabic(str) {
     .replace(/\s+/g, "")
     .toLowerCase();
 }
+function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
+function tierOf(pct) { return pct >= 85 ? "high" : pct >= 50 ? "mid" : "low"; }
 function showError(msg) {
   const box = document.getElementById("errorBox");
-  box.textContent = msg;
-  box.style.display = "block";
+  box.innerHTML = icon("alert") + "<span></span>";
+  box.lastChild.textContent = msg;
+  box.style.display = "flex";
 }
 
 const params = new URLSearchParams(window.location.search);
@@ -177,6 +210,7 @@ let selectedStudent = null;
 async function init() {
   if (!examId) {
     document.getElementById("examTitle").textContent = "رابط غير صالح";
+    document.getElementById("content").innerHTML = "";
     showError("مفيش امتحان محدد في الرابط ده.");
     return;
   }
@@ -185,17 +219,18 @@ async function init() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok && data.error === "exam_closed") {
       document.getElementById("examTitle").textContent = data.title || "الامتحان مقفول";
-      document.getElementById("content").innerHTML = `<div class="card" style="text-align:center;">
-        <p style="font-size:1rem; margin:0;">🔒 الامتحان ده مقفول دلوقتي ومحدش يقدر يفتحه.</p>
-        <p style="font-size:0.85rem; color:#6B6B60; margin-top:0.5rem;">كلّم المعلم لو محتاج تفتحه تاني.</p>
+      document.getElementById("content").innerHTML = `<div class="card empty-state">${icon("lock")}
+        <div class="empty-title">الامتحان ده مقفول دلوقتي ومحدش يقدر يفتحه.</div>
+        <p>كلّم المعلم لو محتاج تفتحه تاني.</p>
       </div>`;
       return;
     }
     if (!res.ok && data.error === "exam_paid") {
       document.getElementById("examTitle").textContent = data.title || "امتحان مدفوع";
-      document.getElementById("content").innerHTML = `<div class="card" style="text-align:center;">
-        <p style="font-size:1rem; margin:0;">💰 الامتحان ده متاح فقط لمن اشترى كود الوصول الخاص بيه.</p>
-        <p style="font-size:0.85rem; color:#6B6B60; margin-top:0.5rem;">لو معاك كود وصول، افتحه من صفحة تفعيل الكود.</p>
+      document.getElementById("content").innerHTML = `<div class="card empty-state">${icon("banknote")}
+        <div class="empty-title">الامتحان ده متاح فقط لمن اشترى كود الوصول الخاص بيه.</div>
+        <p>لو معاك كود وصول، افتحه من صفحة تفعيل الكود.</p>
+        <a href="redeem.html" class="btn-primary">${icon("key")} تفعيل كود</a>
       </div>`;
       return;
     }
@@ -209,6 +244,7 @@ async function init() {
     renderStudentPicker();
   } catch (err) {
     document.getElementById("examTitle").textContent = "تعذر فتح الامتحان";
+    document.getElementById("content").innerHTML = "";
     showError("تعذر تحميل الامتحان. تأكد من الرابط والإنترنت وحاول تاني.");
   }
 }
@@ -330,9 +366,9 @@ function renderStudentPicker() {
         } catch (e) { /* تجاهل، هيتعامل كأنه مش مسموح بالإعادة */ }
 
         if (canRetake) {
-          msgBox.innerHTML = `<div class="card" style="border-right:4px solid #3F6B4A;">
-            <strong>🔄 المعلم سمحلك بإعادة الامتحان</strong>
-            <p style="margin:0.4rem 0 0; color:#6B6B60; font-size:0.88rem;">نتيجتك الجديدة هتستبدل نتيجتك القديمة.</p>
+          msgBox.innerHTML = `<div class="card note-card ok">
+            <strong>${icon("refresh")} المعلم سمحلك بإعادة الامتحان</strong>
+            <p style="margin-bottom:0;">نتيجتك الجديدة هتستبدل نتيجتك القديمة.</p>
           </div>`;
           startBtn.disabled = false;
           startBtn.textContent = "ابدأ الامتحان";
@@ -340,10 +376,10 @@ function renderStudentPicker() {
         }
 
         const pct = prev.total > 0 ? Math.round((prev.score / prev.total) * 100) : 0;
-        msgBox.innerHTML = `<div class="card" style="border-right:4px solid #C15B3C;">
-          <strong>لقد قدّمت هذا الامتحان من قبل</strong>
-          <p style="margin:0.4rem 0 0.7rem; color:#6B6B60; font-size:0.88rem;">نتيجتك السابقة: ${prev.score} / ${prev.total} (${pct}%)</p>
-          <button id="reviewPrevBtn" style="background:#3F6B4A; color:#F5F1E6;">مراجعة إجاباتك</button>
+        msgBox.innerHTML = `<div class="card note-card bad">
+          <strong>${icon("alert")} لقد قدّمت هذا الامتحان من قبل</strong>
+          <p>نتيجتك السابقة: ${prev.score} / ${prev.total} (${pct}%)</p>
+          <button id="reviewPrevBtn" class="btn-green">مراجعة إجاباتك</button>
         </div>`;
         document.getElementById("reviewPrevBtn").addEventListener("click", async () => {
           const btn = document.getElementById("reviewPrevBtn");
@@ -398,15 +434,15 @@ function renderStudentPicker() {
       }
       await auth.signInWithCustomToken(data.customToken);
       selectedStudent = { ...selectedStudent, ...(data.student || {}) };
-      pinMsg.textContent = "✓ تم التأكيد";
-      pinMsg.style.color = "#3F6B4A";
+      pinMsg.innerHTML = icon("check-circle") + " تم التأكيد";
+      pinMsg.style.color = "var(--c-success)";
       pinMsg.style.display = "block";
       await checkAlreadySubmitted();
     } catch (err) {
       pinMsg.textContent = err.message === "locked"
         ? `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. حاول تاني بعد ${err.remainingMin || 5} دقايق.`
         : (err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.");
-      pinMsg.style.color = "#C15B3C";
+      pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
       startBtn.disabled = true;
       startBtn.textContent = "ابدأ الامتحان";
@@ -444,6 +480,34 @@ function loadAnswersFromStorage() {
   }
 }
 
+function isAnswered(i) {
+  const v = answers[i];
+  return typeof v === "number" || (typeof v === "string" && v.trim() !== "");
+}
+function updateExamProgress() {
+  const qs = (exam && exam.questions) || [];
+  const total = qs.length;
+  let done = 0;
+  qs.forEach((q, i) => {
+    const ok = isAnswered(i);
+    if (ok) done++;
+    const card = document.getElementById("qcard_" + i);
+    if (card) card.classList.toggle("answered", ok);
+  });
+  const left = total - done;
+  const t = document.getElementById("examProgressText");
+  if (t) t.textContent = `أجبت على ${done} من ${total}`;
+  const f = document.getElementById("examProgressFill");
+  if (f) f.style.width = (total ? (done / total) * 100 : 0) + "%";
+  const h = document.getElementById("submitHint");
+  if (h) {
+    h.className = "submit-hint" + (left > 0 ? " pending" : "");
+    h.innerHTML = left > 0
+      ? `${icon("alert")} لسه ${left} ${left === 1 ? "سؤال" : "أسئلة"} من غير إجابة`
+      : `${icon("check-circle")} جاوبت على كل الأسئلة، تقدر تسلّم`;
+  }
+}
+
 async function renderExam() {
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error("not_authenticated");
@@ -459,26 +523,24 @@ async function renderExam() {
   const content = document.getElementById("content");
   const questions = exam.questions || [];
 
-  const timerHtml = exam.timeLimitMinutes
-    ? `<div class="timer-bar" id="timerBar">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="stroke:var(--accent);" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        <span>الوقت المتبقي:</span> <span class="timer-value" id="timerValue">--:--</span>
-      </div>`
-    : "";
+  const timerChip = exam.timeLimitMinutes
+    ? `<span class="timer-chip" id="timerBar">${icon("clock")}<span>الوقت المتبقي:</span> <span class="timer-value" id="timerValue">--:--</span></span>`
+    : `<span></span>`;
+  const barHtml = `<div class="exam-bar">
+      <div class="exam-bar-top">${timerChip}<span id="examProgressText"></span></div>
+      <div class="exam-progress-track"><div class="exam-progress-fill" id="examProgressFill"></div></div>
+    </div>`;
 
   const restoredNoticeHtml = hasRestoredAnswers
-    ? `<div class="card" style="margin-bottom:0.5rem; background:#EFF5F0; padding:0.6rem 0.9rem;">
-        <span style="font-size:0.85rem; color:#3F6B4A;">↻ رجّعنالك إجاباتك اللي كتبتها قبل كده في نفس الامتحان.</span>
-      </div>`
+    ? `<div class="card restored">${icon("refresh")}<span>رجّعنالك إجاباتك اللي كتبتها قبل كده في نفس الامتحان.</span></div>`
     : "";
 
   content.innerHTML = `
-    ${timerHtml}
-    <div class="card" style="margin-bottom:0.5rem;">
-      <strong>${escapeHtml(selectedStudent.name)}</strong>
-    </div>
+    ${barHtml}
+    <div class="card who">${icon("user")}<strong>${escapeHtml(selectedStudent.name)}</strong></div>
     ${restoredNoticeHtml}
     ${renderQuestionsHtml(questions)}
+    <div class="submit-hint" id="submitHint"></div>
     <button id="submitBtn">تسليم الإجابات</button>
   `;
 
@@ -495,18 +557,20 @@ async function renderExam() {
           row.querySelector('input').checked = true;
           answers[i] = parseInt(row.dataset.optIdx, 10);
           saveAnswersToStorage();
+          updateExamProgress();
         });
       });
     } else {
       const input = document.getElementById(`answer_${i}`);
       if (input) {
         if (answers[i] !== undefined) input.value = answers[i];
-        input.addEventListener("input", () => { answers[i] = input.value; saveAnswersToStorage(); });
+        input.addEventListener("input", () => { answers[i] = input.value; saveAnswersToStorage(); updateExamProgress(); });
       }
     }
   });
 
   document.getElementById("submitBtn").addEventListener("click", () => submitExam(false));
+  updateExamProgress();
 
   if (exam.timeLimitMinutes) {
     startExamTimer();
@@ -585,13 +649,12 @@ function renderQuestionBody(q, i, totalCount) {
     };
     const isLong = q.type === "essay";
     bodyHtml = isLong
-      ? `<textarea id="answer_${i}" dir="auto" rows="4" placeholder="${placeholders.essay}" style="width:100%; padding:0.65rem 0.8rem; border-radius:9px; border:1px solid rgba(0,0,0,0.15); background:#FFFDF8; font-size:0.95rem; color:#1B2420; font-family:inherit; resize:vertical;"></textarea>`
+      ? `<textarea id="answer_${i}" dir="auto" rows="4" placeholder="${placeholders.essay}"></textarea>`
       : `<input type="text" id="answer_${i}" dir="auto" placeholder="${placeholders[q.type] || placeholders.complete}">`;
   }
   return `
-    <div class="card">
-      <div class="q-num">سؤال ${i + 1} من ${totalCount}</div>
-      <div class="q-title">${escapeHtml(q.prompt)}</div>
+    <div class="card q-card" id="qcard_${i}">
+      <div class="q-head"><span class="q-num">${i + 1}</span><div class="q-title">${escapeHtml(q.prompt)}</div></div>
       ${bodyHtml}
     </div>`;
 }
@@ -747,23 +810,22 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
       };
       const payloadAttr = escapeHtml(JSON.stringify(payload));
       return `
-        <div class="card review-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
-          <div class="q-num">سؤال ${qIndex + 1}</div>
-          <div class="q-title">${escapeHtml(q.prompt)}</div>
-          <div class="review-row">
-            <span class="review-icon">${ad.correct ? '✓' : '✗'}</span>
+        <div class="card q-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
+          <div class="q-head"><span class="q-num">${qIndex + 1}</span><div class="q-title">${escapeHtml(q.prompt)}</div></div>
+          <div class="review-row ${ad.correct ? 'ok' : 'bad'}">
+            ${icon(ad.correct ? "check-circle" : "x-circle")}
             <span class="review-label">إجابتك:</span>
             <span class="review-value">${escapeHtml(givenText)}</span>
           </div>
           ${!ad.correct ? `
-          <div class="review-row">
-            <span class="review-icon" style="visibility:hidden;">✓</span>
+          <div class="review-row ok">
+            ${icon("check-circle")}
             <span class="review-label">الإجابة الصحيحة:</span>
             <span class="review-value review-correct-text">${escapeHtml(correctText)}</span>
           </div>` : ""}
           <div class="explain-actions">
-            <button class="explain-btn" id="${explainId}_explainBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'explain', this)">💡 اشرحلي السبب</button>
-            <button class="explain-btn" id="${explainId}_translateBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'translate', this)">🌐 ترجملي السؤال</button>
+            <button class="explain-btn" id="${explainId}_explainBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'explain', this)">${icon("lightbulb")} اشرحلي السبب</button>
+            <button class="explain-btn" id="${explainId}_translateBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'translate', this)">${icon("globe")} ترجملي السؤال</button>
           </div>
           <div class="explain-box" id="${explainId}_box" style="display:none;"></div>
         </div>`;
@@ -775,15 +837,24 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
     ? "مراجعة إجابتك السابقة."
     : (wasTimedOut ? "انتهى وقت الامتحان، وتم تسليم إجاباتك تلقائيًا." : "تم إرسال نتيجتك للمدرّس بنجاح.");
 
+  const tier = tierOf(pct);
+  const tierText = { high: "ممتاز، كمّل كده", mid: "كويس، راجع الأخطاء تحت", low: "محتاج مراجعة، راجع الأخطاء تحت" }[tier];
+  const correctCount = (answerDetails || []).filter(a => a.correct).length;
+  const wrongCount = Math.max(0, questions.length - correctCount);
   content.innerHTML = `
-    <div class="card">
-      <div class="result-label">نتيجتك</div>
+    <div class="card result-card">
+      <div class="score-ring ${tier}${isFreshSubmission ? " animate" : ""}" style="--p:${pct}"><div class="score-ring-inner"><span class="score-pct">${pct}%</span></div></div>
       <div class="result-score">${score} / ${total}</div>
-      <div class="result-label">(${pct}%)</div>
+      <div class="tier-chip ${tier}">${tierText}</div>
+      <div class="result-counts">
+        <span class="mini ok">${icon("check-circle")} ${correctCount} صح</span>
+        <span class="mini bad">${icon("x-circle")} ${wrongCount} غلط</span>
+      </div>
     </div>
-    <p style="color:#9FB8AD; text-align:center; font-size:0.85rem; margin-bottom:1rem;">${subMessage}</p>
+    <p class="result-msg">${subMessage}</p>
     ${reviewHtml}
   `;
+  window.scrollTo({ top: 0 });
 }
 
 async function requestExplain(explainId, action, btnEl) {
@@ -797,7 +868,7 @@ async function requestExplain(explainId, action, btnEl) {
 
   explainBtn.disabled = true;
   translateBtn.disabled = true;
-  const originalText = btnEl.textContent;
+  const originalHtml = btnEl.innerHTML;
   btnEl.textContent = "جاري التحميل...";
   box.style.display = "block";
   box.textContent = "";
@@ -819,7 +890,7 @@ async function requestExplain(explainId, action, btnEl) {
   } finally {
     explainBtn.disabled = false;
     translateBtn.disabled = false;
-    btnEl.textContent = originalText;
+    btnEl.innerHTML = originalHtml;
   }
 }
 

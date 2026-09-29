@@ -7,52 +7,61 @@
 <title>المكتبة التعليمية</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --accent: #D4A93B; --accent-rgb: 212,169,59;
+    --c-page: #16302B; --c-card: #F5F1E6; --c-cardalt: #EAEAE4; --c-field: #FFFDF8; --c-soft: #EFF5F0;
+    --c-text: #1B2420; --c-muted: #6B6B60; --c-onpage: #F5F1E6; --c-mutedonpage: #9FB8AD;
+    --c-success: #3F6B4A; --c-successbg: #E4EEE5; --c-successsolid: #5E9468;
+    --c-danger: #C15B3C; --c-dangertext: #9C4B32; --c-dangerbg: #F6E7E2;
+    --c-warnbg: #FBF0DE; --c-warntext: #8A6A1F; --c-warnsolid: #C99A2B;
+  }
+  @property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
   * { box-sizing: border-box; }
-  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; --c-card: #F5F1E6; --c-mutedonpage: #9FB8AD; }
-  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
-  h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
-  p.sub { color: #9FB8AD; font-size: 0.88rem; margin: 0 0 1.5rem; }
-  .card { background: #F5F1E6; border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
-  label { display: block; font-size: 0.82rem; color: #6B6B60; margin-bottom: 0.4rem; font-weight: 500; }
-  select, input[type=text] {
-    width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15);
-    background: #FFFDF8; font-size: 0.95rem; color: #1B2420; font-family: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  select:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18); }
-  button {
-    font-family: inherit; background: var(--accent); color: #1B2420; border: none; border-radius: 12px;
-    padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%;
-    transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(var(--accent-rgb),0.3);
-  }
-  button:hover:not(:disabled) { filter: brightness(1.05); }
+  body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--c-page); color: var(--c-text); min-height: 100vh; }
+  h1 { font-family: 'Fraunces', serif; color: var(--c-onpage); font-size: 1.4rem; margin: 0 0 0.3rem; }
+  p.sub { color: var(--c-mutedonpage); font-size: 0.88rem; margin: 0 0 1.5rem; }
+  .ic { width: 1.15em; height: 1.15em; vertical-align: -0.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; pointer-events: none; }
+  .card { background: var(--c-card); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
+  label { display: block; font-size: 0.82rem; color: var(--c-muted); margin-bottom: 0.4rem; font-weight: 500; }
+  select, input[type=text], input[type=email], input[type=password], textarea { width: 100%; padding: 0.65rem 0.8rem; border-radius: 10px; border: 1px solid rgba(0,0,0,0.15); background: var(--c-field); font-size: 0.95rem; color: var(--c-text); font-family: inherit; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.18); }
+  button, .btn-primary { font-family: inherit; background: var(--accent); color: var(--c-text); border: none; border-radius: 12px; padding: 0.75rem 1.2rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; width: 100%; transition: filter 0.15s ease, transform 0.08s ease; box-shadow: 0 3px 10px rgba(var(--accent-rgb),0.3); }
+  .btn-primary { display: flex; align-items: center; justify-content: center; gap: 0.45rem; text-decoration: none; }
+  button:hover:not(:disabled), .btn-primary:hover { filter: brightness(1.05); }
   button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
   button:active:not(:disabled) { transform: scale(0.98); }
-  #errorBox { background: #F6E7E2; color: #9C4B32; padding: 0.65rem 0.9rem; border-radius: 9px; font-size: 0.88rem; margin-bottom: 1rem; display: none; }
-  .loading { color: #9FB8AD; text-align: center; padding: 2rem 0; }
+  button:focus-visible, .btn-primary:focus-visible, .page-link:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-green { background: var(--c-success); color: var(--c-card); box-shadow: none; }
+  .link-btn { display: flex; align-items: center; justify-content: center; gap: 0.4rem; background: none; box-shadow: none; color: var(--c-mutedonpage); font-weight: 600; font-size: 0.85rem; padding: 0.5rem; }
+  .page-link { display: flex; align-items: center; justify-content: center; gap: 0.45rem; color: var(--c-onpage); font-size: 0.9rem; text-decoration: none; padding: 0.6rem; margin-top: 0.4rem; }
+  #errorBox { display: none; align-items: flex-start; gap: 0.5rem; background: var(--c-dangerbg); color: var(--c-dangertext); padding: 0.65rem 0.9rem; border-radius: 10px; font-size: 0.88rem; margin-bottom: 1rem; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; text-align: center; padding: 2rem 1.25rem; color: var(--c-muted); }
+  .empty-state > .ic { box-sizing: content-box; width: 1.9rem; height: 1.9rem; padding: 0.8rem; stroke-width: 1.5; background: rgba(0,0,0,0.06); border-radius: 50%; }
+  .empty-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; color: var(--c-text); }
+  .empty-state p { margin: 0 0 0.4rem; font-size: 0.88rem; line-height: 1.7; }
+  .spinner { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 2px solid rgba(159,184,173,0.35); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading { display: flex; align-items: center; justify-content: center; gap: 0.6rem; color: var(--c-mutedonpage); padding: 2rem 0; }
   .student-suggestions { margin-top: 0.4rem; border-radius: 10px; overflow: hidden; display: none; box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
-  .student-suggestion-item {
-    display: block; width: 100%; text-align: right; background: #FFFDF8; color: #1B2420;
-    border: 1px solid rgba(0,0,0,0.12); border-top: none; padding: 0.65rem 0.8rem;
-    font-size: 0.92rem; font-weight: 500; cursor: pointer; border-radius: 0; transition: background 0.12s ease;
-  }
+  .student-suggestion-item { display: block; width: 100%; text-align: right; background: var(--c-field); color: var(--c-text); border: 1px solid rgba(0,0,0,0.12); border-top: none; padding: 0.7rem 0.8rem; font-size: 0.92rem; font-weight: 500; cursor: pointer; border-radius: 0; box-shadow: none; transition: background 0.12s ease; }
   .student-suggestion-item:first-child { border-top: 1px solid rgba(0,0,0,0.12); border-radius: 10px 10px 0 0; }
   .student-suggestion-item:last-child { border-radius: 0 0 10px 10px; }
-  .student-suggestion-item:hover { background: #FBF3DF; }
-  .student-suggestion-item:active { background: #FBF3DF; }
-  .student-suggestion-empty { padding: 0.65rem 0.8rem; font-size: 0.85rem; color: #9C4B32; background: #F6E7E2; border-radius: 10px; }
+  .student-suggestion-item:hover, .student-suggestion-item:active { background: var(--c-warnbg); filter: none; }
+  .student-suggestion-empty { padding: 0.65rem 0.8rem; font-size: 0.85rem; color: var(--c-dangertext); background: var(--c-dangerbg); border-radius: 10px; }
+  @media (pointer: coarse) { select, input[type=text], input[type=email], input[type=password], textarea { font-size: 16px; } }
+  @media (prefers-reduced-motion: reduce) { .spinner, .score-ring.animate { animation: none; } .exam-progress-fill { transition: none; } }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
+  .card select, .card input { margin-bottom: 0.2rem; }
   .category-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
-  .category-pill {
-    background: rgba(245,241,230,0.12); color: #F5F1E6; border: 1px solid rgba(245,241,230,0.25);
-    border-radius: 999px; padding: 0.35rem 0.85rem; font-size: 0.82rem; cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease;
-  }
-  .category-pill:hover { background: rgba(245,241,230,0.2); }
-  .category-pill.active { background: var(--accent); color: #1B2420; border-color: var(--accent); font-weight: 600; }
-  .mat-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.5rem; }
-  .mat-category { font-size: 0.78rem; color: #6B6B60; margin-bottom: 0.7rem; }
-  .mat-video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 10px; overflow: hidden; margin-bottom: 0.3rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-  .mat-video-wrap iframe { position: absolute; top: 0; right: 0; width: 100%; height: 100%; border: none; }
-  .ic { width: 1.15em; height: 1.15em; vertical-align: -0.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; pointer-events: none; }
+  .category-pill { width: auto; box-shadow: none; background: rgba(245,241,230,0.12); color: var(--c-onpage); border: 1px solid rgba(245,241,230,0.25); border-radius: 999px; padding: 0.4rem 0.9rem; font-size: 0.82rem; font-weight: 500; }
+  .category-pill:hover:not(:disabled) { background: rgba(245,241,230,0.2); filter: none; }
+  .category-pill.active { background: var(--accent); color: var(--c-text); border-color: var(--accent); font-weight: 700; }
+  .banner { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; text-align: center; padding: 0.7rem; margin-bottom: 0.8rem; font-weight: 600; font-size: 0.85rem; }
+  .banner .banner-line { display: inline-flex; align-items: center; gap: 0.45rem; }
+  .banner.ok { color: var(--c-success); } .banner.lock { color: var(--c-dangertext); }
+  .banner p { margin: 0; font-size: 0.78rem; font-weight: 400; color: var(--c-muted); }
+  .mat-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem; }
+  .mat-category { font-size: 0.78rem; color: var(--c-muted); margin-bottom: 0.7rem; }
   /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب */
   .yt-player { margin: 0.5rem 0; border-radius: 12px; overflow: hidden; background: #000; }
   .yt-stage { position: relative; width: 100%; padding-top: 56.25%; }
@@ -76,22 +85,18 @@
   .yt-player:-webkit-full-screen .yt-stage { padding-top: 0; flex: 1; }
   @media (pointer: coarse) { select, input[type=text] { font-size: 16px; } }
   .mat-image { width: 100%; border-radius: 10px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-  .mat-pdf-link {
-    display: block; text-align: center; background: #3F6B4A; color: #F5F1E6 !important;
-    text-decoration: none; padding: 0.7rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem;
-    transition: filter 0.15s ease; border: none; width: 100%; cursor: pointer; font-family: inherit;
-  }
+  .mat-pdf-link { display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--c-success); color: var(--c-card) !important; text-decoration: none; padding: 0.75rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; width: 100%; cursor: pointer; font-family: inherit; box-shadow: none; }
   .mat-pdf-link:hover { filter: brightness(1.1); }
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol></svg>
 <div class="wrap">
   <h1 id="pageTitle">المكتبة التعليمية</h1>
   <p class="sub" id="pageSub">اختر مرحلتك وادخل عشان تشوف المحتوى</p>
   <div id="errorBox"></div>
   <div id="content"></div>
-  <p id="brandFooterText" style="text-align:center; color:#9FB8AD; font-size:0.75rem; opacity:0.8; margin:2rem 0 0; display:none;"></p>
+  <p id="brandFooterText" style="text-align:center; color:var(--c-mutedonpage); font-size:0.75rem; opacity:0.8; margin:2rem 0 0; display:none;"></p>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -165,10 +170,12 @@ function normalizeArabic(str) {
     .replace(/\s+/g, "")
     .toLowerCase();
 }
+function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
 function showError(msg) {
   const box = document.getElementById("errorBox");
-  box.textContent = msg;
-  box.style.display = "block";
+  box.innerHTML = icon("alert") + "<span></span>";
+  box.lastChild.textContent = msg;
+  box.style.display = "flex";
 }
 function clearError() {
   document.getElementById("errorBox").style.display = "none";
@@ -199,7 +206,7 @@ function renderStagePicker() {
       </select>
     </div>
     <button id="stageNextBtn" disabled>التالي</button>
-    <a href="redeem.html" style="display:block; text-align:center; color:#F5F1E6; margin-top:1rem; font-size:0.9rem;">🎟️ عندك كود شراء محتوى؟ فعّله من هنا</a>
+    <a href="redeem.html" class="page-link">${icon("ticket")} عندك كود شراء محتوى؟ فعّله من هنا</a>
   `;
   const select = document.getElementById("stageSelect");
   const nextBtn = document.getElementById("stageNextBtn");
@@ -242,7 +249,7 @@ function renderStudentPicker() {
       <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
     </div>
     <button id="enterBtn" disabled>ادخل المكتبة</button>
-    <a href="redeem.html" style="display:block; text-align:center; color:#F5F1E6; margin-top:1rem; font-size:0.85rem;">مش لاقي اسمك؟ لو معاك كود شراء فعّله من هنا</a>
+    <a href="redeem.html" class="page-link">${icon("ticket")} مش لاقي اسمك؟ لو معاك كود شراء فعّله من هنا</a>
   `;
   const searchInput = document.getElementById("studentSearchInput");
   const suggestionsBox = document.getElementById("studentSuggestions");
@@ -321,7 +328,7 @@ function renderStudentPicker() {
       pinMsg.textContent = err.message === "locked"
         ? `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. حاول تاني بعد ${err.remainingMin || 5} دقايق.`
         : (err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.");
-      pinMsg.style.color = "#C15B3C";
+      pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
       enterBtn.disabled = false;
       enterBtn.textContent = "ادخل المكتبة";
@@ -331,7 +338,7 @@ function renderStudentPicker() {
 
 async function loadMaterials() {
   const content = document.getElementById("content");
-  content.innerHTML = `<div class="loading">جاري تحميل المحتوى...</div>`;
+  content.innerHTML = `<div class="loading"><span class="spinner"></span>جاري تحميل المحتوى...</div>`;
   try {
     const idToken = await auth.currentUser.getIdToken();
     const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-list`, {
@@ -363,22 +370,17 @@ function renderMaterialsBrowser() {
   const categories = ["الكل", ...Array.from(new Set(allMaterials.map(m => m.category || "عام")))];
   const filtered = activeCategory === "الكل" ? allMaterials : allMaterials.filter(m => (m.category || "عام") === activeCategory);
 
-  const pillsHtml = categories.map(c => `<div class="category-pill ${c === activeCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join("");
+  const pillsHtml = categories.map(c => `<button type="button" class="category-pill ${c === activeCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
 
   let bannerHtml = "";
   if (isSubscribed && subscriptionExpiry) {
-    bannerHtml = `<div class="card" style="text-align:center; padding:0.7rem; margin-bottom:0.8rem;">
-      <span style="color:#3F6B4A; font-weight:600; font-size:0.85rem;">✓ اشتراكك ساري لحد ${escapeHtml(subscriptionExpiry)}</span>
-    </div>`;
+    bannerHtml = `<div class="card banner ok"><span class="banner-line">${icon("check-circle")} اشتراكك ساري لحد ${escapeHtml(subscriptionExpiry)}</span></div>`;
   } else if (lockedCount > 0) {
-    bannerHtml = `<div class="card" style="text-align:center; padding:0.7rem; margin-bottom:0.8rem;">
-      <span style="color:#9C4B32; font-weight:600; font-size:0.85rem;">🔒 فيه ${lockedCount} محتوى إضافي للمشتركين بس</span>
-      <p style="margin:0.3rem 0 0; font-size:0.78rem; color:#6B6B60;">كلّم المعلم عشان تشترك</p>
-    </div>`;
+    bannerHtml = `<div class="card banner lock"><span class="banner-line">${icon("lock")} فيه ${lockedCount} محتوى إضافي للمشتركين بس</span><p>كلّم المعلم عشان تشترك</p></div>`;
   }
 
   const itemsHtml = filtered.length === 0
-    ? `<div class="card" style="text-align:center; color:#6B6B60;">لسه مفيش محتوى في التصنيف ده.</div>`
+    ? `<div class="card empty-state">${icon("inbox")}<p>لسه مفيش محتوى في التصنيف ده.</p></div>`
     : filtered.map(m => renderMaterialCard(m)).join("");
 
   content.innerHTML = `
@@ -494,7 +496,7 @@ function renderMaterialCard(m) {
   } else if (m.type === "image") {
     bodyHtml = `<img class="mat-image" src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}">`;
   } else if (m.type === "pdf") {
-    bodyHtml = `<button type="button" class="mat-pdf-link" data-pdf-id="${escapeHtml(m.id)}" data-pdf-title="${escapeHtml(m.title || '')}">📄 افتح ملف الـPDF</button>`;
+    bodyHtml = `<button type="button" class="mat-pdf-link" data-pdf-id="${escapeHtml(m.id)}" data-pdf-title="${escapeHtml(m.title || '')}">${icon("file")} افتح ملف الـPDF</button>`;
   }
   return `
     <div class="card">
