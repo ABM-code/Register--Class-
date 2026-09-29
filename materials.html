@@ -2,13 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#16302B">
 <title>المكتبة التعليمية</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; }
-  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; }
+  :root { --accent: #D4A93B; --accent-rgb: 212,169,59; --c-card: #F5F1E6; --c-mutedonpage: #9FB8AD; }
   body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: #16302B; color: #1B2420; min-height: 100vh; }
   .wrap { max-width: 640px; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
   h1 { font-family: 'Fraunces', serif; color: #F5F1E6; font-size: 1.4rem; margin: 0 0 0.3rem; }
@@ -52,6 +52,29 @@
   .mat-category { font-size: 0.78rem; color: #6B6B60; margin-bottom: 0.7rem; }
   .mat-video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 10px; overflow: hidden; margin-bottom: 0.3rem; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
   .mat-video-wrap iframe { position: absolute; top: 0; right: 0; width: 100%; height: 100%; border: none; }
+  .ic { width: 1.15em; height: 1.15em; vertical-align: -0.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; pointer-events: none; }
+  /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب */
+  .yt-player { margin: 0.5rem 0; border-radius: 12px; overflow: hidden; background: #000; }
+  .yt-stage { position: relative; width: 100%; padding-top: 56.25%; }
+  .yt-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .yt-bigplay { position: absolute; inset: 0; z-index: 1; display: none; place-items: center; pointer-events: none; }
+  .yt-bigplay span { width: 3.6rem; height: 3.6rem; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; }
+  .yt-bigplay .ic { width: 1.5rem; height: 1.5rem; fill: currentColor; }
+  .yt-player:not(.playing):not(.plain) .yt-bigplay { display: grid; }
+  .yt-controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; background: #0F1F1C; color: var(--c-card); direction: ltr; }
+  .yt-controls button { width: auto; box-shadow: none; background: none; color: inherit; padding: 0.3rem; min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700; }
+  .yt-controls button:hover { background: rgba(255,255,255,0.1); }
+  .yt-controls .ic { fill: none; }
+  .yt-controls .yt-play .ic { fill: currentColor; }
+  .yt-seek { flex: 1; min-width: 0; accent-color: var(--accent); }
+  .yt-time { font-size: 0.75rem; color: var(--c-mutedonpage); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay { display: none; }
+  .yt-player:fullscreen { display: flex; flex-direction: column; border-radius: 0; }
+  .yt-player:fullscreen .yt-stage { padding-top: 0; flex: 1; }
+  .yt-player:-webkit-full-screen { display: flex; flex-direction: column; border-radius: 0; }
+  .yt-player:-webkit-full-screen .yt-stage { padding-top: 0; flex: 1; }
+  @media (pointer: coarse) { select, input[type=text] { font-size: 16px; } }
   .mat-image { width: 100%; border-radius: 10px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
   .mat-pdf-link {
     display: block; text-align: center; background: #3F6B4A; color: #F5F1E6 !important;
@@ -62,6 +85,7 @@
 </style>
 </head>
 <body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol></svg>
 <div class="wrap">
   <h1 id="pageTitle">المكتبة التعليمية</h1>
   <p class="sub" id="pageSub">اختر مرحلتك وادخل عشان تشوف المحتوى</p>
@@ -128,6 +152,7 @@ const auth = firebase.auth();
 
 const STAGES = ["Prep 1", "Prep 2", "Prep 3", "Sec 1", "Sec 2", "Sec 3"];
 
+function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
@@ -368,12 +393,104 @@ function renderMaterialsBrowser() {
       renderMaterialsBrowser();
     });
   });
+  initVideoPlayers(content);
+}
+
+/* ===== مشغّل فيديو داخلي ===== */
+let ytApiState = "idle", ytQueue = [];
+function failYT() { if (ytApiState === "ready") return; ytApiState = "failed"; ytQueue.splice(0).forEach(f => f(false)); }
+function ensureYT(cb) {
+  if (window.YT && window.YT.Player) return cb(true);
+  if (ytApiState === "failed") return cb(false);
+  ytQueue.push(cb);
+  if (ytApiState === "idle") {
+    ytApiState = "loading";
+    window.onYouTubeIframeAPIReady = () => { ytApiState = "ready"; ytQueue.splice(0).forEach(f => f(true)); };
+    const t = document.createElement("script");
+    t.src = "https://www.youtube.com/iframe_api";
+    t.onerror = failYT;
+    document.head.appendChild(t);
+    setTimeout(() => { if (ytApiState !== "ready") failYT(); }, 8000);
+  }
+}
+function ytIdFromUrl(u) {
+  const m = /(?:embed\/|[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(u || "");
+  return m ? m[1] : null;
+}
+function videoPlayerHtml(url) {
+  return `<div class="yt-player" data-src="${escapeHtml(url)}">
+    <div class="yt-stage"><div class="yt-bigplay"><span>${icon("play")}</span></div><div class="yt-shield"></div></div>
+    <div class="yt-controls">
+      <button type="button" class="yt-play" aria-label="تشغيل">${icon("play")}</button>
+      <input type="range" class="yt-seek" min="0" max="0" step="1" value="0" aria-label="التقدّم في الفيديو">
+      <span class="yt-time">0:00 / 0:00</span>
+      <button type="button" class="yt-speed" aria-label="سرعة التشغيل">1x</button>
+      <button type="button" class="yt-fs" aria-label="ملء الشاشة">${icon("maximize")}</button>
+    </div>
+  </div>`;
+}
+function initVideoPlayers(root) {
+  root.querySelectorAll(".yt-player:not([data-ready])").forEach(box => {
+    box.setAttribute("data-ready", "1");
+    const url = box.getAttribute("data-src");
+    const id = ytIdFromUrl(url);
+    const stage = box.querySelector(".yt-stage");
+    const plain = () => { box.classList.add("plain"); stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen></iframe>`); };
+    if (!id) return plain();
+    ensureYT(ok => ok ? buildVideoPlayer(box, stage, id) : plain());
+  });
+}
+function buildVideoPlayer(box, stage, id) {
+  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin);
+  stage.insertAdjacentHTML("afterbegin", `<iframe src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
+  const frame = stage.querySelector("iframe");
+  const $ = s => box.querySelector(s);
+  const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs"), btnSpeed = $(".yt-speed"), shield = $(".yt-shield");
+  const speeds = [1, 1.25, 1.5, 0.75];
+  let player = null, timer = null, dragging = false, speedIdx = 0;
+  const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+  const toggle = () => { if (player && player.getPlayerState) (player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo()); };
+  function tick() {
+    if (!box.isConnected) { clearInterval(timer); return; }
+    if (!player || dragging || !player.getCurrentTime) return;
+    const d = player.getDuration() || 0, c = player.getCurrentTime() || 0;
+    seek.max = d; seek.value = c;
+    time.textContent = fmt(c) + " / " + fmt(d);
+  }
+  player = new YT.Player(frame, { events: {
+    onReady: () => { box.classList.add("ready"); tick(); },
+    onStateChange: e => {
+      const playing = e.data === 1;
+      box.classList.toggle("playing", playing);
+      btnPlay.innerHTML = icon(playing ? "pause" : "play");
+      btnPlay.setAttribute("aria-label", playing ? "إيقاف مؤقت" : "تشغيل");
+      clearInterval(timer);
+      if (playing) timer = setInterval(tick, 500);
+      tick();
+    }
+  }});
+  shield.addEventListener("click", toggle);
+  shield.addEventListener("contextmenu", e => e.preventDefault());
+  btnPlay.addEventListener("click", toggle);
+  seek.addEventListener("input", () => { dragging = true; time.textContent = fmt(seek.value) + " / " + fmt(seek.max); });
+  seek.addEventListener("change", () => { if (player && player.seekTo) player.seekTo(Number(seek.value), true); dragging = false; tick(); });
+  btnSpeed.addEventListener("click", () => {
+    speedIdx = (speedIdx + 1) % speeds.length;
+    if (player && player.setPlaybackRate) player.setPlaybackRate(speeds[speedIdx]);
+    btnSpeed.textContent = speeds[speedIdx] + "x";
+  });
+  const reqFs = box.requestFullscreen || box.webkitRequestFullscreen;
+  if (!reqFs) btnFs.hidden = true;
+  btnFs.addEventListener("click", () => {
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else reqFs.call(box);
+  });
 }
 
 function renderMaterialCard(m) {
   let bodyHtml = "";
   if (m.type === "video") {
-    bodyHtml = `<div class="mat-video-wrap"><iframe src="${escapeHtml(m.url)}" allowfullscreen></iframe></div>`;
+    bodyHtml = videoPlayerHtml(m.url);
   } else if (m.type === "image") {
     bodyHtml = `<img class="mat-image" src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}">`;
   } else if (m.type === "pdf") {

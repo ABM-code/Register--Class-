@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#16302B">
 <title>محتواي</title>
 <!-- تحديث التصميم: المرحلة 3 + مشغّل فيديو داخلي (29 سبتمبر 2026) -->
@@ -28,6 +28,7 @@
   .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; text-decoration: none; padding: 0.7rem 1.3rem; font-size: 0.9rem; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
   button:focus-visible, .btn-primary:focus-visible, .redeem-link:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (pointer: coarse) { select, input[type=text] { font-size: 16px; } }
   .link-btn { display: inline-flex; align-items: center; gap: 0.4rem; background: none; box-shadow: none; color: var(--c-mutedonpage); font-weight: 600; font-size: 0.85rem; padding: 0.4rem 0.2rem; margin-bottom: 0.4rem; }
   .redeem-link { display: flex; align-items: center; justify-content: center; gap: 0.45rem; color: var(--c-onpage); margin-top: 0.6rem; font-size: 0.9rem; text-decoration: none; padding: 0.6rem; }
   #errorBox { display: none; align-items: flex-start; gap: 0.5rem; background: var(--c-dangerbg); color: var(--c-dangertext); padding: 0.65rem 0.9rem; border-radius: 10px; font-size: 0.88rem; margin-bottom: 1rem; }
