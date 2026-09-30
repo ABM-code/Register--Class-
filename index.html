@@ -1117,7 +1117,15 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
         <p style="font-size:0.78rem; color:var(--c-mutedoncard); margin:0 0 0.6rem;">صوّر ورقة الأسئلة وارفعها، وهيحاول الذكاء الاصطناعي يحولها لأسئلة جاهزة تراجعها قبل الحفظ.</p>
         <input type="file" id="aiImageInput" accept="image/*" style="display:none;">
         <button id="aiImportBtn" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:9px; padding:0.65rem; font-weight:700; cursor:pointer;">ارفع صورة الأسئلة</button>
-        <div id="aiImportStatus" style="font-size:0.82rem; margin-top:0.5rem; display:none;"></div>
+        <div id="aiImportStatus" style="font-size:0.82rem; margin-top:0.5rem; display:none; line-height:1.7;"></div>
+        <div id="aiImportActions" style="display:none; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;"></div>
+        <details id="textImportBox" style="margin-top:0.7rem;">
+          <summary style="cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--c-textoncard);">أو الصق نص الأسئلة (من غير ذكاء اصطناعي ومن غير حد يومي)</summary>
+          <p style="font-size:0.78rem; color:var(--c-mutedoncard); margin:0.5rem 0;">اكتب كل سؤال برقم، وتحته الاختيارات <bdi dir="ltr">a) b) c) d)</bdi>، وبعدها <bdi dir="ltr">Answer: b</bdi>. أو حط مفتاح الإجابات في الآخر بالشكل ده: <bdi dir="ltr">1-b 2-c 3-a</bdi></p>
+          <textarea id="textImportInput" dir="auto" rows="8" placeholder="1. He ___ to school every day.&#10;a) go&#10;b) goes&#10;c) going&#10;Answer: b&#10;&#10;2. Rewrite: I began studying five years ago. (for)&#10;Answer: I have been studying for five years." style="width:100%; padding:0.6rem; border-radius:9px; border:1px solid rgba(0,0,0,0.15); background:var(--c-white); color:var(--c-textoncard); font-size:0.85rem; font-family:inherit;"></textarea>
+          <button type="button" onclick="importQuestionsFromText()" style="width:100%; margin-top:0.5rem; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:9px; padding:0.6rem; font-weight:700; cursor:pointer;">حلّل النص وضيف الأسئلة</button>
+          <div id="textImportStatus" style="font-size:0.82rem; margin-top:0.5rem; display:none; line-height:1.7;"></div>
+        </details>
       </div>
       <div id="questionsBuilder"></div>
       <div style="display:flex; gap:0.5rem; margin:0.5rem 0 0.5rem;">
@@ -1644,7 +1652,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v78 — مشغّل الفيديو بملء الشاشة وتدوير تلقائي في مكتبة المعلم — 30 سبتمبر 2026";
+const APP_VERSION = "v79 — تحسين أخطاء استيراد الأسئلة من الصورة (حد Gemini اليومي) + استيراد الأسئلة من نص بدون ذكاء اصطناعي — 30 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -5192,25 +5200,123 @@ function stripLeadingNumbering(text) {
     .trim();
 }
 
-async function handleAiImage(file) {
+let lastAiFile = null, aiRetryTimer = null;
+function clearAiRetry() { if (aiRetryTimer) { clearInterval(aiRetryTimer); aiRetryTimer = null; } }
+
+// بيحسب الساعة اللي بيتصفّر فيها الحد اليومي (منتصف الليل بتوقيت المحيط الهادي) بتوقيت جهازك
+function aiQuotaResetText() {
+  try {
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }).formatToParts(now);
+    const g = t => Number(parts.find(x => x.type === t).value) % 24;
+    const secSinceMidnight = g("hour") * 3600 + Number(parts.find(x => x.type === "minute").value) * 60 + Number(parts.find(x => x.type === "second").value);
+    const reset = new Date(now.getTime() + (86400 - secSinceMidnight) * 1000);
+    return reset.toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit" });
+  } catch (e) { return ""; }
+}
+
+// بيفهم رسالة الخطأ اللي راجعة من الخادم ويصنّفها
+function parseAiError(msg) {
+  const t = String(msg || "");
+  const info = { kind: "other", retrySec: 0, model: "", limit: "" };
+  const r1 = /retry\s*in\s*([\d.]+)\s*s/i.exec(t) || /"retryDelay"\s*:\s*"(\d+)s"/i.exec(t);
+  if (r1) info.retrySec = Math.ceil(parseFloat(r1[1]));
+  const md = /"model"\s*:\s*"([^"]+)"/.exec(t) || /model:\s*([\w.\-]+)/i.exec(t);
+  if (md) info.model = md[1];
+  const lm = /limit:\s*(\d+)/i.exec(t) || /"quotaValue"\s*:\s*"(\d+)"/.exec(t);
+  if (lm) info.limit = lm[1];
+  if (/RESOURCE_EXHAUSTED|\b429\b|quota/i.test(t)) info.kind = /PerDay/i.test(t) ? "quota_daily" : "quota_minute";
+  else if (/UNAVAILABLE|\b503\b|overloaded|high demand|اتأخر/i.test(t)) info.kind = "busy";
+  else if (/تعذر الوصول للخادم/.test(t)) info.kind = "network";
+  return info;
+}
+
+function retryLastAiImage() { if (lastAiFile) handleAiImage(lastAiFile); }
+function openTextImport() {
+  const box = document.getElementById("textImportBox");
+  box.open = true;
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+  setTimeout(() => document.getElementById("textImportInput").focus(), 300);
+}
+
+function showAiFailure(err, file, attempt) {
+  const statusEl = document.getElementById("aiImportStatus");
+  const actions = document.getElementById("aiImportActions");
+  const raw = String((err && err.message) || err);
+  const info = parseAiError(raw);
+  statusEl.style.display = "block";
+  statusEl.style.color = "var(--c-dangertext)";
+  const btnCss = 'style="flex:none; background:var(--c-cardalt); color:var(--c-textoncard); border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.45rem 0.8rem; font-weight:600; font-size:0.82rem; cursor:pointer;"';
+  const retryBtn = `<button type="button" ${btnCss} onclick="retryLastAiImage()">إعادة المحاولة</button>`;
+  const manualBtn = `<button type="button" ${btnCss} onclick="addQuestionCard()">ضيف سؤال يدوي</button>`;
+  const pasteBtn = `<button type="button" ${btnCss} onclick="openTextImport()">الصق نص الأسئلة</button>`;
+  const details = `<details style="margin-top:0.4rem; color:var(--c-mutedoncard);"><summary style="cursor:pointer;">تفاصيل تقنية</summary><div style="direction:ltr; text-align:left; word-break:break-word; font-size:0.72rem; margin-top:0.3rem;">${escapeHtml(raw)}</div></details>`;
+  let html = "", btns = "";
+
+  if (info.kind === "quota_daily") {
+    const when = aiQuotaResetText();
+    html = `<strong>وصلت للحد اليومي المجاني للذكاء الاصطناعي.</strong><br>
+      خدمة <bdi dir="ltr">Gemini</bdi> المجانية بتسمح بـ ${escapeHtml(info.limit || "عدد محدود من")} طلب في اليوم${info.model ? ` لنموذج <bdi dir="ltr">${escapeHtml(info.model)}</bdi>` : ""}، والحد ده خلص. ده مش عطل في التطبيق.
+      ${when ? `العدّاد بيتصفّر الساعة <strong>${escapeHtml(when)}</strong> تقريبًا بتوقيت جهازك.` : ""}<br>
+      لحد ما يتصفّر: الصق نص الأسئلة أو ضيفها يدوي. والحل الدائم: تفعيل الفوترة في <bdi dir="ltr">Google AI Studio</bdi>، أو إضافة نموذج بديل في الخادم.`;
+    btns = pasteBtn + manualBtn;
+  } else if ((info.kind === "quota_minute" || info.kind === "busy") && attempt < 2 && (info.retrySec || 8) <= 90) {
+    let left = Math.max(3, info.retrySec || 8) + 1;
+    html = `<strong>الخدمة مشغولة لحظيًا.</strong> هعيد المحاولة تلقائيًا بعد <span id="aiRetryCount">${left}</span> ثانية...`;
+    btns = retryBtn + pasteBtn;
+    clearAiRetry();
+    aiRetryTimer = setInterval(() => {
+      const builder = document.getElementById("examBuilderView");
+      if (!builder || builder.style.display === "none") { clearAiRetry(); return; }
+      left--;
+      const c = document.getElementById("aiRetryCount");
+      if (c) c.textContent = Math.max(0, left);
+      if (left <= 0) { clearAiRetry(); handleAiImage(file, attempt + 1); }
+    }, 1000);
+  } else if (info.kind === "quota_minute" || info.kind === "busy") {
+    html = `<strong>الخدمة لسه مشغولة.</strong> جرّب بعد شوية، أو الصق نص الأسئلة بدل الصورة.`;
+    btns = retryBtn + pasteBtn + manualBtn;
+  } else if (info.kind === "network") {
+    html = `<strong>تعذر الوصول للخادم.</strong> اتأكد من النت وجرّب تاني.`;
+    btns = retryBtn + pasteBtn;
+  } else {
+    html = `<strong>تعذر تحليل الصورة.</strong> جرّب صورة أوضح، أو الصق نص الأسئلة.`;
+    btns = retryBtn + pasteBtn + manualBtn;
+  }
+  statusEl.innerHTML = html + details;
+  actions.innerHTML = btns;
+  actions.style.display = "flex";
+}
+
+async function handleAiImage(file, attempt = 0) {
+  clearAiRetry();
+  lastAiFile = file;
   const statusEl = document.getElementById("aiImportStatus");
   const btn = document.getElementById("aiImportBtn");
+  const actions = document.getElementById("aiImportActions");
+  actions.style.display = "none";
+  actions.innerHTML = "";
   statusEl.style.display = "block";
-  statusEl.style.color = "#6B6B60";
-  statusEl.textContent = "جاري تحليل الصورة، ممكن ياخد نص دقيقة...";
+  statusEl.style.color = "var(--c-mutedoncard)";
+  statusEl.textContent = attempt ? "جاري إعادة المحاولة..." : "جاري تحليل الصورة، ممكن ياخد نص دقيقة...";
   btn.disabled = true;
 
   try {
     const base64 = await resizeImageToBase64(file, 1600);
     let res;
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 90000);
     try {
       res = await fetch(AI_WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageBase64: base64, mimeType: "image/jpeg" }),
+        signal: ctrl.signal,
       });
     } catch (networkErr) {
-      throw new Error("تعذر الوصول للخادم (الرابط أو الاتصال بالنت). التفاصيل: " + networkErr.message);
+      throw new Error(networkErr.name === "AbortError" ? "الخادم اتأخر أوي ومردش." : "تعذر الوصول للخادم (الرابط أو الاتصال بالنت). التفاصيل: " + networkErr.message);
+    } finally {
+      clearTimeout(timeoutId);
     }
     if (!res.ok) {
       let details = "";
@@ -5225,8 +5331,8 @@ async function handleAiImage(file) {
     const data = await res.json();
     const aiQuestions = data.questions || [];
     if (aiQuestions.length === 0) {
-      statusEl.style.color = "#9C4B32";
-      statusEl.textContent = "معرفش أطلع أي أسئلة من الصورة دي. جرب صورة أوضح.";
+      statusEl.style.color = "var(--c-dangertext)";
+      statusEl.textContent = "معرفش أطلع أي أسئلة من الصورة دي. جرب صورة أوضح، أو الصق نص الأسئلة.";
       return;
     }
     aiQuestions.forEach(q => {
@@ -5242,14 +5348,141 @@ async function handleAiImage(file) {
       });
     });
     renderQuestionsBuilder();
-    statusEl.style.color = "#3F6B4A";
+    statusEl.style.color = "var(--c-success)";
     statusEl.textContent = `تمت إضافة ${aiQuestions.length} سؤال. راجعهم كويس قبل الحفظ (الذكاء الاصطناعي ممكن يغلط).`;
   } catch (err) {
-    statusEl.style.color = "#9C4B32";
-    statusEl.textContent = "تعذر تحليل الصورة: " + (err.message || err);
+    showAiFailure(err, file, attempt);
   } finally {
     btn.disabled = false;
   }
+}
+
+/* ===== استيراد الأسئلة من نص (محلي بالكامل، من غير أي API) ===== */
+function parseQuestionsFromText(raw) {
+  const AR = "٠١٢٣٤٥٦٧٨٩";
+  const text = String(raw || "").replace(/[٠-٩]/g, d => AR.indexOf(d)).replace(/\r/g, "");
+  const lines = text.split("\n").map(l => l.trim());
+  const LET = { a: 0, b: 1, c: 2, d: 3, e: 4, "أ": 0, "ا": 0, "ب": 1, "ج": 2, "د": 3 };
+  const letterIdx = ch => LET[String(ch).toLowerCase()];
+  const L = "[a-eA-Eأابجد]";
+  const qStart = /^(?:q(?:uestion)?\.?\s*)?(\d{1,3})\s*[.)\-–:]\s*(.+)$/i;
+  const optRe = new RegExp("^\\(?(" + L + ")\\s*(?:\\)|[.\\-:](?=\\s))\\s*(.+)$");
+  const ansRe = /^(?:ans(?:wer)?|correct(?:\s+answer)?|الإجابة(?:\s+الصحيحة)?|الاجابة(?:\s+الصحيحة)?|الحل)\s*[:：=\-]\s*(.+)$/i;
+  const keyHead = /^(?:answers?|answer\s*key|key|الإجابات|الاجابات|مفتاح\s+الإجابة|مفتاح\s+الاجابة|الإجابات\s+النموذجية)\s*[:：\-]?\s*$/i;
+  const inlineKey = /^(?:answers?|answer\s*key|الإجابات|الاجابات)\s*[:：]\s*(\d.*)$/i;
+  const passHead = /^(?:passage|reading|text|النص|القطعة)\s*[:：]\s*(.*)$/i;
+  const markRe = /\s*(?:\*|✓|✔|\((?:correct|صح|صحيحة)\))\s*$/i;
+  const pairRe = new RegExp("(\\d{1,3})\\s*[.)\\-:=]?\\s*(" + L + ")(?![A-Za-z])", "g");
+  const splitRe = new RegExp("(?:^|\\s)\\(?(" + L + ")(?:\\)|[.\\-:](?=\\s))\\s*", "g");
+
+  // بيقسّم سطر فيه أكتر من اختيار (a) x  b) y  c) z)
+  function splitInline(str) {
+    const marks = [];
+    let m;
+    splitRe.lastIndex = 0;
+    while ((m = splitRe.exec(str)) !== null) marks.push({ idx: letterIdx(m[1]), start: m.index, end: splitRe.lastIndex });
+    if (marks.length < 2) return null;
+    const first = marks.findIndex(x => x.idx === 0);
+    if (first < 0) return null;
+    const seq = marks.slice(first);
+    for (let i = 1; i < seq.length; i++) if (seq[i].idx !== seq[i - 1].idx + 1) return null;
+    if (seq.length < 2) return null;
+    return { head: str.slice(0, seq[0].start).trim(), opts: seq.map((x, i) => str.slice(x.end, i + 1 < seq.length ? seq[i + 1].start : str.length).trim()) };
+  }
+
+  const qs = [];
+  let cur = null, passage = "", inPassage = false, inKey = false;
+  const key = {};
+  const push = () => { if (cur) { qs.push(cur); cur = null; } };
+  const addOption = (c, t) => {
+    let starred = false;
+    if (markRe.test(t)) { starred = true; t = t.replace(markRe, ""); }
+    c.options.push(t.trim());
+    if (starred) c.marked = c.options.length - 1;
+  };
+
+  for (let line of lines) {
+    if (!line) continue;
+    if (keyHead.test(line)) { push(); inKey = true; continue; }
+    const ik = inlineKey.exec(line);
+    if (ik) { push(); for (const m of ik[1].matchAll(pairRe)) key[Number(m[1])] = letterIdx(m[2]); continue; }
+    if (inKey) { for (const m of line.matchAll(pairRe)) key[Number(m[1])] = letterIdx(m[2]); continue; }
+    const ph = passHead.exec(line);
+    if (ph) { push(); passage = ph[1] || ""; inPassage = true; continue; }
+
+    let lead = false;
+    if (cur && /^\*\s*/.test(line)) { lead = true; line = line.replace(/^\*\s*/, ""); }
+    const am = ansRe.exec(line);
+    if (am && cur) { cur.ansRaw = am[1].trim(); continue; }
+    const om = cur ? optRe.exec(line) : null;
+    if (om) {
+      const inl = splitInline(line);
+      if (inl) inl.opts.forEach(o => addOption(cur, o));
+      else { addOption(cur, om[2]); if (lead) cur.marked = cur.options.length - 1; }
+      continue;
+    }
+    const qm = qStart.exec(line);
+    if (qm) {
+      push();
+      inPassage = false;
+      cur = { num: Number(qm[1]), prompt: qm[2].trim(), options: [], marked: -1, ansRaw: "", passage };
+      const inl = splitInline(cur.prompt);
+      if (inl) { cur.prompt = inl.head; inl.opts.forEach(o => addOption(cur, o)); }
+      continue;
+    }
+    if (inPassage && !cur) { passage += (passage ? "\n" : "") + line; continue; }
+    if (cur) {
+      if (cur.options.length) cur.options[cur.options.length - 1] += " " + line;
+      else cur.prompt += " " + line;
+    }
+  }
+  push();
+
+  let noAnswer = 0;
+  const out = qs.filter(q => q.prompt).map(q => {
+    const res = { type: "mcq", passage: q.passage || "", prompt: q.prompt.trim(), options: q.options, correctIndex: 0, correctAnswers: [""] };
+    const ans = q.ansRaw || "";
+    let ci = q.marked;
+    if (ci < 0 && ans && q.options.length >= 2) {
+      const m1 = new RegExp("^\\(?(" + L + ")[).]?$").exec(ans) || new RegExp("^\\(?(" + L + ")\\)\\s*\\S").exec(ans) || new RegExp("^(" + L + ")\\.\\s+\\S").exec(ans);
+      if (m1) ci = letterIdx(m1[1]);
+      else { const k = q.options.findIndex(o => o.trim().toLowerCase() === ans.toLowerCase()); if (k >= 0) ci = k; }
+    }
+    if (ci < 0 && key[q.num] !== undefined) ci = key[q.num];
+    if (q.options.length >= 2) {
+      if (ci >= 0 && ci < q.options.length) res.correctIndex = ci; else noAnswer++;
+    } else {
+      res.options = ["", "", "", ""];
+      res.type = /^(?:rewrite|re-write|أعد\s+كتابة|اعد\s+كتابة)/i.test(res.prompt) ? "rewrite" : /^(?:correct\b|صحح|صحّح)/i.test(res.prompt) ? "correct" : "complete";
+      const answers = ans ? ans.split(/\s*(?:\/|\||;|،|؛)\s*/).filter(Boolean) : [];
+      if (answers.length) res.correctAnswers = answers; else noAnswer++;
+    }
+    return res;
+  });
+  return { questions: out, noAnswer };
+}
+
+function importQuestionsFromText() {
+  const input = document.getElementById("textImportInput");
+  const st = document.getElementById("textImportStatus");
+  const { questions, noAnswer } = parseQuestionsFromText(input.value);
+  st.style.display = "block";
+  if (!questions.length) {
+    st.style.color = "var(--c-dangertext)";
+    st.textContent = "معرفتش أطلع أسئلة من النص. اكتب كل سؤال برقم (1. 2. 3.) وتحته الاختيارات a) b) c) d).";
+    return;
+  }
+  questions.forEach(q => {
+    currentBuilderQuestions.push({
+      id: "q_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+      type: q.type, passage: q.passage, prompt: q.prompt, options: q.options,
+      correctIndex: q.correctIndex, correctAnswers: q.correctAnswers,
+    });
+  });
+  renderQuestionsBuilder();
+  input.value = "";
+  st.style.color = noAnswer ? "var(--c-warntext)" : "var(--c-success)";
+  st.textContent = `تمت إضافة ${questions.length} سؤال.` + (noAnswer ? ` ${noAnswer} منهم من غير إجابة صحيحة واضحة، راجعهم.` : " راجعهم قبل الحفظ.");
 }
 
 function addQuestionCard() {
