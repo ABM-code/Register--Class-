@@ -1652,7 +1652,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v82 — روابط الامتحانات القصيرة /e/كود + مشاركة الامتحان — 1 أكتوبر 2026";
+const APP_VERSION = "v83 — التطبيق يفضل مفتوح (من غير قفل تلقائي) ويرجع لنفس التاب ومكان التمرير — 1 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -3843,7 +3843,17 @@ function toggleStageCounts() {
   renderTorail();
 }
 
+const APP_TABS = ["students", "exams", "stats", "torail", "products"];
+function getSavedTab() {
+  try {
+    const t = localStorage.getItem("lastTab");
+    if (APP_TABS.includes(t)) return t;
+  } catch (e) {}
+  return "students";
+}
+
 function switchTab(tab) {
+  try { localStorage.setItem("lastTab", tab); } catch (e) {}
   document.getElementById("viewStudents").style.display = tab === "students" ? "block" : "none";
   document.getElementById("viewExams").style.display = tab === "exams" ? "block" : "none";
   document.getElementById("viewStats").style.display = tab === "stats" ? "block" : "none";
@@ -7525,7 +7535,8 @@ async function showApp() {
   document.querySelectorAll(".app-content").forEach(el => {
     el.style.display = el.classList.contains("tab-nav") ? "flex" : "block";
   });
-  switchTab("students");
+  switchTab(getSavedTab());
+  restoreSavedScroll();
   try {
     await ensureTeacherDoc(currentTeacherId);
     await migrateLegacyDataToTeacher(currentTeacherId);
@@ -7535,16 +7546,20 @@ async function showApp() {
 }
 
 // قفل تلقائي بعد فترة عدم استخدام (بالميلي ثانية). عدّل الرقم لو حابب مدة مختلفة.
-const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 دقيقة
+// 0 = بدون قفل تلقائي (التطبيق يفضل مفتوح حتى لو خرجت منه لتطبيق تاني). لو حابب تفعّل القفل
+// التلقائي تاني حط مدة بالميلي ثانية (مثلًا 30 * 60 * 1000 = 30 دقيقة). تسجيل الخروج اليدوي شغال دايمًا.
+const INACTIVITY_TIMEOUT_MS = 0;
 let inactivityTimer = null;
 const inactivityEvents = ["mousemove", "keydown", "click", "touchstart", "scroll"];
 
 function resetInactivityTimer() {
+  if (!INACTIVITY_TIMEOUT_MS) return;
   if (inactivityTimer) clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(() => { logoutApp(); }, INACTIVITY_TIMEOUT_MS);
 }
 
 function startInactivityWatcher() {
+  if (!INACTIVITY_TIMEOUT_MS) return;
   inactivityEvents.forEach(evt => document.addEventListener(evt, resetInactivityTimer));
   resetInactivityTimer();
 }
@@ -7618,7 +7633,31 @@ function handleAvatarChange(file) {
   }
 })();
 
+// حفظ مكان التمرير عشان لو المتصفح أعاد تحميل الصفحة بعد ما خرجت لتطبيق تاني ترجع لنفس المكان.
+function saveScrollPosition() {
+  try {
+    if (!auth.currentUser) return;
+    localStorage.setItem("lastScroll", JSON.stringify({ tab: getSavedTab(), y: Math.round(window.scrollY || 0), at: Date.now() }));
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveScrollPosition(); });
+window.addEventListener("pagehide", saveScrollPosition);
+
+function restoreSavedScroll() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem("lastScroll") || "null"); } catch (e) {}
+  if (!saved || saved.tab !== getSavedTab() || !(saved.y > 0)) return;
+  if (Date.now() - (saved.at || 0) > 12 * 60 * 60 * 1000) return; // أقدم من 12 ساعة: مش لازم
+  // المحتوى بيتحمّل بعد لحظات، فبنجرّب كذا مرة لحد ما الصفحة تبقى طويلة كفاية.
+  [150, 600, 1500, 3000].forEach(ms => setTimeout(() => {
+    if (document.documentElement.scrollHeight >= saved.y + window.innerHeight * 0.5 && Math.abs(window.scrollY - saved.y) > 40) {
+      window.scrollTo({ top: saved.y });
+    }
+  }, ms));
+}
+
 function logoutApp() {
+  try { localStorage.removeItem("lastScroll"); } catch (e) {}
   stopInactivityWatcher();
   auth.signOut().then(() => location.reload()).catch(() => location.reload());
 }
