@@ -881,7 +881,13 @@ async function requestExplain(explainId, action, btnEl) {
     });
     const data = await res.json().catch(() => null);
     if (!res.ok || !data || !data.text) {
-      box.textContent = "معلش، حصلت مشكلة وإحنا بنجيب الشرح. جربي تاني كمان شوية.";
+      if (data && data.error === "quota_exceeded" && data.scope === "daily") {
+        box.textContent = "الشرح والترجمة مش متاحين دلوقتي لأن حد الاستخدام اليومي خلص. جرّب تاني بكرة أو اسأل المعلم.";
+      } else if (data && (data.error === "quota_exceeded" || data.error === "ai_busy")) {
+        box.textContent = `الخدمة مشغولة دلوقتي. جرّب تاني بعد ${Math.max(5, data.retryAfterSec || 15)} ثانية تقريبًا.`;
+      } else {
+        box.textContent = "معلش، حصلت مشكلة وإحنا بنجيب الشرح. جربي تاني كمان شوية.";
+      }
     } else {
       box.textContent = data.text;
     }

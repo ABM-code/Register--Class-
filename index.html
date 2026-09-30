@@ -1652,7 +1652,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v79 — تحسين أخطاء استيراد الأسئلة من الصورة (حد Gemini اليومي) + استيراد الأسئلة من نص بدون ذكاء اصطناعي — 30 سبتمبر 2026";
+const APP_VERSION = "v80 — الواجهة بتفهم ردود الخادم الجديد (429 منظّم + وقت الانتظار + سلسلة النماذج) — 30 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -5244,6 +5244,16 @@ function showAiFailure(err, file, attempt) {
   const actions = document.getElementById("aiImportActions");
   const raw = String((err && err.message) || err);
   const info = parseAiError(raw);
+  const eb = err && err.body;
+  if (eb && typeof eb === "object" && ["quota_exceeded", "ai_busy", "ai_unavailable", "not_configured"].includes(eb.error)) {   // رد منظّم من الخادم الجديد
+    info.structured = true;
+    if (eb.error === "quota_exceeded") info.kind = eb.scope === "daily" ? "quota_daily" : "quota_minute";
+    else if (eb.error === "ai_busy") info.kind = "busy";
+    else if (eb.error === "not_configured") info.kind = "config";
+    if (eb.retryAfterSec) info.retrySec = eb.retryAfterSec;
+    info.resetAt = eb.resetAt || "";
+    info.tried = Array.isArray(eb.tried) ? (eb.tried.filter(t => !t.skipped).length || eb.tried.length) : 0;
+  }
   statusEl.style.display = "block";
   statusEl.style.color = "var(--c-dangertext)";
   const btnCss = 'style="flex:none; background:var(--c-cardalt); color:var(--c-textoncard); border:1px solid rgba(0,0,0,0.15); border-radius:9px; padding:0.45rem 0.8rem; font-weight:600; font-size:0.82rem; cursor:pointer;"';
@@ -5254,8 +5264,13 @@ function showAiFailure(err, file, attempt) {
   let html = "", btns = "";
 
   if (info.kind === "quota_daily") {
-    const when = aiQuotaResetText();
-    html = `<strong>وصلت للحد اليومي المجاني للذكاء الاصطناعي.</strong><br>
+    const when = info.resetAt ? new Date(info.resetAt).toLocaleTimeString("ar-EG", { hour: "numeric", minute: "2-digit" }) : aiQuotaResetText();
+    html = info.structured
+      ? `<strong>كل نماذج الذكاء الاصطناعي المتاحة وصلت لحدها اليومي.</strong><br>
+      الخادم جرّب ${info.tried || "كذا"} نموذج/مزوّد وكلهم خلصوا. ده مش عطل في التطبيق.
+      ${when ? `أقرب وقت يتصفّر فيه العدّاد الساعة <strong>${escapeHtml(when)}</strong> تقريبًا بتوقيت جهازك.` : ""}<br>
+      لحد ما يتصفّر: الصق نص الأسئلة أو ضيفها يدوي. والحل الدائم: تفعيل الفوترة، أو إضافة مزوّد احتياطي على الخادم.`
+      : `<strong>وصلت للحد اليومي المجاني للذكاء الاصطناعي.</strong><br>
       خدمة <bdi dir="ltr">Gemini</bdi> المجانية بتسمح بـ ${escapeHtml(info.limit || "عدد محدود من")} طلب في اليوم${info.model ? ` لنموذج <bdi dir="ltr">${escapeHtml(info.model)}</bdi>` : ""}، والحد ده خلص. ده مش عطل في التطبيق.
       ${when ? `العدّاد بيتصفّر الساعة <strong>${escapeHtml(when)}</strong> تقريبًا بتوقيت جهازك.` : ""}<br>
       لحد ما يتصفّر: الصق نص الأسئلة أو ضيفها يدوي. والحل الدائم: تفعيل الفوترة في <bdi dir="ltr">Google AI Studio</bdi>، أو إضافة نموذج بديل في الخادم.`;
@@ -5276,6 +5291,9 @@ function showAiFailure(err, file, attempt) {
   } else if (info.kind === "quota_minute" || info.kind === "busy") {
     html = `<strong>الخدمة لسه مشغولة.</strong> جرّب بعد شوية، أو الصق نص الأسئلة بدل الصورة.`;
     btns = retryBtn + pasteBtn + manualBtn;
+  } else if (info.kind === "config") {
+    html = `<strong>مفاتيح الذكاء الاصطناعي مش متضبطة على الخادم.</strong> راجع المتغيرات السرية في Cloudflare.`;
+    btns = pasteBtn + manualBtn;
   } else if (info.kind === "network") {
     html = `<strong>تعذر الوصول للخادم.</strong> اتأكد من النت وجرّب تاني.`;
     btns = retryBtn + pasteBtn;
@@ -5319,14 +5337,16 @@ async function handleAiImage(file, attempt = 0) {
       clearTimeout(timeoutId);
     }
     if (!res.ok) {
-      let details = "";
+      let details = "", errBody = null;
       try {
-        const errBody = await res.json();
+        errBody = await res.json();
         details = errBody.error ? (errBody.error + (errBody.details ? " — " + errBody.details : "")) : JSON.stringify(errBody);
       } catch (e) {
         details = await res.text().catch(() => "");
       }
-      throw new Error(`الخادم رجّع خطأ (${res.status}). ${details}`);
+      const httpErr = new Error(`الخادم رجّع خطأ (${res.status}). ${details}`);
+      httpErr.body = errBody;
+      throw httpErr;
     }
     const data = await res.json();
     const aiQuestions = data.questions || [];
