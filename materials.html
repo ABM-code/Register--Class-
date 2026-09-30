@@ -62,8 +62,8 @@
   .banner p { margin: 0; font-size: 0.78rem; font-weight: 400; color: var(--c-muted); }
   .mat-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem; }
   .mat-category { font-size: 0.78rem; color: var(--c-muted); margin-bottom: 0.7rem; }
-  /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب */
-  .yt-player { margin: 0.5rem 0; border-radius: 12px; overflow: hidden; background: #000; }
+  /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب + ملء الشاشة مع تدوير */
+  .yt-player { --yt-fg: #F5F1E6; --yt-muted: #9FB8AD; --yt-accent: var(--accent, var(--c-accent, #D4A93B)); position: relative; margin: 0.5rem 0; border-radius: 12px; overflow: hidden; background: #000; }
   .yt-stage { position: relative; width: 100%; padding-top: 56.25%; }
   .yt-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
@@ -71,26 +71,26 @@
   .yt-bigplay span { width: 3.6rem; height: 3.6rem; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; }
   .yt-bigplay .ic { width: 1.5rem; height: 1.5rem; fill: currentColor; }
   .yt-player:not(.playing):not(.plain) .yt-bigplay { display: grid; }
-  .yt-controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; background: #0F1F1C; color: var(--c-card); direction: ltr; }
-  .yt-controls button { width: auto; box-shadow: none; background: none; color: inherit; padding: 0.3rem; min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700; }
+  .yt-controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; background: #0F1F1C; color: var(--yt-fg); direction: ltr; transition: opacity 0.25s ease; }
+  .yt-controls button { width: auto; box-shadow: none; border: none; font-family: inherit; cursor: pointer; background: none; color: inherit; padding: 0.3rem; min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700; }
   .yt-controls button:hover { background: rgba(255,255,255,0.1); }
   .yt-controls .ic { fill: none; }
   .yt-controls .yt-play .ic { fill: currentColor; }
-  .yt-seek { flex: 1; min-width: 0; accent-color: var(--accent); }
-  .yt-time { font-size: 0.75rem; color: var(--c-mutedonpage); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .yt-seek { flex: 1; min-width: 0; accent-color: var(--yt-accent); }
+  .yt-time { font-size: 0.75rem; color: var(--yt-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay { display: none; }
-  .yt-player:fullscreen { display: flex; flex-direction: column; border-radius: 0; }
-  .yt-player:fullscreen .yt-stage { padding-top: 0; flex: 1; }
-  .yt-player:-webkit-full-screen { display: flex; flex-direction: column; border-radius: 0; }
-  .yt-player:-webkit-full-screen .yt-stage { padding-top: 0; flex: 1; }
-  @media (pointer: coarse) { select, input[type=text] { font-size: 16px; } }
+  .yt-player.yt-fs { display: flex; flex-direction: column; border-radius: 0; margin: 0; width: 100%; height: 100%; }
+  .yt-player.yt-fs .yt-stage { padding-top: 0; flex: 1; min-height: 0; }
+  .yt-player.yt-fs .yt-controls { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0)); padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)); }
+  .yt-player.yt-fs.hide-controls .yt-controls { opacity: 0; pointer-events: none; }
+  .yt-player.yt-fake { position: fixed; top: 0; left: 0; z-index: 2147483000; transform-origin: 0 0; }
   .mat-image { width: 100%; border-radius: 10px; display: block; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
   .mat-pdf-link { display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--c-success); color: var(--c-card) !important; text-decoration: none; padding: 0.75rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; border: none; width: 100%; cursor: pointer; font-family: inherit; box-shadow: none; }
   .mat-pdf-link:hover { filter: brightness(1.1); }
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-minimize" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></symbol><symbol id="i-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol></svg>
 <div class="wrap">
   <h1 id="pageTitle">المكتبة التعليمية</h1>
   <p class="sub" id="pageSub">اختر مرحلتك وادخل عشان تشوف المحتوى</p>
@@ -427,7 +427,7 @@ function videoPlayerHtml(url) {
       <input type="range" class="yt-seek" min="0" max="0" step="1" value="0" aria-label="التقدّم في الفيديو">
       <span class="yt-time">0:00 / 0:00</span>
       <button type="button" class="yt-speed" aria-label="سرعة التشغيل">1x</button>
-      <button type="button" class="yt-fs" aria-label="ملء الشاشة">${icon("maximize")}</button>
+      <button type="button" class="yt-fs-btn" aria-label="ملء الشاشة">${icon("maximize")}</button>
     </div>
   </div>`;
 }
@@ -447,18 +447,90 @@ function buildVideoPlayer(box, stage, id) {
   stage.insertAdjacentHTML("afterbegin", `<iframe src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
   const frame = stage.querySelector("iframe");
   const $ = s => box.querySelector(s);
-  const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs"), btnSpeed = $(".yt-speed"), shield = $(".yt-shield");
+  const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs-btn"), btnSpeed = $(".yt-speed"), shield = $(".yt-shield");
   const speeds = [1, 1.25, 1.5, 0.75];
   let player = null, timer = null, dragging = false, speedIdx = 0;
+  let fsMode = null, autoFs = false, hideTimer = null;
   const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
   const toggle = () => { if (player && player.getPlayerState) (player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo()); };
   function tick() {
-    if (!box.isConnected) { clearInterval(timer); return; }
+    if (!box.isConnected) { clearInterval(timer); if (fsMode) exitFs(); return; }
     if (!player || dragging || !player.getCurrentTime) return;
     const d = player.getDuration() || 0, c = player.getCurrentTime() || 0;
     seek.max = d; seek.value = c;
     time.textContent = fmt(c) + " / " + fmt(d);
   }
+
+  /* ملء الشاشة + تدوير: نظام الجهاز لو متاح، وإلا تدوير بالـCSS (آيفون) */
+  function poke() {
+    box.classList.remove("hide-controls");
+    clearTimeout(hideTimer);
+    if (fsMode && box.classList.contains("playing")) hideTimer = setTimeout(() => box.classList.add("hide-controls"), 3000);
+  }
+  function layoutFake() {
+    if (fsMode !== "fake") return;
+    const w = window.innerWidth, h = window.innerHeight;
+    if (h > w) { box.style.width = h + "px"; box.style.height = w + "px"; box.style.transform = "translateX(" + w + "px) rotate(90deg)"; }
+    else { box.style.width = w + "px"; box.style.height = h + "px"; box.style.transform = "none"; }
+  }
+  async function enterFs(auto) {
+    if (fsMode) return;
+    autoFs = !!auto;
+    const reqFs = box.requestFullscreen || box.webkitRequestFullscreen;
+    if (!auto && reqFs) {
+      try {
+        const r = reqFs.call(box);
+        if (r && r.then) await r;
+        fsMode = "native";
+        try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock("landscape"); } catch (e) {}
+      } catch (e) { fsMode = null; }
+    }
+    if (!fsMode) {
+      fsMode = "fake";
+      box.classList.add("yt-fake");
+      document.body.style.overflow = "hidden";
+      layoutFake();
+    }
+    box.classList.add("yt-fs");
+    btnFs.innerHTML = icon("minimize");
+    btnFs.setAttribute("aria-label", "الخروج من ملء الشاشة");
+    poke();
+  }
+  function exitFs(fromEvent) {
+    const mode = fsMode;
+    if (!mode) return;
+    fsMode = null; autoFs = false;
+    if (mode === "native") {
+      if (!fromEvent) { try { const p = (document.exitFullscreen || document.webkitExitFullscreen).call(document); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+      try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+    } else {
+      box.classList.remove("yt-fake");
+      box.style.width = box.style.height = box.style.transform = "";
+      document.body.style.overflow = "";
+    }
+    box.classList.remove("yt-fs", "hide-controls");
+    btnFs.innerHTML = icon("maximize");
+    btnFs.setAttribute("aria-label", "ملء الشاشة");
+    clearTimeout(hideTimer);
+  }
+  const onFsChange = () => { if (fsMode === "native" && document.fullscreenElement !== box && document.webkitFullscreenElement !== box) exitFs(true); };
+  document.addEventListener("fullscreenchange", onFsChange);
+  document.addEventListener("webkitfullscreenchange", onFsChange);
+  window.addEventListener("resize", layoutFake);
+  window.addEventListener("orientationchange", () => setTimeout(layoutFake, 250));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && fsMode === "fake") exitFs(); });
+  const mqLand = window.matchMedia("(orientation: landscape)");
+  const onOrient = () => {
+    if (!box.isConnected) { mqLand.removeEventListener && mqLand.removeEventListener("change", onOrient); return; }
+    if (mqLand.matches) {
+      if (!fsMode && box.classList.contains("playing") && window.matchMedia("(pointer: coarse)").matches) enterFs(true);
+    } else if (autoFs && fsMode) exitFs();
+  };
+  if (mqLand.addEventListener) mqLand.addEventListener("change", onOrient);
+  btnFs.addEventListener("click", () => { fsMode ? exitFs() : enterFs(false); });
+  box.addEventListener("pointerdown", poke);
+  box.addEventListener("mousemove", poke);
+
   player = new YT.Player(frame, { events: {
     onReady: () => { box.classList.add("ready"); tick(); },
     onStateChange: e => {
@@ -468,7 +540,7 @@ function buildVideoPlayer(box, stage, id) {
       btnPlay.setAttribute("aria-label", playing ? "إيقاف مؤقت" : "تشغيل");
       clearInterval(timer);
       if (playing) timer = setInterval(tick, 500);
-      tick();
+      tick(); poke();
     }
   }});
   shield.addEventListener("click", toggle);
@@ -480,12 +552,6 @@ function buildVideoPlayer(box, stage, id) {
     speedIdx = (speedIdx + 1) % speeds.length;
     if (player && player.setPlaybackRate) player.setPlaybackRate(speeds[speedIdx]);
     btnSpeed.textContent = speeds[speedIdx] + "x";
-  });
-  const reqFs = box.requestFullscreen || box.webkitRequestFullscreen;
-  if (!reqFs) btnFs.hidden = true;
-  btnFs.addEventListener("click", () => {
-    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-    else reqFs.call(box);
   });
 }
 
