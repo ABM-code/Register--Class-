@@ -202,12 +202,43 @@ function showError(msg) {
 }
 
 const params = new URLSearchParams(window.location.search);
-const examId = params.get("examId");
+// مجلد التطبيق (مثلًا /Register--Class-/) بيتحفظ هنا قبل ما نغيّر شكل العنوان لـ /e/CODE،
+// عشان الروابط النسبية (زي redeem.html) تفضل شغالة بعد التغيير.
+const APP_BASE = window.location.pathname.replace(/[^/]*$/, "");
+let examId = params.get("examId");
+const examCodeParam = params.get("code");
 let exam = null;
 let studentsInStage = [];
 let selectedStudent = null;
 
 async function init() {
+  // رابط قصير: /e/CODE (404.html بيحوّله لـ exam.html?code=CODE). بنحوّل الكود لـexamId
+  // عن طريق الـWorker ونرجّع العنوان لشكل /e/CODE من غير إعادة تحميل.
+  if (!examId && examCodeParam) {
+    try {
+      const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/resolve-exam?code=${encodeURIComponent(examCodeParam)}`);
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 404 || (r.ok && !d.ok)) {
+        document.getElementById("examTitle").textContent = "رابط غير صالح";
+        document.getElementById("content").innerHTML = `<div class="card empty-state">${icon("alert")}
+          <div class="empty-title">عذرًا، رابط الامتحان غير صالح أو لم يعد متاحًا.</div>
+          <p>تأكد من الرابط أو اطلب رابطًا جديدًا من المعلم.</p>
+        </div>`;
+        return;
+      }
+      if (!r.ok || !d.ok || !d.examId) throw new Error("resolve_failed");
+      examId = d.examId;
+      try {
+        const clean = String(examCodeParam).toUpperCase().replace(/[^A-Z0-9]/g, "");
+        history.replaceState(null, "", APP_BASE + "e/" + clean);
+      } catch (_) { /* العنوان شكلي بس — مايكسرش التحميل */ }
+    } catch (err) {
+      document.getElementById("examTitle").textContent = "تعذر فتح الامتحان";
+      document.getElementById("content").innerHTML = "";
+      showError("تعذر فتح الرابط. تأكد من اتصالك بالإنترنت وحاول تاني.");
+      return;
+    }
+  }
   if (!examId) {
     document.getElementById("examTitle").textContent = "رابط غير صالح";
     document.getElementById("content").innerHTML = "";
@@ -230,7 +261,7 @@ async function init() {
       document.getElementById("content").innerHTML = `<div class="card empty-state">${icon("banknote")}
         <div class="empty-title">الامتحان ده متاح فقط لمن اشترى كود الوصول الخاص بيه.</div>
         <p>لو معاك كود وصول، افتحه من صفحة تفعيل الكود.</p>
-        <a href="redeem.html" class="btn-primary">${icon("key")} تفعيل كود</a>
+        <a href="${APP_BASE}redeem.html" class="btn-primary">${icon("key")} تفعيل كود</a>
       </div>`;
       return;
     }

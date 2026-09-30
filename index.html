@@ -1652,7 +1652,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v81 — حماية المحتوى المدفوع: الفيديو لا يصل للعميل إلا بعد تحقق الخادم + حماية من التخمين + سجل عمليات — 30 سبتمبر 2026";
+const APP_VERSION = "v82 — روابط الامتحانات القصيرة /e/كود + مشاركة الامتحان — 1 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1792,6 +1792,7 @@ function startSync() {
   examsCol.where("teacherId", "==", currentTeacherId).onSnapshot(
     (snapshot) => {
       exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      ensureExamCodes(exams);
       renderExamsList();
       renderNotificationCenter();
       if (isStatsTabVisible()) renderStatsDashboard();
@@ -4923,7 +4924,7 @@ function renderExamsList() {
       const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
       const submittedIdsForCard = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId));
       const missingCount = students.filter(s => s.stage === ex.stage && !submittedIdsForCard.has(s.id)).length;
-      const link = window.location.origin + window.location.pathname.replace(/index\\.html$/, "") + "exam.html?examId=" + ex.id;
+      const link = examShareUrl(ex);
       const examLastSeen = getExamLastSeen(ex.id);
       const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
       const newBadgeHtml = newCount > 0 ? `<span class="exam-new-badge"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg> ${newCount} جديد</span>` : "";
@@ -4942,6 +4943,7 @@ function renderExamsList() {
         ${statusBadge || paidBadge ? `<div style="margin-bottom:0.6rem; display:flex; gap:0.4rem; flex-wrap:wrap;">${statusBadge}${paidBadge}</div>` : ""}
         <div class="exam-card-actions">
           <button style="background:var(--c-accent); color:var(--c-onaccent);" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
+          <button style="background:var(--c-accent); color:var(--c-onaccent);" onclick="shareExamLink('${ex.id}')">مشاركة الامتحان</button>
           <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="editExam('${ex.id}')">تعديل</button>
           <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="viewExamResults('${ex.id}')">النتائج</button>
           <button style="background:var(--c-warnbg); color:var(--c-warntext);" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش ${isOldUnloadedExam ? '(دوس لعرض العدد)' : '(' + missingCount + '/' + stageStudentCount + ')'}</button>
@@ -4965,8 +4967,38 @@ async function toggleExamManualClose(examId, shouldClose) {
   }
 }
 
+// رابط مشاركة الامتحان: الشكل القصير /e/CODE لو الامتحان ليه كود، وإلا الشكل القديم
+// (بيفضل شغال) لحد ما الكود يتولّد تلقائيًا.
+function examShareUrl(ex) {
+  const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+  if (ex && ex.examCode) return base + "e/" + ex.examCode;
+  return base + "exam.html?examId=" + (ex ? ex.id : "");
+}
+
+// بيطلب من الـWorker توليد كود لأي امتحان ناقصه كود (مرة واحدة لكل امتحان في الجلسة).
+// الـWorker idempotent ومابيغيّر أي حقل تاني. أول ما الكود يتكتب، الـsnapshot بيحدّث الواجهة.
+const examCodeAssignRequested = new Set();
+async function ensureExamCodes(list) {
+  try {
+    const missing = (list || []).filter(ex => ex && !ex.examCode && !examCodeAssignRequested.has(ex.id)).map(ex => ex.id);
+    if (!missing.length || !auth.currentUser) return;
+    missing.forEach(id => examCodeAssignRequested.add(id));
+    const idToken = await auth.currentUser.getIdToken();
+    for (let i = 0; i < missing.length; i += 40) {
+      const chunk = missing.slice(i, i + 40);
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/assign-exam-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+        body: JSON.stringify({ examIds: chunk }),
+      });
+      if (!res.ok) chunk.forEach(id => examCodeAssignRequested.delete(id));
+    }
+  } catch (e) { /* التوليد التلقائي best-effort — الرابط القديم بيفضل شغال */ }
+}
+
 function copyExamLink(examId) {
-  const link = window.location.origin + window.location.pathname.replace(/index\.html$/, "") + "exam.html?examId=" + examId;
+  const ex = exams.find(x => x.id === examId);
+  const link = examShareUrl(ex || { id: examId });
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(link).then(() => {
       showSuccess("تم نسخ رابط الامتحان. الصقه في جروب الواتساب.");
@@ -4976,6 +5008,20 @@ function copyExamLink(examId) {
   } else {
     prompt("انسخ الرابط ده يدويًا:", link);
   }
+}
+
+async function shareExamLink(examId) {
+  const ex = exams.find(x => x.id === examId);
+  const link = examShareUrl(ex || { id: examId });
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: (ex && ex.title) || "امتحان", url: link });
+      return;
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+    }
+  }
+  copyExamLink(examId);
 }
 
 async function deleteExam(examId) {
@@ -5945,7 +5991,8 @@ async function saveExam() {
       showSuccess("تم حفظ التعديلات بنجاح.");
     } else {
       examData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      await examsCol.add(examData);
+      const newExamRef = await examsCol.add(examData);
+      ensureExamCodes([{ id: newExamRef.id }]);
       showSuccess("تم حفظ الامتحان بنجاح.");
     }
     closeExamBuilder();
