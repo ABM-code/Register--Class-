@@ -78,6 +78,7 @@
   .yt-controls .yt-play .ic { fill: currentColor; }
   .yt-seek { flex: 1; min-width: 0; accent-color: var(--yt-accent); }
   .yt-time { font-size: 0.75rem; color: var(--yt-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .yt-player.loading-video .yt-bigplay span { opacity: .5; }
   .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay { display: none; }
   .yt-player.yt-fs { display: flex; flex-direction: column; border-radius: 0; margin: 0; width: 100%; height: 100%; }
   .yt-player.yt-fs .yt-stage { padding-top: 0; flex: 1; min-height: 0; }
@@ -419,8 +420,9 @@ function ytIdFromUrl(u) {
   const m = /(?:embed\/|[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(u || "");
   return m ? m[1] : null;
 }
-function videoPlayerHtml(url) {
-  return `<div class="yt-player" data-src="${escapeHtml(url)}">
+function videoPlayerHtml(url, matId) {
+  const src = matId ? `data-mat-id="${escapeHtml(matId)}"` : `data-src="${escapeHtml(url)}"`;
+  return `<div class="yt-player" ${src}>
     <div class="yt-stage"><div class="yt-bigplay"><span>${icon("play")}</span></div><div class="yt-shield"></div></div>
     <div class="yt-controls">
       <button type="button" class="yt-play" aria-label="تشغيل">${icon("play")}</button>
@@ -434,16 +436,40 @@ function videoPlayerHtml(url) {
 function initVideoPlayers(root) {
   root.querySelectorAll(".yt-player:not([data-ready])").forEach(box => {
     box.setAttribute("data-ready", "1");
-    const url = box.getAttribute("data-src");
-    const id = ytIdFromUrl(url);
     const stage = box.querySelector(".yt-stage");
-    const plain = () => { box.classList.add("plain"); stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen></iframe>`); };
-    if (!id) return plain();
-    ensureYT(ok => ok ? buildVideoPlayer(box, stage, id) : plain());
+    const start = (url, autoplay) => {
+      const id = ytIdFromUrl(url);
+      const plain = () => { box.classList.add("plain"); stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen></iframe>`); };
+      if (!id) return plain();
+      ensureYT(ok => ok ? buildVideoPlayer(box, stage, id, autoplay) : plain());
+    };
+    const matId = box.getAttribute("data-mat-id");
+    if (!matId) { start(box.getAttribute("data-src"), false); return; }
+    /* الفيديو المدفوع: الـ ID مش موجود في الصفحة أصلًا — بيتطلب من الخادم عند الضغط بس */
+    let loading = false;
+    const onTap = async () => {
+      if (loading) return;
+      loading = true;
+      box.classList.add("loading-video");
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/content-video?materialId=${encodeURIComponent(matId)}`, { headers: { "Authorization": `Bearer ${idToken}` } });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.ok || !data.url) throw new Error(data.error || "server_error");
+        stage.removeEventListener("click", onTap);
+        box.classList.remove("loading-video");
+        start(data.url, true);
+      } catch (err) {
+        loading = false;
+        box.classList.remove("loading-video");
+        alert("تعذر فتح الفيديو. تأكد من اتصالك وحاول مرة أخرى.");
+      }
+    };
+    stage.addEventListener("click", onTap);
   });
 }
-function buildVideoPlayer(box, stage, id) {
-  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin);
+function buildVideoPlayer(box, stage, id, autoplay) {
+  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin) + (autoplay ? "&autoplay=1" : "");
   stage.insertAdjacentHTML("afterbegin", `<iframe src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
   const frame = stage.querySelector("iframe");
   const $ = s => box.querySelector(s);
@@ -558,7 +584,7 @@ function buildVideoPlayer(box, stage, id) {
 function renderMaterialCard(m) {
   let bodyHtml = "";
   if (m.type === "video") {
-    bodyHtml = videoPlayerHtml(m.url);
+    bodyHtml = m.hasVideo ? videoPlayerHtml("", m.id) : "";
   } else if (m.type === "image") {
     bodyHtml = `<img class="mat-image" src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}">`;
   } else if (m.type === "pdf") {

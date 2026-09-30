@@ -102,8 +102,10 @@ function showError(msg) {
 function clearError() { document.getElementById("errorBox").style.display = "none"; }
 
 const ERROR_MESSAGES = {
-  invalid_code: "الكود غير صحيح.",
+  invalid_code: "كود الشراء غير صحيح.",
   already_activated: "هذا الكود تم تفعيله بالفعل من حساب آخر.",
+  code_bound_other: "هذا الكود مرتبط بطالب آخر.",
+  too_many_attempts: "محاولات كتير خاطئة. استنى شوية وحاول تاني.",
   code_expired: "انتهت صلاحية تفعيل هذا الكود.",
   code_disabled: "هذا الكود معطّل.",
   product_unavailable: "هذا المنتج غير متاح حاليًا.",
