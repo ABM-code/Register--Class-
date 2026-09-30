@@ -1652,7 +1652,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v83 — التطبيق يفضل مفتوح (من غير قفل تلقائي) ويرجع لنفس التاب ومكان التمرير — 1 أكتوبر 2026";
+const APP_VERSION = "v84 — إشعار كل نتيجة باسم الطالب ويفتح صفحته مباشرة — 1 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -3905,13 +3905,34 @@ function computeNotifications() {
   exams.forEach(ex => {
     const examLastSeen = getExamLastSeen(ex.id);
     const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
-    if (newCount > 0) {
-      notifications.push({
-        kind: "new_results",
-        examId: ex.id,
-        sortKey: 2000000000000 + newCount,
-        html: `<strong>${newCount}</strong> نتيجة جديدة في "${escapeHtml(ex.title)}"`,
+    const seenResults = getSeenNotifResults();
+    const newResults = examResults
+      .filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen && !seenResults[r.id])
+      .sort((a, b) => b.submittedAt.toMillis() - a.submittedAt.toMillis());
+    if (newResults.length > 0) {
+      const MAX_PER_EXAM = 8;
+      newResults.slice(0, MAX_PER_EXAM).forEach(r => {
+        const scoreText = (r.total > 0 && r.score !== undefined) ? ` (${r.score}/${r.total})` : "";
+        notifications.push({
+          kind: "new_result",
+          examId: ex.id,
+          studentId: r.studentId || "",
+          resultId: r.id,
+          weight: 1,
+          sortKey: 2000000000000 + r.submittedAt.toMillis() / 1000,
+          html: `<strong>${escapeHtml(r.studentName || "طالب")}</strong> سلّم "${escapeHtml(ex.title)}"${scoreText}`,
+        });
       });
+      if (newResults.length > MAX_PER_EXAM) {
+        const rest = newResults.length - MAX_PER_EXAM;
+        notifications.push({
+          kind: "new_results_more",
+          examId: ex.id,
+          weight: rest,
+          sortKey: 2000000000000,
+          html: `و<strong>${rest}</strong> نتيجة تانية جديدة في "${escapeHtml(ex.title)}"`,
+        });
+      }
     }
     const deadlinePassed = !!(ex.deadline && new Date(ex.deadline) < now);
     const isClosed = !!ex.closedManually || deadlinePassed;
@@ -3942,8 +3963,9 @@ function renderNotificationCenter() {
   const list = document.getElementById("notifCenterList");
   if (!badge || !list) return;
   const notifications = computeNotifications();
-  if (notifications.length > 0) {
-    badge.textContent = notifications.length;
+  const notifTotal = notifications.reduce((sum, n) => sum + (n.weight || 1), 0);
+  if (notifTotal > 0) {
+    badge.textContent = notifTotal;
     badge.style.display = "inline-block";
   } else {
     badge.style.display = "none";
@@ -3952,7 +3974,7 @@ function renderNotificationCenter() {
   if (panel && panel.style.display === "block") {
     list.innerHTML = notifications.length
       ? notifications.map(n => `
-          <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
+          <div onclick="openNotificationItem('${n.examId}', '${n.studentId || ""}', '${n.resultId || ""}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
             ${n.html}
           </div>`).join("")
       : `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><p>مفيش إشعارات جديدة <svg class="ic" aria-hidden="true"><use href="#i-sparkle"/></svg></p></div>`;
@@ -3967,8 +3989,31 @@ function toggleNotificationCenter() {
   if (!isOpen) renderNotificationCenter();
 }
 
-function openNotificationItem(examId) {
+// نتائج اتفتح إشعارها بتتعلّم "متشافة" لوحدها (بدون ما نخفي باقي نتائج نفس الامتحان)
+function getSeenNotifResults() {
+  try { return JSON.parse(localStorage.getItem("notifSeenResults") || "{}") || {}; } catch (e) { return {}; }
+}
+function markNotifResultSeen(resultId) {
+  if (!resultId) return;
+  try {
+    const map = getSeenNotifResults();
+    map[resultId] = Date.now();
+    const keys = Object.keys(map);
+    if (keys.length > 500) keys.sort((a, b) => map[a] - map[b]).slice(0, keys.length - 500).forEach(k => delete map[k]);
+    localStorage.setItem("notifSeenResults", JSON.stringify(map));
+  } catch (e) {}
+}
+
+function openNotificationItem(examId, studentId, resultId) {
   document.getElementById("notifCenterPanel").style.display = "none";
+  // إشعار نتيجة طالب: نروح مباشرة لصفحة الطالب (لو لسه موجود في القايمة)
+  if (studentId && students.some(s => s.id === studentId)) {
+    markNotifResultSeen(resultId);
+    renderNotificationCenter();
+    goToStudentProfile(studentId);
+    return;
+  }
+  // غير كده (إشعار موعد، أو طالب اتمسح): نفس السلوك القديم — نتائج الامتحان
   switchTab("exams");
   viewExamResults(examId);
 }
