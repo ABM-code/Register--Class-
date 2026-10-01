@@ -1654,7 +1654,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v87 — إصلاح أمني: أي محتوى داخل منتج مدفوع بيتقفل تلقائيًا إلا بكود — 1 أكتوبر 2026";
+const APP_VERSION = "v88 — كل رسائل الواتساب بتبدأ بـ «رسالة مسجلة» بخط عريض + الدرجة في سطر منفصل — 1 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -3368,6 +3368,17 @@ function toEnglishDigits(str) {
     return idx === -1 ? c : String(idx);
   });
 }
+// كل رسائل الواتساب (نتيجة، متابعة، غياب، إيصال، تذكير...) بتبدأ بعبارة "رسالة مسجلة" بخط عريض
+// (في واتساب العريض = نجمة قبل وبعد النص). كل الروابط بتعدّي من هنا عشان مايفوتش أي نوع رسالة.
+const WA_RECORDED_HEADER = "*رسالة مسجلة*";
+function withRecordedHeader(message) {
+  const text = String(message == null ? "" : message);
+  if (text.startsWith(WA_RECORDED_HEADER)) return text;
+  return WA_RECORDED_HEADER + "\n\n" + text;
+}
+function buildWaUrl(waNumber, message) {
+  return "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(withRecordedHeader(message));
+}
 function formatPhoneForWhatsapp(phone) {
   let digits = (phone || "").replace(/[^0-9]/g, "");
   if (!digits) return "";
@@ -3381,7 +3392,7 @@ function sendWhatsappReceipt(s, payment) {
   const amount = payment.amount ? payment.amount + " جنيه" : "";
   const date = fmtDate(payment.date);
   const message = `تحية طيبة،\nنفيدكم بأنه تم استلام مبلغ ${amount} من الطالب/ة ${s.name} بتاريخ ${date}.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`;
-  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  const url = buildWaUrl(waNumber, message);
   window.open(url, "_blank");
 }
 function openWhatsappFor(studentId, target) {
@@ -3396,7 +3407,7 @@ function openWhatsappFor(studentId, target) {
   const message = target === "parent"
     ? `تحية طيبة، معاك ${TEACHER_NAME} بخصوص الطالب/ة ${s.name}.`
     : `أهلاً ${s.name}، معاك ${TEACHER_NAME}.`;
-  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  const url = buildWaUrl(waNumber, message);
   window.open(url, "_blank");
 }
 async function addPayment(studentId) {
@@ -6753,8 +6764,8 @@ function sendExamResultWhatsapp(r) {
   const waNumber = formatPhoneForWhatsapp(r.parentPhone);
   if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
-  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+  const url = buildWaUrl(waNumber, message);
   window.open(url, "_blank");
 }
 
@@ -6767,7 +6778,7 @@ function startWhatsappQueue() {
   waQueue = list.map(r => {
     const waNumber = formatPhoneForWhatsapp(r.parentPhone);
     const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-    const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+    const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
     return { name: r.studentName, phone: r.parentPhone || "", waNumber, message };
   });
   waQueueIndex = 0;
@@ -6825,7 +6836,7 @@ function renderWaQueueStep() {
 function waQueueOpenCurrent() {
   const item = waQueue[waQueueIndex];
   if (!item || !item.waNumber) return;
-  const url = "https://wa.me/" + item.waNumber + "?text=" + encodeURIComponent(item.message);
+  const url = buildWaUrl(item.waNumber, item.message);
   window.open(url, "_blank");
 }
 
@@ -6949,7 +6960,7 @@ function sendExamReminderWhatsapp(s, examTitle, target) {
   const message = target === "parent"
     ? `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${examTitle}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`
     : `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
-  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
+  const url = buildWaUrl(waNumber, message);
   window.open(url, "_blank");
 }
 
