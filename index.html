@@ -537,6 +537,8 @@
   <div class="sd-list">
     <button class="sd-item" id="smartSearchBtn" onclick="closeSettingsDrawer(); openSmartSearch()"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>البحث الشامل</span></button>
     <button class="sd-item" id="themeToggleBtn" onclick="toggleTheme()"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg><span>الشكل الفاتح</span></button>
+    <button class="sd-item" id="notifSoundBtn" onclick="toggleNotifSound()"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span id="notifSoundLabel">صوت التنبيهات</span></button>
+    <button class="sd-item" id="notifSoundTestBtn" onclick="unlockChimeAudio(); playNotifChime(true)"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span>جرّب صوت التنبيه</span></button>
     <div class="sd-sep"></div>
     <button class="sd-item" id="brandSettingsBtn" onclick="closeSettingsDrawer(); openBrandSettings()"><svg class="ic" aria-hidden="true"><use href="#i-tag"/></svg><span>الهوية والعلامة</span></button>
     <button class="sd-item" id="changePasswordBtn" onclick="closeSettingsDrawer(); openChangePassword()"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><span>كلمة السر</span></button>
@@ -1652,7 +1654,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v84 — إشعار كل نتيجة باسم الطالب ويفتح صفحته مباشرة — 1 أكتوبر 2026";
+const APP_VERSION = "v85 — صوت تنبيه مميز + رقم التنبيهات على أيقونة التطبيق — 1 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1729,15 +1731,90 @@ function isStatsTabVisible() {
   return el && el.style.display !== "none";
 }
 
-function maybeNotifyNewResult(r) {
-  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+// ===== صوت التنبيهات: نغمة مميزة (3 نوتات صاعدة) مولّدة بالكود، من غير ملف صوت =====
+let _chimeCtx = null;
+function isNotifSoundOn() {
+  try { return localStorage.getItem("notifSound") !== "off"; } catch (e) { return true; }
+}
+function getChimeCtx() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  if (!_chimeCtx) { try { _chimeCtx = new AC(); } catch (e) { return null; } }
+  return _chimeCtx;
+}
+// المتصفحات بتمنع الصوت قبل أول لمسة من المستخدم، فبنفعّل الصوت أول ما يلمس الشاشة.
+function unlockChimeAudio() {
+  const ctx = getChimeCtx();
+  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+}
+["touchstart", "click", "keydown"].forEach(ev => window.addEventListener(ev, unlockChimeAudio, { passive: true }));
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") unlockChimeAudio(); });
+
+function playNotifChime(force) {
+  if (!force && !isNotifSoundOn()) return;
+  const ctx = getChimeCtx();
+  if (!ctx) return;
   try {
-    new Notification("نتيجة جديدة: " + (r.studentName || ""), {
-      body: `${r.examTitle || ""} — ${r.score}/${r.total} (${pct}%)`,
-      icon: "icon-192.png",
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const t0 = ctx.currentTime + 0.02;
+    // E5 → A5 → C#6 → E6: نغمة "دينج دينج" صاعدة مبهجة
+    [[659.25, 0], [880, 0.14], [1108.73, 0.28], [1318.51, 0.42]].forEach(([freq, at], i, arr) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const start = t0 + at;
+      const len = i === arr.length - 1 ? 0.7 : 0.32;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.32, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + len);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(start); osc.stop(start + len + 0.05);
     });
   } catch (e) {}
+}
+
+function updateNotifSoundButton() {
+  const el = document.getElementById("notifSoundLabel");
+  if (el) el.textContent = isNotifSoundOn() ? "صوت التنبيهات: شغّال (اضغط للكتم)" : "صوت التنبيهات: مكتوم (اضغط للتشغيل)";
+}
+function toggleNotifSound() {
+  const on = !isNotifSoundOn();
+  try { localStorage.setItem("notifSound", on ? "on" : "off"); } catch (e) {}
+  updateNotifSoundButton();
+  if (on) { unlockChimeAudio(); playNotifChime(true); }
+}
+
+// ===== رقم التنبيهات على أيقونة التطبيق (Badging API) =====
+// شغال لما التطبيق يكون متثبّت على الشاشة الرئيسية (PWA) — أندرويد Chrome وآيفون iOS 16.4+.
+// الرقم بيتحدّث طول ما التطبيق شغّال (حتى في الخلفية لفترة)، وبيفضل آخر رقم لما تقفله.
+let _lastAppBadge = null;
+function updateAppBadge(count) {
+  if (count === _lastAppBadge) return;
+  _lastAppBadge = count;
+  try {
+    if (count > 0 && navigator.setAppBadge) navigator.setAppBadge(count).catch(() => {});
+    else if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+  } catch (e) {}
+}
+
+// إشعار النظام (بيظهر حتى لو التطبيق في الخلفية): بنستخدم الـService Worker لو متاح لأن
+// `new Notification` بيفشل بصمت على أندرويد Chrome — ده كان سبب إنك ماكنتش بتسمع/تشوف حاجة.
+async function showSystemNotification(title, body, tag) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const opts = { body, icon: "icon-192.png", badge: "icon-192.png", tag: tag || "new-result", renotify: true, vibrate: [200, 100, 200, 100, 300] };
+  try {
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg && reg.showNotification) { await reg.showNotification(title, opts); return; }
+    }
+    new Notification(title, opts);
+  } catch (e) {}
+}
+
+function maybeNotifyNewResult(r) {
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  showSystemNotification("نتيجة جديدة: " + (r.studentName || ""), `${r.examTitle || ""} — ${r.score}/${r.total} (${pct}%)`, "result-" + (r.studentId || "") + "-" + (r.examId || ""));
 }
 
 // عشان مشكلة "Missing or insufficient permissions" اللي بتظهر عشوائيًا: أحيانًا الجلسة
@@ -1824,11 +1901,14 @@ function startSync() {
       return bt - at;
     });
     if (!firstResultsSnapshot) {
+      let newResultsInSnapshot = 0;
       snapshot.docChanges().forEach(change => {
         if (change.type === "added" && !change.doc.metadata.hasPendingWrites && !change.doc.data().deletedAt) {
-          maybeNotifyNewResult(change.doc.data());
+          newResultsInSnapshot++;
+          if (newResultsInSnapshot <= 3) maybeNotifyNewResult(change.doc.data());
         }
       });
+      if (newResultsInSnapshot > 0) playNotifChime();
     }
     firstResultsSnapshot = false;
     updateExamsBadge();
@@ -3964,6 +4044,7 @@ function renderNotificationCenter() {
   if (!badge || !list) return;
   const notifications = computeNotifications();
   const notifTotal = notifications.reduce((sum, n) => sum + (n.weight || 1), 0);
+  updateAppBadge(notifTotal);
   if (notifTotal > 0) {
     badge.textContent = notifTotal;
     badge.style.display = "inline-block";
@@ -4355,6 +4436,7 @@ function renderExamQuestionDifficulty() {
 }
 
 function initNotifUi() {
+  updateNotifSoundButton();
   const card = document.getElementById("notifPermCard");
   if (typeof Notification === "undefined") { card.style.display = "none"; return; }
   card.style.display = Notification.permission === "default" ? "block" : "none";
@@ -7703,6 +7785,7 @@ function restoreSavedScroll() {
 
 function logoutApp() {
   try { localStorage.removeItem("lastScroll"); } catch (e) {}
+  try { if (navigator.clearAppBadge) navigator.clearAppBadge(); } catch (e) {}
   stopInactivityWatcher();
   auth.signOut().then(() => location.reload()).catch(() => location.reload());
 }
