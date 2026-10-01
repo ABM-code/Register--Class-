@@ -1654,7 +1654,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v86 — الضغط على إشعار النتيجة يفتح نتيجة الطالب مباشرة — 1 أكتوبر 2026";
+const APP_VERSION = "v87 — إصلاح أمني: أي محتوى داخل منتج مدفوع بيتقفل تلقائيًا إلا بكود — 1 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -2103,6 +2103,7 @@ async function saveProduct() {
       await productsCol.add(payload);
     }
     showSuccess("تم حفظ المنتج بنجاح.");
+    syncProductLocks();
     await loadProductsOnce(true);
     closeProductBuilder();
   } catch (err) {
@@ -5151,6 +5152,16 @@ async function ensureExamCodes(list) {
   } catch (e) { /* التوليد التلقائي best-effort — الرابط القديم بيفضل شغال */ }
 }
 
+// بيطلب من الـWorker يعلّم أي امتحان جوه منتج كـ paidOnly (يتنادى بعد حفظ منتج ومرة عند الدخول).
+let _productLocksSynced = false;
+async function syncProductLocks() {
+  try {
+    if (!auth.currentUser) return;
+    const idToken = await auth.currentUser.getIdToken();
+    await fetch(`${STUDENT_AUTH_WORKER_URL}/sync-product-locks`, { method: "POST", headers: { "Authorization": `Bearer ${idToken}` } });
+  } catch (e) { /* best-effort — الخادم بيقفل المحتوى بنفسه برضو */ }
+}
+
 function copyExamLink(examId) {
   const ex = exams.find(x => x.id === examId);
   const link = examShareUrl(ex || { id: examId });
@@ -7683,6 +7694,7 @@ async function showApp() {
   });
   switchTab(getSavedTab());
   restoreSavedScroll();
+  if (!_productLocksSynced) { _productLocksSynced = true; syncProductLocks(); }
   try {
     await ensureTeacherDoc(currentTeacherId);
     await migrateLegacyDataToTeacher(currentTeacherId);
