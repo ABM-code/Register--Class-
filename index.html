@@ -1654,7 +1654,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v85 — صوت تنبيه مميز + رقم التنبيهات على أيقونة التطبيق — 1 أكتوبر 2026";
+const APP_VERSION = "v86 — الضغط على إشعار النتيجة يفتح نتيجة الطالب مباشرة — 1 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -4085,16 +4085,34 @@ function markNotifResultSeen(resultId) {
   } catch (e) {}
 }
 
-function openNotificationItem(examId, studentId, resultId) {
+// بيفتح نتيجة الطالب نفسها: صفحة الصفحة الصح في قايمة النتائج، الصف مفتوح (تفاصيل الإجابات)،
+// ومتمرّر لحد ما يظهر في نص الشاشة.
+function focusResultRow(resultId) {
+  const list = getVisibleExamResultsList();
+  const idx = list.findIndex(r => r.id === resultId);
+  if (idx < 0) return false;
+  resultsPage = Math.floor(idx / PAGE_SIZE) + 1;
+  expandedResultId = resultId;
+  renderExamResultsList();
+  setTimeout(() => {
+    const el = document.getElementById("resultRow_" + resultId);
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 80);
+  return true;
+}
+
+async function openNotificationItem(examId, studentId, resultId) {
   document.getElementById("notifCenterPanel").style.display = "none";
-  // إشعار نتيجة طالب: نروح مباشرة لصفحة الطالب (لو لسه موجود في القايمة)
-  if (studentId && students.some(s => s.id === studentId)) {
+  // إشعار نتيجة طالب: نروح مباشرة لنتيجته (مش كارت الطالب)
+  if (resultId) {
     markNotifResultSeen(resultId);
+    switchTab("exams");
+    await viewExamResults(examId, { keepUnseen: true });
+    focusResultRow(resultId);
     renderNotificationCenter();
-    goToStudentProfile(studentId);
     return;
   }
-  // غير كده (إشعار موعد، أو طالب اتمسح): نفس السلوك القديم — نتائج الامتحان
+  // غير كده (إشعار موعد أو "وN نتيجة تانية"): نفس السلوك القديم — نتائج الامتحان
   switchTab("exams");
   viewExamResults(examId);
 }
@@ -6222,9 +6240,10 @@ async function ensureExamResultsLoaded(examId, force) {
 function markExamSeen(examId) {
   try { localStorage.setItem("examSeen_" + examId, Date.now().toString()); } catch (e) {}
 }
-async function viewExamResults(examId) {
+async function viewExamResults(examId, opts) {
   viewingExamId = examId;
-  markExamSeen(examId);
+  // لما نفتح نتيجة طالب واحد من الإشعارات (keepUnseen) مابنعلّمش باقي نتائج الامتحان كمتشافة
+  if (!(opts && opts.keepUnseen)) markExamSeen(examId);
   const ex = exams.find(e => e.id === examId);
   document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
   const searchInput = document.getElementById("examResultsSearchInput");
@@ -6691,7 +6710,7 @@ function renderExamResultsList() {
         ` : ""}
       </div>` : "";
     return `
-      <div class="result-row-wrap">
+      <div class="result-row-wrap" id="resultRow_${r.id}">
         <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
           <div style="display:flex; align-items:center; gap:0.6rem;">
             <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
