@@ -51,29 +51,57 @@
   .score-chip.low, .tier-chip.low { background: var(--c-dangerbg); color: var(--c-dangertext); }
   .mat-video-wrap { position: relative; width: 100%; padding-top: 56.25%; border-radius: 10px; overflow: hidden; margin: 0.5rem 0; }
   .mat-video-wrap iframe { position: absolute; top: 0; right: 0; width: 100%; height: 100%; border: none; }
-  /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب + ملء الشاشة مع تدوير */
+  /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب + ملء الشاشة مع تدوير + إيماءات */
   .yt-player { --yt-fg: #F5F1E6; --yt-muted: #9FB8AD; --yt-accent: var(--accent, var(--c-accent, #D4A93B)); position: relative; margin: 0.5rem 0; border-radius: 12px; overflow: hidden; background: #000; }
   .yt-stage { position: relative; width: 100%; padding-top: 56.25%; }
   .yt-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-  .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
   .yt-bigplay { position: absolute; inset: 0; z-index: 1; display: none; place-items: center; pointer-events: none; }
   .yt-bigplay span { width: 3.6rem; height: 3.6rem; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; }
   .yt-bigplay .ic { width: 1.5rem; height: 1.5rem; fill: currentColor; }
-  .yt-player:not(.playing):not(.plain) .yt-bigplay { display: grid; }
+  .yt-player:not(.playing):not(.plain):not(.buffering):not(.ended) .yt-bigplay { display: grid; }
+  .yt-spinner { position: absolute; top: 50%; left: 50%; width: 2.4rem; height: 2.4rem; margin: -1.2rem 0 0 -1.2rem; z-index: 1; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: ytspin 0.8s linear infinite; display: none; pointer-events: none; }
+  .yt-player.buffering .yt-spinner { display: block; }
+  @keyframes ytspin { to { transform: rotate(360deg); } }
+  .yt-seekfx { position: absolute; top: 0; bottom: 0; width: 36%; z-index: 3; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,0.14); opacity: 0; pointer-events: none; transition: opacity 0.15s ease; }
+  .yt-seekfx-l { left: 0; border-radius: 0 60% 60% 0 / 0 50% 50% 0; }
+  .yt-seekfx-r { right: 0; border-radius: 60% 0 0 60% / 50% 0 0 50%; }
+  .yt-seekfx.show { opacity: 1; }
+  .yt-seekfx-in { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 700; }
+  .yt-seekfx-in .ic { width: 1.7rem; height: 1.7rem; fill: currentColor; }
+  .yt-toast { position: absolute; left: 50%; bottom: 0.8rem; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 0.6rem; background: rgba(0,0,0,0.78); color: #fff; padding: 0.4rem 0.85rem; border-radius: 999px; font-size: 0.8rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+  .yt-toast.show { opacity: 1; pointer-events: auto; }
+  .yt-toast-btn { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: none; color: #fff; border: 1px solid rgba(255,255,255,0.55); border-radius: 999px; padding: 0.15rem 0.65rem; font-size: 0.75rem; font-weight: 600; }
+  .yt-end, .yt-err { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; text-align: center; color: #fff; }
+  .yt-end { background: rgba(0,0,0,0.88); }
+  .yt-err { z-index: 5; background: #000; padding: 1rem; font-size: 0.85rem; line-height: 1.7; }
+  .yt-err .ic { width: 1.6rem; height: 1.6rem; display: block; margin: 0 auto 0.4rem; color: #E0A458; }
+  .yt-player.ended .yt-end { display: grid; }
+  .yt-player.errored .yt-err { display: grid; }
+  .yt-replay { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 0.6rem 1.1rem; font-size: 0.9rem; font-weight: 700; }
   .yt-controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; background: #0F1F1C; color: var(--yt-fg); direction: ltr; transition: opacity 0.25s ease; }
   .yt-controls button { width: auto; box-shadow: none; border: none; font-family: inherit; cursor: pointer; background: none; color: inherit; padding: 0.3rem; min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700; }
   .yt-controls button:hover { background: rgba(255,255,255,0.1); }
   .yt-controls .ic { fill: none; }
   .yt-controls .yt-play .ic { fill: currentColor; }
+  .yt-controls .yt-skip, .yt-controls .yt-mute { display: none; }
+  @media (pointer: fine) { .yt-controls .yt-skip, .yt-controls .yt-mute { display: grid; } }
   .yt-seek { flex: 1; min-width: 0; accent-color: var(--yt-accent); }
   .yt-time { font-size: 0.75rem; color: var(--yt-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .yt-player.loading-video .yt-bigplay span { opacity: .5; }
-  .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay { display: none; }
+  .yt-speedmenu { position: absolute; left: 0.5rem; right: 0.5rem; bottom: 3.4rem; z-index: 6; display: none; flex-wrap: wrap; justify-content: center; gap: 0.3rem; padding: 0.5rem; border-radius: 12px; background: rgba(0,0,0,0.88); direction: ltr; }
+  .yt-speedmenu.open { display: flex; }
+  .yt-speedmenu button { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: none; color: #fff; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 600; }
+  .yt-speedmenu button.on { background: var(--yt-accent); color: #1B2420; border-color: transparent; }
+  .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-err, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
   .yt-player.yt-fs { display: flex; flex-direction: column; border-radius: 0; margin: 0; width: 100%; height: 100%; }
   .yt-player.yt-fs .yt-stage { padding-top: 0; flex: 1; min-height: 0; }
   .yt-player.yt-fs .yt-controls { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0)); padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)); }
+  .yt-player.yt-fs .yt-speedmenu { bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px)); }
+  .yt-player.yt-fs .yt-toast { bottom: calc(4.2rem + env(safe-area-inset-bottom, 0px)); }
   .yt-player.yt-fs.hide-controls .yt-controls { opacity: 0; pointer-events: none; }
+  .yt-player.yt-fs.hide-controls .yt-speedmenu { display: none; }
   .yt-player.yt-fake { position: fixed; top: 0; left: 0; z-index: 2147483000; transform-origin: 0 0; }
+  @media (prefers-reduced-motion: reduce) { .yt-spinner { animation: none; } .yt-seekfx, .yt-toast, .yt-controls { transition: none; } }
   .mat-image { width: 100%; border-radius: 10px; display: block; margin: 0.5rem 0; }
   .mat-pdf-link { display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; background: var(--c-success); color: var(--c-card) !important; text-decoration: none; padding: 0.7rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; margin: 0.5rem 0; border: none; width: 100%; cursor: pointer; font-family: inherit; }
   .empty-state { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; text-align: center; padding: 2rem 1.25rem; color: var(--c-muted); }
@@ -126,7 +154,7 @@
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol><symbol id="i-key" viewBox="0 0 24 24"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol><symbol id="i-infinity" viewBox="0 0 24 24"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-minimize" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></symbol></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol><symbol id="i-key" viewBox="0 0 24 24"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol><symbol id="i-infinity" viewBox="0 0 24 24"><path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-minimize" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></symbol><symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol><symbol id="i-volume-x" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol><symbol id="i-fast-forward" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></symbol><symbol id="i-rewind" viewBox="0 0 24 24"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></symbol></svg>
 <div class="wrap">
   <h1 id="pageTitle">محتواي</h1>
   <p class="sub" id="pageSub">كل المنتجات اللي فعّلتها بالأكواد</p>
@@ -255,14 +283,36 @@ function ytIdFromUrl(u) {
   const m = /(?:embed\/|[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(u || "");
   return m ? m[1] : null;
 }
-function videoPlayerHtml(url, matId) {
-  const src = matId ? `data-mat-id="${escapeHtml(matId)}"` : `data-src="${escapeHtml(url)}"`;
-  return `<div class="yt-player" ${src}>
-    <div class="yt-stage"><div class="yt-bigplay"><span>${icon("play")}</span></div><div class="yt-shield"></div></div>
+const YT_SEEK_STEP = 10;
+const YT_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+let ytActiveBox = null, ytKeysBound = false;
+function ytStore(k, v) {
+  try {
+    if (v === undefined) return localStorage.getItem(k);
+    if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, String(v));
+  } catch (e) {}
+  return null;
+}
+function videoPlayerHtml(url) {
+  return `<div class="yt-player" data-src="${escapeHtml(url)}">
+    <div class="yt-stage">
+      <div class="yt-bigplay"><span>${icon("play")}</span></div>
+      <div class="yt-spinner"></div>
+      <div class="yt-seekfx yt-seekfx-l"><div class="yt-seekfx-in">${icon("rewind")}<span><b>10</b> ثواني</span></div></div>
+      <div class="yt-seekfx yt-seekfx-r"><div class="yt-seekfx-in">${icon("fast-forward")}<span><b>10</b> ثواني</span></div></div>
+      <div class="yt-end"><button type="button" class="yt-replay">${icon("rotate-ccw")} إعادة التشغيل</button></div>
+      <div class="yt-err"><div>${icon("alert")}<span class="yt-err-msg"></span></div></div>
+      <div class="yt-toast"></div>
+      <div class="yt-shield"></div>
+    </div>
+    <div class="yt-speedmenu"></div>
     <div class="yt-controls">
       <button type="button" class="yt-play" aria-label="تشغيل">${icon("play")}</button>
+      <button type="button" class="yt-skip yt-back" aria-label="رجوع 10 ثواني">${icon("rewind")}</button>
+      <button type="button" class="yt-skip yt-fwd" aria-label="تقديم 10 ثواني">${icon("fast-forward")}</button>
       <input type="range" class="yt-seek" min="0" max="0" step="1" value="0" aria-label="التقدّم في الفيديو">
       <span class="yt-time">0:00 / 0:00</span>
+      <button type="button" class="yt-mute" aria-label="كتم الصوت">${icon("volume-2")}</button>
       <button type="button" class="yt-speed" aria-label="سرعة التشغيل">1x</button>
       <button type="button" class="yt-fs-btn" aria-label="ملء الشاشة">${icon("maximize")}</button>
     </div>
@@ -271,56 +321,125 @@ function videoPlayerHtml(url, matId) {
 function initVideoPlayers(root) {
   root.querySelectorAll(".yt-player:not([data-ready])").forEach(box => {
     box.setAttribute("data-ready", "1");
+    const url = box.getAttribute("data-src");
+    const id = ytIdFromUrl(url);
     const stage = box.querySelector(".yt-stage");
-    const start = (url, autoplay) => {
-      const id = ytIdFromUrl(url);
-      const plain = () => { box.classList.add("plain"); stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen></iframe>`); };
-      if (!id) return plain();
-      ensureYT(ok => ok ? buildVideoPlayer(box, stage, id, autoplay) : plain());
-    };
-    const matId = box.getAttribute("data-mat-id");
-    if (!matId) { start(box.getAttribute("data-src"), false); return; }
-    /* الفيديو المدفوع: الـ ID مش موجود في الصفحة أصلًا — بيتطلب من الخادم عند الضغط بس */
-    let loading = false;
-    const onTap = async () => {
-      if (loading) return;
-      loading = true;
-      box.classList.add("loading-video");
-      try {
-        const idToken = await auth.currentUser.getIdToken();
-        const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/content-video?materialId=${encodeURIComponent(matId)}`, { headers: { "Authorization": `Bearer ${idToken}` } });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.ok || !data.url) throw new Error(data.error || "server_error");
-        stage.removeEventListener("click", onTap);
-        box.classList.remove("loading-video");
-        start(data.url, true);
-      } catch (err) {
-        loading = false;
-        box.classList.remove("loading-video");
-        alert("تعذر فتح الفيديو. تأكد من اتصالك وحاول مرة أخرى.");
-      }
-    };
-    stage.addEventListener("click", onTap);
+    const plain = () => { box.classList.add("plain"); stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen></iframe>`); };
+    if (!id) return plain();
+    ensureYT(ok => ok ? buildVideoPlayer(box, stage, id) : plain());
   });
 }
-function buildVideoPlayer(box, stage, id, autoplay) {
-  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin) + (autoplay ? "&autoplay=1" : "");
+
+/* اختصارات الكيبورد (للكمبيوتر): بتشتغل بس لو الماوس فوق الفيديو أو هو ملء الشاشة */
+function ytBindKeys() {
+  if (ytKeysBound) return;
+  ytKeysBound = true;
+  document.addEventListener("keydown", e => {
+    const box = ytActiveBox, api = box && box._ytApi;
+    if (!api || !box.isConnected || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+    if (!(api.isFs() || box.matches(":hover") || box.contains(document.activeElement))) return;
+    switch (e.key) {
+      case " ": if (tag === "BUTTON") return; e.preventDefault(); api.toggle(); break;
+      case "k": case "K": api.toggle(); break;
+      case "ArrowLeft": case "j": case "J": e.preventDefault(); api.seek(-1); break;
+      case "ArrowRight": case "l": case "L": e.preventDefault(); api.seek(1); break;
+      case "ArrowUp": e.preventDefault(); api.volume(10); break;
+      case "ArrowDown": e.preventDefault(); api.volume(-10); break;
+      case "m": case "M": api.mute(); break;
+      case "f": case "F": api.fs(); break;
+      case "<": api.speed(-1); break;
+      case ">": api.speed(1); break;
+      default: return;
+    }
+  });
+}
+
+function buildVideoPlayer(box, stage, id) {
+  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin);
   stage.insertAdjacentHTML("afterbegin", `<iframe src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
   const frame = stage.querySelector("iframe");
   const $ = s => box.querySelector(s);
-  const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs-btn"), btnSpeed = $(".yt-speed"), shield = $(".yt-shield");
-  const speeds = [1, 1.25, 1.5, 0.75];
-  let player = null, timer = null, dragging = false, speedIdx = 0;
-  let fsMode = null, autoFs = false, hideTimer = null;
+  const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs-btn"), btnSpeed = $(".yt-speed"), btnMute = $(".yt-mute");
+  const shield = $(".yt-shield"), toast = $(".yt-toast"), speedMenu = $(".yt-speedmenu"), fxL = $(".yt-seekfx-l"), fxR = $(".yt-seekfx-r");
+  let player = null, timer = null, dragging = false, fsMode = null, autoFs = false, hideTimer = null, toastTimer = null, fxTimer = null;
+  let speedList = YT_SPEEDS.slice();
+  let speed = parseFloat(ytStore("ytspeed")) || 1;
+  if (!YT_SPEEDS.includes(speed)) speed = 1;
+  let savedPos = parseFloat(ytStore("ytpos:" + id)) || 0, resumeDone = false, speedApplied = false, lastSaved = 0;
+  let streak = { dir: 0, total: 0, last: 0 }, tapTimer = null, lastTap = { t: 0, zone: "" };
+  btnSpeed.textContent = speed + "x";
+
   const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
   const toggle = () => { if (player && player.getPlayerState) (player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo()); };
+  function showToast(html, ms) {
+    toast.innerHTML = html;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), ms || 1500);
+  }
+  function savePos(ended) {
+    if (!player || !player.getCurrentTime) return;
+    if (ended) { ytStore("ytpos:" + id, null); return; }
+    const c = player.getCurrentTime() || 0;
+    if (c > 5) { lastSaved = c; ytStore("ytpos:" + id, Math.floor(c)); }
+  }
   function tick() {
     if (!box.isConnected) { clearInterval(timer); if (fsMode) exitFs(); return; }
     if (!player || dragging || !player.getCurrentTime) return;
     const d = player.getDuration() || 0, c = player.getCurrentTime() || 0;
     seek.max = d; seek.value = c;
     time.textContent = fmt(c) + " / " + fmt(d);
+    if (box.classList.contains("playing") && Math.abs(c - lastSaved) >= 5) savePos(false);
   }
+
+  /* تقديم/تأخير 10 ثواني (بالضغط المزدوج على الجانبين أو الكيبورد أو الأزرار) */
+  function seekBy(sec) {
+    if (!player || !player.getCurrentTime) return;
+    const d = player.getDuration() || 0;
+    let t = (player.getCurrentTime() || 0) + sec;
+    t = Math.max(0, d ? Math.min(t, d - 0.1) : t);
+    player.seekTo(t, true);
+    seek.max = d; seek.value = t;
+    time.textContent = fmt(t) + " / " + fmt(d);
+    box.classList.remove("ended");
+  }
+  function doSeek(dir) {
+    const now = Date.now();
+    if (streak.dir !== dir || now - streak.last > 800) streak = { dir, total: 0, last: now };
+    streak.total += YT_SEEK_STEP;
+    streak.last = now;
+    seekBy(dir * YT_SEEK_STEP);
+    const fx = dir > 0 ? fxR : fxL, other = dir > 0 ? fxL : fxR;
+    other.classList.remove("show");
+    fx.querySelector("b").textContent = streak.total;
+    fx.classList.add("show");
+    clearTimeout(fxTimer);
+    fxTimer = setTimeout(() => { fx.classList.remove("show"); streak = { dir: 0, total: 0, last: 0 }; }, 800);
+    poke();
+  }
+  // الجانب اللي اتضغط عليه (حتى لو الفيديو متدوّر بالـCSS على الآيفون)
+  function zoneOf(e) {
+    const r = shield.getBoundingClientRect();
+    const rotated = box.classList.contains("yt-fake") && /rotate/.test(box.style.transform || "");
+    const f = rotated ? (e.clientY - r.top) / r.height : (e.clientX - r.left) / r.width;
+    return f < 0.35 ? "left" : f > 0.65 ? "right" : "mid";
+  }
+  shield.addEventListener("click", e => {
+    speedMenu.classList.remove("open");
+    const now = Date.now(), zone = zoneOf(e), dir = zone === "left" ? -1 : zone === "right" ? 1 : 0;
+    if (dir && streak.dir === dir && now - streak.last < 700) { clearTimeout(tapTimer); lastTap = { t: 0, zone: "" }; doSeek(dir); return; }   // ضغطات سريعة زيادة = 10 ثواني كمان
+    if (lastTap.zone === zone && now - lastTap.t < 300) {                                                                                      // ضغط مزدوج
+      clearTimeout(tapTimer); lastTap = { t: 0, zone: "" };
+      if (dir) doSeek(dir); else (fsMode ? exitFs() : enterFs(false));
+      return;
+    }
+    lastTap = { t: now, zone };
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => { lastTap = { t: 0, zone: "" }; toggle(); poke(); }, 280);                                                    // ضغطة واحدة = تشغيل/إيقاف
+  });
+  shield.addEventListener("contextmenu", e => e.preventDefault());
 
   /* ملء الشاشة + تدوير: نظام الجهاز لو متاح، وإلا تدوير بالـCSS (آيفون) */
   function poke() {
@@ -389,41 +508,127 @@ function buildVideoPlayer(box, stage, id, autoplay) {
   };
   if (mqLand.addEventListener) mqLand.addEventListener("change", onOrient);
   btnFs.addEventListener("click", () => { fsMode ? exitFs() : enterFs(false); });
-  box.addEventListener("pointerdown", poke);
+  box.addEventListener("pointerdown", () => { ytActiveBox = box; poke(); });
+  box.addEventListener("mouseenter", () => { ytActiveBox = box; });
   box.addEventListener("mousemove", poke);
 
+  /* السرعة (القائمة بتفتح فوق الأزرار، والاختيار بيتحفظ للفيديوهات الجاية) */
+  function applySpeed(r, persist) {
+    speed = r;
+    if (player && player.setPlaybackRate) player.setPlaybackRate(r);
+    btnSpeed.textContent = r + "x";
+    speedMenu.querySelectorAll("button").forEach(b => b.classList.toggle("on", Number(b.dataset.r) === r));
+    if (persist) ytStore("ytspeed", r);
+  }
+  function buildSpeedMenu() {
+    let rates = [];
+    try { rates = (player.getAvailablePlaybackRates && player.getAvailablePlaybackRates()) || []; } catch (e) {}
+    const list = YT_SPEEDS.filter(r => !rates.length || rates.includes(r));
+    speedList = list.length ? list : YT_SPEEDS.slice();
+    speedMenu.innerHTML = speedList.map(r => `<button type="button" data-r="${r}"${r === speed ? ' class="on"' : ""}>${r}x</button>`).join("");
+  }
+  btnSpeed.addEventListener("click", () => { speedMenu.classList.toggle("open"); poke(); });
+  speedMenu.addEventListener("click", e => {
+    const b = e.target.closest("button[data-r]");
+    if (!b) return;
+    applySpeed(Number(b.dataset.r), true);
+    speedMenu.classList.remove("open");
+    if (e.detail > 0) b.blur();
+    poke();
+  });
+
+  /* الصوت (على الكمبيوتر بس؛ على الموبايل بزراير الجهاز) */
+  function syncMute() { const m = player && player.isMuted && player.isMuted(); btnMute.innerHTML = icon(m ? "volume-x" : "volume-2"); btnMute.setAttribute("aria-label", m ? "تشغيل الصوت" : "كتم الصوت"); }
+  function toggleMute() {
+    if (!player || !player.isMuted) return;
+    if (player.isMuted()) player.unMute(); else player.mute();
+    syncMute();
+    showToast(player.isMuted() ? "الصوت مكتوم" : "تم تشغيل الصوت", 1000);
+  }
+  function changeVolume(d) {
+    if (!player || !player.getVolume) return;
+    const v = Math.min(100, Math.max(0, (player.getVolume() || 0) + d));
+    player.setVolume(v);
+    if (v > 0 && player.isMuted && player.isMuted()) player.unMute();
+    syncMute();
+    showToast("الصوت " + v + "%", 1000);
+  }
+  btnMute.addEventListener("click", toggleMute);
+  // بعد الضغط بالماوس/اللمس بنشيل التركيز من الزرار، عشان زرار المسافة يفضل للتشغيل/الإيقاف مش يكرّر آخر زرار اتضغط
+  $(".yt-controls").addEventListener("click", e => { if (e.detail > 0) { const b = e.target.closest("button"); if (b) b.blur(); } });
+  $(".yt-back").addEventListener("click", () => doSeek(-1));
+  $(".yt-fwd").addEventListener("click", () => doSeek(1));
+
+  /* كمّل من آخر مكان وقفت عنده (على نفس الجهاز) */
+  function maybeResume() {
+    const d = player.getDuration() || 0;
+    if (savedPos > 5 && (!d || savedPos < d - 10) && (player.getCurrentTime() || 0) < 3) {
+      player.seekTo(savedPos, true);
+      showToast(`<span>كمّلنا من ${fmt(savedPos)}</span><button type="button" class="yt-toast-btn">من الأول</button>`, 6000);
+    }
+  }
+  toast.addEventListener("click", e => {
+    if (!e.target.closest(".yt-toast-btn")) return;
+    if (player && player.seekTo) player.seekTo(0, true);
+    toast.classList.remove("show");
+  });
+  $(".yt-replay").addEventListener("click", () => {
+    if (!player) return;
+    player.seekTo(0, true); player.playVideo();
+    box.classList.remove("ended");
+  });
+  window.addEventListener("pagehide", () => { if (box.classList.contains("playing")) savePos(false); });
+
+  const ERR = {
+    2: "رابط الفيديو غير صالح.",
+    5: "المتصفح مقدرش يشغّل الفيديو ده. جرّب تحدّث الصفحة.",
+    100: "الفيديو ده اتحذف أو بقى خاص.",
+    101: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
+    150: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
+  };
   player = new YT.Player(frame, { events: {
-    onReady: () => { box.classList.add("ready"); tick(); },
+    onReady: () => { box.classList.add("ready"); buildSpeedMenu(); syncMute(); tick(); },
     onStateChange: e => {
-      const playing = e.data === 1;
+      const st = e.data, playing = st === 1;
       box.classList.toggle("playing", playing);
+      box.classList.toggle("buffering", st === 3);
+      box.classList.toggle("ended", st === 0);
       btnPlay.innerHTML = icon(playing ? "pause" : "play");
       btnPlay.setAttribute("aria-label", playing ? "إيقاف مؤقت" : "تشغيل");
       clearInterval(timer);
       if (playing) timer = setInterval(tick, 500);
+      if (playing && !speedApplied) { speedApplied = true; if (speed !== 1) applySpeed(speed, false); }
+      if (playing && !resumeDone) { resumeDone = true; maybeResume(); }
+      if (st === 2) savePos(false);
+      if (st === 0) savePos(true);
       tick(); poke();
+    },
+    onError: e => {
+      box.querySelector(".yt-err-msg").textContent = ERR[e.data] || "حصلت مشكلة في تشغيل الفيديو.";
+      box.classList.remove("playing", "buffering");
+      box.classList.add("errored");
     }
   }});
-  shield.addEventListener("click", toggle);
-  shield.addEventListener("contextmenu", e => e.preventDefault());
-  btnPlay.addEventListener("click", toggle);
   seek.addEventListener("input", () => { dragging = true; time.textContent = fmt(seek.value) + " / " + fmt(seek.max); });
-  seek.addEventListener("change", () => { if (player && player.seekTo) player.seekTo(Number(seek.value), true); dragging = false; tick(); });
-  btnSpeed.addEventListener("click", () => {
-    speedIdx = (speedIdx + 1) % speeds.length;
-    if (player && player.setPlaybackRate) player.setPlaybackRate(speeds[speedIdx]);
-    btnSpeed.textContent = speeds[speedIdx] + "x";
-  });
+  seek.addEventListener("change", () => { if (player && player.seekTo) player.seekTo(Number(seek.value), true); dragging = false; tick(); seek.blur(); });
+  btnPlay.addEventListener("click", toggle);
+
+  box._ytApi = {
+    toggle, isFs: () => !!fsMode, fs: () => (fsMode ? exitFs() : enterFs(false)),
+    seek: d => doSeek(d > 0 ? 1 : -1), volume: changeVolume, mute: toggleMute,
+    speed: step => { const i = speedList.indexOf(speed); const n = speedList[Math.min(speedList.length - 1, Math.max(0, (i < 0 ? speedList.indexOf(1) : i) + step))]; applySpeed(n, true); showToast(n + "x", 900); },
+  };
+  ytBindKeys();
 }
 
 function renderItemRow(it, isExpired) {
   const unavailable = (typeIcon, title) => `<div class="item-row"><span class="item-title">${icon(typeIcon)} ${escapeHtml(title)}</span><span class="na">${icon("lock")} غير متاح</span></div>`;
   if (it.type === "material") {
     const typeIcon = it.mediaType === "video" ? "video" : it.mediaType === "image" ? "image" : "file";
-    const hasContent = it.mediaType === "pdf" ? it.hasFile : it.mediaType === "video" ? !!it.hasVideo : !!it.url;
+    const hasContent = it.mediaType === "pdf" ? it.hasFile : !!it.url;
     if (isExpired || it.unavailable || !hasContent) return unavailable(typeIcon, it.title);
     let bodyHtml = "";
-    if (it.mediaType === "video") bodyHtml = videoPlayerHtml("", it.id);
+    if (it.mediaType === "video") bodyHtml = videoPlayerHtml(it.url);
     else if (it.mediaType === "image") bodyHtml = `<img class="mat-image" src="${escapeHtml(it.url)}" alt="${escapeHtml(it.title)}">`;
     else if (it.mediaType === "pdf") bodyHtml = `<button type="button" class="mat-pdf-link" data-pdf-id="${escapeHtml(it.id)}">${icon("file")} افتح ملف الـPDF</button>`;
     return `<div><div class="item-row"><span class="item-title">${icon(typeIcon)} ${escapeHtml(it.title)}</span></div>${bodyHtml}</div>`;

@@ -401,28 +401,57 @@
   .sd-item:hover, .sd-item:focus-visible { background: rgba(0,0,0,0.05); outline: none; }
   .sd-item.sd-danger, .sd-item.sd-danger .ic { color: var(--c-dangertext); }
   @media (prefers-reduced-motion: reduce) { .sd-overlay, .sd-panel { transition: none; } }
-  /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب + ملء الشاشة مع تدوير */
+  /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب + ملء الشاشة مع تدوير + إيماءات */
   .yt-player { --yt-fg: #F5F1E6; --yt-muted: #9FB8AD; --yt-accent: var(--accent, var(--c-accent, #D4A93B)); position: relative; margin: 0.5rem 0; border-radius: 12px; overflow: hidden; background: #000; }
   .yt-stage { position: relative; width: 100%; padding-top: 56.25%; }
   .yt-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-  .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
   .yt-bigplay { position: absolute; inset: 0; z-index: 1; display: none; place-items: center; pointer-events: none; }
   .yt-bigplay span { width: 3.6rem; height: 3.6rem; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; }
   .yt-bigplay .ic { width: 1.5rem; height: 1.5rem; fill: currentColor; }
-  .yt-player:not(.playing):not(.plain) .yt-bigplay { display: grid; }
+  .yt-player:not(.playing):not(.plain):not(.buffering):not(.ended) .yt-bigplay { display: grid; }
+  .yt-spinner { position: absolute; top: 50%; left: 50%; width: 2.4rem; height: 2.4rem; margin: -1.2rem 0 0 -1.2rem; z-index: 1; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: ytspin 0.8s linear infinite; display: none; pointer-events: none; }
+  .yt-player.buffering .yt-spinner { display: block; }
+  @keyframes ytspin { to { transform: rotate(360deg); } }
+  .yt-seekfx { position: absolute; top: 0; bottom: 0; width: 36%; z-index: 3; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,0.14); opacity: 0; pointer-events: none; transition: opacity 0.15s ease; }
+  .yt-seekfx-l { left: 0; border-radius: 0 60% 60% 0 / 0 50% 50% 0; }
+  .yt-seekfx-r { right: 0; border-radius: 60% 0 0 60% / 50% 0 0 50%; }
+  .yt-seekfx.show { opacity: 1; }
+  .yt-seekfx-in { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 700; }
+  .yt-seekfx-in .ic { width: 1.7rem; height: 1.7rem; fill: currentColor; }
+  .yt-toast { position: absolute; left: 50%; bottom: 0.8rem; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 0.6rem; background: rgba(0,0,0,0.78); color: #fff; padding: 0.4rem 0.85rem; border-radius: 999px; font-size: 0.8rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+  .yt-toast.show { opacity: 1; pointer-events: auto; }
+  .yt-toast-btn { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: none; color: #fff; border: 1px solid rgba(255,255,255,0.55); border-radius: 999px; padding: 0.15rem 0.65rem; font-size: 0.75rem; font-weight: 600; }
+  .yt-end, .yt-err { position: absolute; inset: 0; z-index: 4; display: none; place-items: center; text-align: center; color: #fff; }
+  .yt-end { background: rgba(0,0,0,0.88); }
+  .yt-err { z-index: 5; background: #000; padding: 1rem; font-size: 0.85rem; line-height: 1.7; }
+  .yt-err .ic { width: 1.6rem; height: 1.6rem; display: block; margin: 0 auto 0.4rem; color: #E0A458; }
+  .yt-player.ended .yt-end { display: grid; }
+  .yt-player.errored .yt-err { display: grid; }
+  .yt-replay { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 0.6rem 1.1rem; font-size: 0.9rem; font-weight: 700; }
   .yt-controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; background: #0F1F1C; color: var(--yt-fg); direction: ltr; transition: opacity 0.25s ease; }
   .yt-controls button { width: auto; box-shadow: none; border: none; font-family: inherit; cursor: pointer; background: none; color: inherit; padding: 0.3rem; min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700; }
   .yt-controls button:hover { background: rgba(255,255,255,0.1); }
   .yt-controls .ic { fill: none; }
   .yt-controls .yt-play .ic { fill: currentColor; }
+  .yt-controls .yt-skip, .yt-controls .yt-mute { display: none; }
+  @media (pointer: fine) { .yt-controls .yt-skip, .yt-controls .yt-mute { display: grid; } }
   .yt-seek { flex: 1; min-width: 0; accent-color: var(--yt-accent); }
   .yt-time { font-size: 0.75rem; color: var(--yt-muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay { display: none; }
+  .yt-speedmenu { position: absolute; left: 0.5rem; right: 0.5rem; bottom: 3.4rem; z-index: 6; display: none; flex-wrap: wrap; justify-content: center; gap: 0.3rem; padding: 0.5rem; border-radius: 12px; background: rgba(0,0,0,0.88); direction: ltr; }
+  .yt-speedmenu.open { display: flex; }
+  .yt-speedmenu button { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: none; color: #fff; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 600; }
+  .yt-speedmenu button.on { background: var(--yt-accent); color: #1B2420; border-color: transparent; }
+  .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-err, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
   .yt-player.yt-fs { display: flex; flex-direction: column; border-radius: 0; margin: 0; width: 100%; height: 100%; }
   .yt-player.yt-fs .yt-stage { padding-top: 0; flex: 1; min-height: 0; }
   .yt-player.yt-fs .yt-controls { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0)); padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)); }
+  .yt-player.yt-fs .yt-speedmenu { bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px)); }
+  .yt-player.yt-fs .yt-toast { bottom: calc(4.2rem + env(safe-area-inset-bottom, 0px)); }
   .yt-player.yt-fs.hide-controls .yt-controls { opacity: 0; pointer-events: none; }
+  .yt-player.yt-fs.hide-controls .yt-speedmenu { display: none; }
   .yt-player.yt-fake { position: fixed; top: 0; left: 0; z-index: 2147483000; transform-origin: 0 0; }
+  @media (prefers-reduced-motion: reduce) { .yt-spinner { animation: none; } .yt-seekfx, .yt-toast, .yt-controls { transition: none; } }
   /* ===== المرحلة 3: الداشبورد + الامتحانات + النتائج + حالات فاضية ===== */
   .stats-row { flex-wrap: wrap; }
   .stats-row .stat-card { min-width: 105px; padding: 0.8rem 0.85rem 0.7rem; border-radius: 14px; border-top: 3px solid var(--sc, var(--c-accent)); }
@@ -464,7 +493,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-unlock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></symbol><symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol><symbol id="i-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol><symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol><symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></symbol><symbol id="i-package" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-minimize" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></symbol></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-printer" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-clipboard" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol><symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-unlock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></symbol><symbol id="i-calendar" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol><symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol><symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol><symbol id="i-file" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-tag" viewBox="0 0 24 24"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></symbol><symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol><symbol id="i-archive" viewBox="0 0 24 24"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol><symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/><path d="M6.38 18.7 4 21"/><path d="M17.64 18.67 20 21"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></symbol><symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol><symbol id="i-inbox" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol><symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></symbol><symbol id="i-package" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol><symbol id="i-log-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></symbol><symbol id="i-maximize" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></symbol><symbol id="i-minimize" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/></symbol><symbol id="i-rotate-ccw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol><symbol id="i-volume-x" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></symbol><symbol id="i-volume-2" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol><symbol id="i-fast-forward" viewBox="0 0 24 24"><polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/></symbol><symbol id="i-rewind" viewBox="0 0 24 24"><polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/></symbol></svg>
 
 <div id="waQueueModal" style="display:none; position:fixed; inset:0; background:rgba(22,48,43,0.92); z-index:9998; align-items:center; justify-content:center; padding:1.25rem;">
   <div style="background:var(--c-cardbg); border-radius:14px; padding:1.5rem; max-width:400px; width:100%; text-align:center;">
@@ -537,8 +566,6 @@
   <div class="sd-list">
     <button class="sd-item" id="smartSearchBtn" onclick="closeSettingsDrawer(); openSmartSearch()"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>البحث الشامل</span></button>
     <button class="sd-item" id="themeToggleBtn" onclick="toggleTheme()"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg><span>الشكل الفاتح</span></button>
-    <button class="sd-item" id="notifSoundBtn" onclick="toggleNotifSound()"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span id="notifSoundLabel">صوت التنبيهات</span></button>
-    <button class="sd-item" id="notifSoundTestBtn" onclick="unlockChimeAudio(); playNotifChime(true)"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><span>جرّب صوت التنبيه</span></button>
     <div class="sd-sep"></div>
     <button class="sd-item" id="brandSettingsBtn" onclick="closeSettingsDrawer(); openBrandSettings()"><svg class="ic" aria-hidden="true"><use href="#i-tag"/></svg><span>الهوية والعلامة</span></button>
     <button class="sd-item" id="changePasswordBtn" onclick="closeSettingsDrawer(); openChangePassword()"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><span>كلمة السر</span></button>
@@ -1654,7 +1681,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v88 — كل رسائل الواتساب بتبدأ بـ «رسالة مسجلة» بخط عريض + الدرجة في سطر منفصل — 1 أكتوبر 2026";
+const APP_VERSION = "v81 — مشغّل الفيديو: ضغط مزدوج للتقديم/التأخير 10 ثواني + ميزات إضافية — 30 سبتمبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1731,90 +1758,15 @@ function isStatsTabVisible() {
   return el && el.style.display !== "none";
 }
 
-// ===== صوت التنبيهات: نغمة مميزة (3 نوتات صاعدة) مولّدة بالكود، من غير ملف صوت =====
-let _chimeCtx = null;
-function isNotifSoundOn() {
-  try { return localStorage.getItem("notifSound") !== "off"; } catch (e) { return true; }
-}
-function getChimeCtx() {
-  const AC = window.AudioContext || window.webkitAudioContext;
-  if (!AC) return null;
-  if (!_chimeCtx) { try { _chimeCtx = new AC(); } catch (e) { return null; } }
-  return _chimeCtx;
-}
-// المتصفحات بتمنع الصوت قبل أول لمسة من المستخدم، فبنفعّل الصوت أول ما يلمس الشاشة.
-function unlockChimeAudio() {
-  const ctx = getChimeCtx();
-  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
-}
-["touchstart", "click", "keydown"].forEach(ev => window.addEventListener(ev, unlockChimeAudio, { passive: true }));
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") unlockChimeAudio(); });
-
-function playNotifChime(force) {
-  if (!force && !isNotifSoundOn()) return;
-  const ctx = getChimeCtx();
-  if (!ctx) return;
+function maybeNotifyNewResult(r) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
   try {
-    if (ctx.state === "suspended") ctx.resume().catch(() => {});
-    const t0 = ctx.currentTime + 0.02;
-    // E5 → A5 → C#6 → E6: نغمة "دينج دينج" صاعدة مبهجة
-    [[659.25, 0], [880, 0.14], [1108.73, 0.28], [1318.51, 0.42]].forEach(([freq, at], i, arr) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = freq;
-      const start = t0 + at;
-      const len = i === arr.length - 1 ? 0.7 : 0.32;
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(0.32, start + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + len);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(start); osc.stop(start + len + 0.05);
+    new Notification("نتيجة جديدة: " + (r.studentName || ""), {
+      body: `${r.examTitle || ""} — ${r.score}/${r.total} (${pct}%)`,
+      icon: "icon-192.png",
     });
   } catch (e) {}
-}
-
-function updateNotifSoundButton() {
-  const el = document.getElementById("notifSoundLabel");
-  if (el) el.textContent = isNotifSoundOn() ? "صوت التنبيهات: شغّال (اضغط للكتم)" : "صوت التنبيهات: مكتوم (اضغط للتشغيل)";
-}
-function toggleNotifSound() {
-  const on = !isNotifSoundOn();
-  try { localStorage.setItem("notifSound", on ? "on" : "off"); } catch (e) {}
-  updateNotifSoundButton();
-  if (on) { unlockChimeAudio(); playNotifChime(true); }
-}
-
-// ===== رقم التنبيهات على أيقونة التطبيق (Badging API) =====
-// شغال لما التطبيق يكون متثبّت على الشاشة الرئيسية (PWA) — أندرويد Chrome وآيفون iOS 16.4+.
-// الرقم بيتحدّث طول ما التطبيق شغّال (حتى في الخلفية لفترة)، وبيفضل آخر رقم لما تقفله.
-let _lastAppBadge = null;
-function updateAppBadge(count) {
-  if (count === _lastAppBadge) return;
-  _lastAppBadge = count;
-  try {
-    if (count > 0 && navigator.setAppBadge) navigator.setAppBadge(count).catch(() => {});
-    else if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
-  } catch (e) {}
-}
-
-// إشعار النظام (بيظهر حتى لو التطبيق في الخلفية): بنستخدم الـService Worker لو متاح لأن
-// `new Notification` بيفشل بصمت على أندرويد Chrome — ده كان سبب إنك ماكنتش بتسمع/تشوف حاجة.
-async function showSystemNotification(title, body, tag) {
-  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-  const opts = { body, icon: "icon-192.png", badge: "icon-192.png", tag: tag || "new-result", renotify: true, vibrate: [200, 100, 200, 100, 300] };
-  try {
-    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg && reg.showNotification) { await reg.showNotification(title, opts); return; }
-    }
-    new Notification(title, opts);
-  } catch (e) {}
-}
-
-function maybeNotifyNewResult(r) {
-  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-  showSystemNotification("نتيجة جديدة: " + (r.studentName || ""), `${r.examTitle || ""} — ${r.score}/${r.total} (${pct}%)`, "result-" + (r.studentId || "") + "-" + (r.examId || ""));
 }
 
 // عشان مشكلة "Missing or insufficient permissions" اللي بتظهر عشوائيًا: أحيانًا الجلسة
@@ -1869,7 +1821,6 @@ function startSync() {
   examsCol.where("teacherId", "==", currentTeacherId).onSnapshot(
     (snapshot) => {
       exams = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      ensureExamCodes(exams);
       renderExamsList();
       renderNotificationCenter();
       if (isStatsTabVisible()) renderStatsDashboard();
@@ -1901,14 +1852,11 @@ function startSync() {
       return bt - at;
     });
     if (!firstResultsSnapshot) {
-      let newResultsInSnapshot = 0;
       snapshot.docChanges().forEach(change => {
         if (change.type === "added" && !change.doc.metadata.hasPendingWrites && !change.doc.data().deletedAt) {
-          newResultsInSnapshot++;
-          if (newResultsInSnapshot <= 3) maybeNotifyNewResult(change.doc.data());
+          maybeNotifyNewResult(change.doc.data());
         }
       });
-      if (newResultsInSnapshot > 0) playNotifChime();
     }
     firstResultsSnapshot = false;
     updateExamsBadge();
@@ -2103,7 +2051,6 @@ async function saveProduct() {
       await productsCol.add(payload);
     }
     showSuccess("تم حفظ المنتج بنجاح.");
-    syncProductLocks();
     await loadProductsOnce(true);
     closeProductBuilder();
   } catch (err) {
@@ -3368,17 +3315,6 @@ function toEnglishDigits(str) {
     return idx === -1 ? c : String(idx);
   });
 }
-// كل رسائل الواتساب (نتيجة، متابعة، غياب، إيصال، تذكير...) بتبدأ بعبارة "رسالة مسجلة" بخط عريض
-// (في واتساب العريض = نجمة قبل وبعد النص). كل الروابط بتعدّي من هنا عشان مايفوتش أي نوع رسالة.
-const WA_RECORDED_HEADER = "*رسالة مسجلة*";
-function withRecordedHeader(message) {
-  const text = String(message == null ? "" : message);
-  if (text.startsWith(WA_RECORDED_HEADER)) return text;
-  return WA_RECORDED_HEADER + "\n\n" + text;
-}
-function buildWaUrl(waNumber, message) {
-  return "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(withRecordedHeader(message));
-}
 function formatPhoneForWhatsapp(phone) {
   let digits = (phone || "").replace(/[^0-9]/g, "");
   if (!digits) return "";
@@ -3392,7 +3328,7 @@ function sendWhatsappReceipt(s, payment) {
   const amount = payment.amount ? payment.amount + " جنيه" : "";
   const date = fmtDate(payment.date);
   const message = `تحية طيبة،\nنفيدكم بأنه تم استلام مبلغ ${amount} من الطالب/ة ${s.name} بتاريخ ${date}.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`;
-  const url = buildWaUrl(waNumber, message);
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
 function openWhatsappFor(studentId, target) {
@@ -3407,7 +3343,7 @@ function openWhatsappFor(studentId, target) {
   const message = target === "parent"
     ? `تحية طيبة، معاك ${TEACHER_NAME} بخصوص الطالب/ة ${s.name}.`
     : `أهلاً ${s.name}، معاك ${TEACHER_NAME}.`;
-  const url = buildWaUrl(waNumber, message);
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
 async function addPayment(studentId) {
@@ -3935,17 +3871,7 @@ function toggleStageCounts() {
   renderTorail();
 }
 
-const APP_TABS = ["students", "exams", "stats", "torail", "products"];
-function getSavedTab() {
-  try {
-    const t = localStorage.getItem("lastTab");
-    if (APP_TABS.includes(t)) return t;
-  } catch (e) {}
-  return "students";
-}
-
 function switchTab(tab) {
-  try { localStorage.setItem("lastTab", tab); } catch (e) {}
   document.getElementById("viewStudents").style.display = tab === "students" ? "block" : "none";
   document.getElementById("viewExams").style.display = tab === "exams" ? "block" : "none";
   document.getElementById("viewStats").style.display = tab === "stats" ? "block" : "none";
@@ -3997,34 +3923,13 @@ function computeNotifications() {
   exams.forEach(ex => {
     const examLastSeen = getExamLastSeen(ex.id);
     const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
-    const seenResults = getSeenNotifResults();
-    const newResults = examResults
-      .filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen && !seenResults[r.id])
-      .sort((a, b) => b.submittedAt.toMillis() - a.submittedAt.toMillis());
-    if (newResults.length > 0) {
-      const MAX_PER_EXAM = 8;
-      newResults.slice(0, MAX_PER_EXAM).forEach(r => {
-        const scoreText = (r.total > 0 && r.score !== undefined) ? ` (${r.score}/${r.total})` : "";
-        notifications.push({
-          kind: "new_result",
-          examId: ex.id,
-          studentId: r.studentId || "",
-          resultId: r.id,
-          weight: 1,
-          sortKey: 2000000000000 + r.submittedAt.toMillis() / 1000,
-          html: `<strong>${escapeHtml(r.studentName || "طالب")}</strong> سلّم "${escapeHtml(ex.title)}"${scoreText}`,
-        });
+    if (newCount > 0) {
+      notifications.push({
+        kind: "new_results",
+        examId: ex.id,
+        sortKey: 2000000000000 + newCount,
+        html: `<strong>${newCount}</strong> نتيجة جديدة في "${escapeHtml(ex.title)}"`,
       });
-      if (newResults.length > MAX_PER_EXAM) {
-        const rest = newResults.length - MAX_PER_EXAM;
-        notifications.push({
-          kind: "new_results_more",
-          examId: ex.id,
-          weight: rest,
-          sortKey: 2000000000000,
-          html: `و<strong>${rest}</strong> نتيجة تانية جديدة في "${escapeHtml(ex.title)}"`,
-        });
-      }
     }
     const deadlinePassed = !!(ex.deadline && new Date(ex.deadline) < now);
     const isClosed = !!ex.closedManually || deadlinePassed;
@@ -4055,10 +3960,8 @@ function renderNotificationCenter() {
   const list = document.getElementById("notifCenterList");
   if (!badge || !list) return;
   const notifications = computeNotifications();
-  const notifTotal = notifications.reduce((sum, n) => sum + (n.weight || 1), 0);
-  updateAppBadge(notifTotal);
-  if (notifTotal > 0) {
-    badge.textContent = notifTotal;
+  if (notifications.length > 0) {
+    badge.textContent = notifications.length;
     badge.style.display = "inline-block";
   } else {
     badge.style.display = "none";
@@ -4067,7 +3970,7 @@ function renderNotificationCenter() {
   if (panel && panel.style.display === "block") {
     list.innerHTML = notifications.length
       ? notifications.map(n => `
-          <div onclick="openNotificationItem('${n.examId}', '${n.studentId || ""}', '${n.resultId || ""}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
+          <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
             ${n.html}
           </div>`).join("")
       : `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><p>مفيش إشعارات جديدة <svg class="ic" aria-hidden="true"><use href="#i-sparkle"/></svg></p></div>`;
@@ -4082,49 +3985,8 @@ function toggleNotificationCenter() {
   if (!isOpen) renderNotificationCenter();
 }
 
-// نتائج اتفتح إشعارها بتتعلّم "متشافة" لوحدها (بدون ما نخفي باقي نتائج نفس الامتحان)
-function getSeenNotifResults() {
-  try { return JSON.parse(localStorage.getItem("notifSeenResults") || "{}") || {}; } catch (e) { return {}; }
-}
-function markNotifResultSeen(resultId) {
-  if (!resultId) return;
-  try {
-    const map = getSeenNotifResults();
-    map[resultId] = Date.now();
-    const keys = Object.keys(map);
-    if (keys.length > 500) keys.sort((a, b) => map[a] - map[b]).slice(0, keys.length - 500).forEach(k => delete map[k]);
-    localStorage.setItem("notifSeenResults", JSON.stringify(map));
-  } catch (e) {}
-}
-
-// بيفتح نتيجة الطالب نفسها: صفحة الصفحة الصح في قايمة النتائج، الصف مفتوح (تفاصيل الإجابات)،
-// ومتمرّر لحد ما يظهر في نص الشاشة.
-function focusResultRow(resultId) {
-  const list = getVisibleExamResultsList();
-  const idx = list.findIndex(r => r.id === resultId);
-  if (idx < 0) return false;
-  resultsPage = Math.floor(idx / PAGE_SIZE) + 1;
-  expandedResultId = resultId;
-  renderExamResultsList();
-  setTimeout(() => {
-    const el = document.getElementById("resultRow_" + resultId);
-    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 80);
-  return true;
-}
-
-async function openNotificationItem(examId, studentId, resultId) {
+function openNotificationItem(examId) {
   document.getElementById("notifCenterPanel").style.display = "none";
-  // إشعار نتيجة طالب: نروح مباشرة لنتيجته (مش كارت الطالب)
-  if (resultId) {
-    markNotifResultSeen(resultId);
-    switchTab("exams");
-    await viewExamResults(examId, { keepUnseen: true });
-    focusResultRow(resultId);
-    renderNotificationCenter();
-    return;
-  }
-  // غير كده (إشعار موعد أو "وN نتيجة تانية"): نفس السلوك القديم — نتائج الامتحان
   switchTab("exams");
   viewExamResults(examId);
 }
@@ -4466,7 +4328,6 @@ function renderExamQuestionDifficulty() {
 }
 
 function initNotifUi() {
-  updateNotifSoundButton();
   const card = document.getElementById("notifPermCard");
   if (typeof Notification === "undefined") { card.style.display = "none"; return; }
   card.style.display = Notification.permission === "default" ? "block" : "none";
@@ -4751,13 +4612,36 @@ function ytIdFromUrl(u) {
   const m = /(?:embed\/|[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(u || "");
   return m ? m[1] : null;
 }
+const YT_SEEK_STEP = 10;
+const YT_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+let ytActiveBox = null, ytKeysBound = false;
+function ytStore(k, v) {
+  try {
+    if (v === undefined) return localStorage.getItem(k);
+    if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, String(v));
+  } catch (e) {}
+  return null;
+}
 function videoPlayerHtml(url) {
   return `<div class="yt-player" data-src="${escapeHtml(url)}">
-    <div class="yt-stage"><div class="yt-bigplay"><span>${icon("play")}</span></div><div class="yt-shield"></div></div>
+    <div class="yt-stage">
+      <div class="yt-bigplay"><span>${icon("play")}</span></div>
+      <div class="yt-spinner"></div>
+      <div class="yt-seekfx yt-seekfx-l"><div class="yt-seekfx-in">${icon("rewind")}<span><b>10</b> ثواني</span></div></div>
+      <div class="yt-seekfx yt-seekfx-r"><div class="yt-seekfx-in">${icon("fast-forward")}<span><b>10</b> ثواني</span></div></div>
+      <div class="yt-end"><button type="button" class="yt-replay">${icon("rotate-ccw")} إعادة التشغيل</button></div>
+      <div class="yt-err"><div>${icon("alert")}<span class="yt-err-msg"></span></div></div>
+      <div class="yt-toast"></div>
+      <div class="yt-shield"></div>
+    </div>
+    <div class="yt-speedmenu"></div>
     <div class="yt-controls">
       <button type="button" class="yt-play" aria-label="تشغيل">${icon("play")}</button>
+      <button type="button" class="yt-skip yt-back" aria-label="رجوع 10 ثواني">${icon("rewind")}</button>
+      <button type="button" class="yt-skip yt-fwd" aria-label="تقديم 10 ثواني">${icon("fast-forward")}</button>
       <input type="range" class="yt-seek" min="0" max="0" step="1" value="0" aria-label="التقدّم في الفيديو">
       <span class="yt-time">0:00 / 0:00</span>
+      <button type="button" class="yt-mute" aria-label="كتم الصوت">${icon("volume-2")}</button>
       <button type="button" class="yt-speed" aria-label="سرعة التشغيل">1x</button>
       <button type="button" class="yt-fs-btn" aria-label="ملء الشاشة">${icon("maximize")}</button>
     </div>
@@ -4774,24 +4658,117 @@ function initVideoPlayers(root) {
     ensureYT(ok => ok ? buildVideoPlayer(box, stage, id) : plain());
   });
 }
+
+/* اختصارات الكيبورد (للكمبيوتر): بتشتغل بس لو الماوس فوق الفيديو أو هو ملء الشاشة */
+function ytBindKeys() {
+  if (ytKeysBound) return;
+  ytKeysBound = true;
+  document.addEventListener("keydown", e => {
+    const box = ytActiveBox, api = box && box._ytApi;
+    if (!api || !box.isConnected || e.ctrlKey || e.metaKey || e.altKey) return;
+    const t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+    if (!(api.isFs() || box.matches(":hover") || box.contains(document.activeElement))) return;
+    switch (e.key) {
+      case " ": if (tag === "BUTTON") return; e.preventDefault(); api.toggle(); break;
+      case "k": case "K": api.toggle(); break;
+      case "ArrowLeft": case "j": case "J": e.preventDefault(); api.seek(-1); break;
+      case "ArrowRight": case "l": case "L": e.preventDefault(); api.seek(1); break;
+      case "ArrowUp": e.preventDefault(); api.volume(10); break;
+      case "ArrowDown": e.preventDefault(); api.volume(-10); break;
+      case "m": case "M": api.mute(); break;
+      case "f": case "F": api.fs(); break;
+      case "<": api.speed(-1); break;
+      case ">": api.speed(1); break;
+      default: return;
+    }
+  });
+}
+
 function buildVideoPlayer(box, stage, id) {
   const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin);
   stage.insertAdjacentHTML("afterbegin", `<iframe src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
   const frame = stage.querySelector("iframe");
   const $ = s => box.querySelector(s);
-  const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs-btn"), btnSpeed = $(".yt-speed"), shield = $(".yt-shield");
-  const speeds = [1, 1.25, 1.5, 0.75];
-  let player = null, timer = null, dragging = false, speedIdx = 0;
-  let fsMode = null, autoFs = false, hideTimer = null;
+  const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs-btn"), btnSpeed = $(".yt-speed"), btnMute = $(".yt-mute");
+  const shield = $(".yt-shield"), toast = $(".yt-toast"), speedMenu = $(".yt-speedmenu"), fxL = $(".yt-seekfx-l"), fxR = $(".yt-seekfx-r");
+  let player = null, timer = null, dragging = false, fsMode = null, autoFs = false, hideTimer = null, toastTimer = null, fxTimer = null;
+  let speedList = YT_SPEEDS.slice();
+  let speed = parseFloat(ytStore("ytspeed")) || 1;
+  if (!YT_SPEEDS.includes(speed)) speed = 1;
+  let savedPos = parseFloat(ytStore("ytpos:" + id)) || 0, resumeDone = false, speedApplied = false, lastSaved = 0;
+  let streak = { dir: 0, total: 0, last: 0 }, tapTimer = null, lastTap = { t: 0, zone: "" };
+  btnSpeed.textContent = speed + "x";
+
   const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
   const toggle = () => { if (player && player.getPlayerState) (player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo()); };
+  function showToast(html, ms) {
+    toast.innerHTML = html;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), ms || 1500);
+  }
+  function savePos(ended) {
+    if (!player || !player.getCurrentTime) return;
+    if (ended) { ytStore("ytpos:" + id, null); return; }
+    const c = player.getCurrentTime() || 0;
+    if (c > 5) { lastSaved = c; ytStore("ytpos:" + id, Math.floor(c)); }
+  }
   function tick() {
     if (!box.isConnected) { clearInterval(timer); if (fsMode) exitFs(); return; }
     if (!player || dragging || !player.getCurrentTime) return;
     const d = player.getDuration() || 0, c = player.getCurrentTime() || 0;
     seek.max = d; seek.value = c;
     time.textContent = fmt(c) + " / " + fmt(d);
+    if (box.classList.contains("playing") && Math.abs(c - lastSaved) >= 5) savePos(false);
   }
+
+  /* تقديم/تأخير 10 ثواني (بالضغط المزدوج على الجانبين أو الكيبورد أو الأزرار) */
+  function seekBy(sec) {
+    if (!player || !player.getCurrentTime) return;
+    const d = player.getDuration() || 0;
+    let t = (player.getCurrentTime() || 0) + sec;
+    t = Math.max(0, d ? Math.min(t, d - 0.1) : t);
+    player.seekTo(t, true);
+    seek.max = d; seek.value = t;
+    time.textContent = fmt(t) + " / " + fmt(d);
+    box.classList.remove("ended");
+  }
+  function doSeek(dir) {
+    const now = Date.now();
+    if (streak.dir !== dir || now - streak.last > 800) streak = { dir, total: 0, last: now };
+    streak.total += YT_SEEK_STEP;
+    streak.last = now;
+    seekBy(dir * YT_SEEK_STEP);
+    const fx = dir > 0 ? fxR : fxL, other = dir > 0 ? fxL : fxR;
+    other.classList.remove("show");
+    fx.querySelector("b").textContent = streak.total;
+    fx.classList.add("show");
+    clearTimeout(fxTimer);
+    fxTimer = setTimeout(() => { fx.classList.remove("show"); streak = { dir: 0, total: 0, last: 0 }; }, 800);
+    poke();
+  }
+  // الجانب اللي اتضغط عليه (حتى لو الفيديو متدوّر بالـCSS على الآيفون)
+  function zoneOf(e) {
+    const r = shield.getBoundingClientRect();
+    const rotated = box.classList.contains("yt-fake") && /rotate/.test(box.style.transform || "");
+    const f = rotated ? (e.clientY - r.top) / r.height : (e.clientX - r.left) / r.width;
+    return f < 0.35 ? "left" : f > 0.65 ? "right" : "mid";
+  }
+  shield.addEventListener("click", e => {
+    speedMenu.classList.remove("open");
+    const now = Date.now(), zone = zoneOf(e), dir = zone === "left" ? -1 : zone === "right" ? 1 : 0;
+    if (dir && streak.dir === dir && now - streak.last < 700) { clearTimeout(tapTimer); lastTap = { t: 0, zone: "" }; doSeek(dir); return; }   // ضغطات سريعة زيادة = 10 ثواني كمان
+    if (lastTap.zone === zone && now - lastTap.t < 300) {                                                                                      // ضغط مزدوج
+      clearTimeout(tapTimer); lastTap = { t: 0, zone: "" };
+      if (dir) doSeek(dir); else (fsMode ? exitFs() : enterFs(false));
+      return;
+    }
+    lastTap = { t: now, zone };
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => { lastTap = { t: 0, zone: "" }; toggle(); poke(); }, 280);                                                    // ضغطة واحدة = تشغيل/إيقاف
+  });
+  shield.addEventListener("contextmenu", e => e.preventDefault());
 
   /* ملء الشاشة + تدوير: نظام الجهاز لو متاح، وإلا تدوير بالـCSS (آيفون) */
   function poke() {
@@ -4860,31 +4837,117 @@ function buildVideoPlayer(box, stage, id) {
   };
   if (mqLand.addEventListener) mqLand.addEventListener("change", onOrient);
   btnFs.addEventListener("click", () => { fsMode ? exitFs() : enterFs(false); });
-  box.addEventListener("pointerdown", poke);
+  box.addEventListener("pointerdown", () => { ytActiveBox = box; poke(); });
+  box.addEventListener("mouseenter", () => { ytActiveBox = box; });
   box.addEventListener("mousemove", poke);
 
+  /* السرعة (القائمة بتفتح فوق الأزرار، والاختيار بيتحفظ للفيديوهات الجاية) */
+  function applySpeed(r, persist) {
+    speed = r;
+    if (player && player.setPlaybackRate) player.setPlaybackRate(r);
+    btnSpeed.textContent = r + "x";
+    speedMenu.querySelectorAll("button").forEach(b => b.classList.toggle("on", Number(b.dataset.r) === r));
+    if (persist) ytStore("ytspeed", r);
+  }
+  function buildSpeedMenu() {
+    let rates = [];
+    try { rates = (player.getAvailablePlaybackRates && player.getAvailablePlaybackRates()) || []; } catch (e) {}
+    const list = YT_SPEEDS.filter(r => !rates.length || rates.includes(r));
+    speedList = list.length ? list : YT_SPEEDS.slice();
+    speedMenu.innerHTML = speedList.map(r => `<button type="button" data-r="${r}"${r === speed ? ' class="on"' : ""}>${r}x</button>`).join("");
+  }
+  btnSpeed.addEventListener("click", () => { speedMenu.classList.toggle("open"); poke(); });
+  speedMenu.addEventListener("click", e => {
+    const b = e.target.closest("button[data-r]");
+    if (!b) return;
+    applySpeed(Number(b.dataset.r), true);
+    speedMenu.classList.remove("open");
+    if (e.detail > 0) b.blur();
+    poke();
+  });
+
+  /* الصوت (على الكمبيوتر بس؛ على الموبايل بزراير الجهاز) */
+  function syncMute() { const m = player && player.isMuted && player.isMuted(); btnMute.innerHTML = icon(m ? "volume-x" : "volume-2"); btnMute.setAttribute("aria-label", m ? "تشغيل الصوت" : "كتم الصوت"); }
+  function toggleMute() {
+    if (!player || !player.isMuted) return;
+    if (player.isMuted()) player.unMute(); else player.mute();
+    syncMute();
+    showToast(player.isMuted() ? "الصوت مكتوم" : "تم تشغيل الصوت", 1000);
+  }
+  function changeVolume(d) {
+    if (!player || !player.getVolume) return;
+    const v = Math.min(100, Math.max(0, (player.getVolume() || 0) + d));
+    player.setVolume(v);
+    if (v > 0 && player.isMuted && player.isMuted()) player.unMute();
+    syncMute();
+    showToast("الصوت " + v + "%", 1000);
+  }
+  btnMute.addEventListener("click", toggleMute);
+  // بعد الضغط بالماوس/اللمس بنشيل التركيز من الزرار، عشان زرار المسافة يفضل للتشغيل/الإيقاف مش يكرّر آخر زرار اتضغط
+  $(".yt-controls").addEventListener("click", e => { if (e.detail > 0) { const b = e.target.closest("button"); if (b) b.blur(); } });
+  $(".yt-back").addEventListener("click", () => doSeek(-1));
+  $(".yt-fwd").addEventListener("click", () => doSeek(1));
+
+  /* كمّل من آخر مكان وقفت عنده (على نفس الجهاز) */
+  function maybeResume() {
+    const d = player.getDuration() || 0;
+    if (savedPos > 5 && (!d || savedPos < d - 10) && (player.getCurrentTime() || 0) < 3) {
+      player.seekTo(savedPos, true);
+      showToast(`<span>كمّلنا من ${fmt(savedPos)}</span><button type="button" class="yt-toast-btn">من الأول</button>`, 6000);
+    }
+  }
+  toast.addEventListener("click", e => {
+    if (!e.target.closest(".yt-toast-btn")) return;
+    if (player && player.seekTo) player.seekTo(0, true);
+    toast.classList.remove("show");
+  });
+  $(".yt-replay").addEventListener("click", () => {
+    if (!player) return;
+    player.seekTo(0, true); player.playVideo();
+    box.classList.remove("ended");
+  });
+  window.addEventListener("pagehide", () => { if (box.classList.contains("playing")) savePos(false); });
+
+  const ERR = {
+    2: "رابط الفيديو غير صالح.",
+    5: "المتصفح مقدرش يشغّل الفيديو ده. جرّب تحدّث الصفحة.",
+    100: "الفيديو ده اتحذف أو بقى خاص.",
+    101: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
+    150: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
+  };
   player = new YT.Player(frame, { events: {
-    onReady: () => { box.classList.add("ready"); tick(); },
+    onReady: () => { box.classList.add("ready"); buildSpeedMenu(); syncMute(); tick(); },
     onStateChange: e => {
-      const playing = e.data === 1;
+      const st = e.data, playing = st === 1;
       box.classList.toggle("playing", playing);
+      box.classList.toggle("buffering", st === 3);
+      box.classList.toggle("ended", st === 0);
       btnPlay.innerHTML = icon(playing ? "pause" : "play");
       btnPlay.setAttribute("aria-label", playing ? "إيقاف مؤقت" : "تشغيل");
       clearInterval(timer);
       if (playing) timer = setInterval(tick, 500);
+      if (playing && !speedApplied) { speedApplied = true; if (speed !== 1) applySpeed(speed, false); }
+      if (playing && !resumeDone) { resumeDone = true; maybeResume(); }
+      if (st === 2) savePos(false);
+      if (st === 0) savePos(true);
       tick(); poke();
+    },
+    onError: e => {
+      box.querySelector(".yt-err-msg").textContent = ERR[e.data] || "حصلت مشكلة في تشغيل الفيديو.";
+      box.classList.remove("playing", "buffering");
+      box.classList.add("errored");
     }
   }});
-  shield.addEventListener("click", toggle);
-  shield.addEventListener("contextmenu", e => e.preventDefault());
-  btnPlay.addEventListener("click", toggle);
   seek.addEventListener("input", () => { dragging = true; time.textContent = fmt(seek.value) + " / " + fmt(seek.max); });
-  seek.addEventListener("change", () => { if (player && player.seekTo) player.seekTo(Number(seek.value), true); dragging = false; tick(); });
-  btnSpeed.addEventListener("click", () => {
-    speedIdx = (speedIdx + 1) % speeds.length;
-    if (player && player.setPlaybackRate) player.setPlaybackRate(speeds[speedIdx]);
-    btnSpeed.textContent = speeds[speedIdx] + "x";
-  });
+  seek.addEventListener("change", () => { if (player && player.seekTo) player.seekTo(Number(seek.value), true); dragging = false; tick(); seek.blur(); });
+  btnPlay.addEventListener("click", toggle);
+
+  box._ytApi = {
+    toggle, isFs: () => !!fsMode, fs: () => (fsMode ? exitFs() : enterFs(false)),
+    seek: d => doSeek(d > 0 ? 1 : -1), volume: changeVolume, mute: toggleMute,
+    speed: step => { const i = speedList.indexOf(speed); const n = speedList[Math.min(speedList.length - 1, Math.max(0, (i < 0 ? speedList.indexOf(1) : i) + step))]; applySpeed(n, true); showToast(n + "x", 900); },
+  };
+  ytBindKeys();
 }
 
 function renderMaterialPreview(m) {
@@ -5091,7 +5154,7 @@ function renderExamsList() {
       const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
       const submittedIdsForCard = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId));
       const missingCount = students.filter(s => s.stage === ex.stage && !submittedIdsForCard.has(s.id)).length;
-      const link = examShareUrl(ex);
+      const link = window.location.origin + window.location.pathname.replace(/index\\.html$/, "") + "exam.html?examId=" + ex.id;
       const examLastSeen = getExamLastSeen(ex.id);
       const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
       const newBadgeHtml = newCount > 0 ? `<span class="exam-new-badge"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg> ${newCount} جديد</span>` : "";
@@ -5110,7 +5173,6 @@ function renderExamsList() {
         ${statusBadge || paidBadge ? `<div style="margin-bottom:0.6rem; display:flex; gap:0.4rem; flex-wrap:wrap;">${statusBadge}${paidBadge}</div>` : ""}
         <div class="exam-card-actions">
           <button style="background:var(--c-accent); color:var(--c-onaccent);" onclick="copyExamLink('${ex.id}')">نسخ الرابط</button>
-          <button style="background:var(--c-accent); color:var(--c-onaccent);" onclick="shareExamLink('${ex.id}')">مشاركة الامتحان</button>
           <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="editExam('${ex.id}')">تعديل</button>
           <button style="background:var(--c-cardalt); color:var(--c-textoncard);" onclick="viewExamResults('${ex.id}')">النتائج</button>
           <button style="background:var(--c-warnbg); color:var(--c-warntext);" onclick="viewMissingStudents('${ex.id}')">لسه ما دخلوش ${isOldUnloadedExam ? '(دوس لعرض العدد)' : '(' + missingCount + '/' + stageStudentCount + ')'}</button>
@@ -5134,48 +5196,8 @@ async function toggleExamManualClose(examId, shouldClose) {
   }
 }
 
-// رابط مشاركة الامتحان: الشكل القصير /e/CODE لو الامتحان ليه كود، وإلا الشكل القديم
-// (بيفضل شغال) لحد ما الكود يتولّد تلقائيًا.
-function examShareUrl(ex) {
-  const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
-  if (ex && ex.examCode) return base + "e/" + ex.examCode;
-  return base + "exam.html?examId=" + (ex ? ex.id : "");
-}
-
-// بيطلب من الـWorker توليد كود لأي امتحان ناقصه كود (مرة واحدة لكل امتحان في الجلسة).
-// الـWorker idempotent ومابيغيّر أي حقل تاني. أول ما الكود يتكتب، الـsnapshot بيحدّث الواجهة.
-const examCodeAssignRequested = new Set();
-async function ensureExamCodes(list) {
-  try {
-    const missing = (list || []).filter(ex => ex && !ex.examCode && !examCodeAssignRequested.has(ex.id)).map(ex => ex.id);
-    if (!missing.length || !auth.currentUser) return;
-    missing.forEach(id => examCodeAssignRequested.add(id));
-    const idToken = await auth.currentUser.getIdToken();
-    for (let i = 0; i < missing.length; i += 40) {
-      const chunk = missing.slice(i, i + 40);
-      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/assign-exam-code`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-        body: JSON.stringify({ examIds: chunk }),
-      });
-      if (!res.ok) chunk.forEach(id => examCodeAssignRequested.delete(id));
-    }
-  } catch (e) { /* التوليد التلقائي best-effort — الرابط القديم بيفضل شغال */ }
-}
-
-// بيطلب من الـWorker يعلّم أي امتحان جوه منتج كـ paidOnly (يتنادى بعد حفظ منتج ومرة عند الدخول).
-let _productLocksSynced = false;
-async function syncProductLocks() {
-  try {
-    if (!auth.currentUser) return;
-    const idToken = await auth.currentUser.getIdToken();
-    await fetch(`${STUDENT_AUTH_WORKER_URL}/sync-product-locks`, { method: "POST", headers: { "Authorization": `Bearer ${idToken}` } });
-  } catch (e) { /* best-effort — الخادم بيقفل المحتوى بنفسه برضو */ }
-}
-
 function copyExamLink(examId) {
-  const ex = exams.find(x => x.id === examId);
-  const link = examShareUrl(ex || { id: examId });
+  const link = window.location.origin + window.location.pathname.replace(/index\.html$/, "") + "exam.html?examId=" + examId;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(link).then(() => {
       showSuccess("تم نسخ رابط الامتحان. الصقه في جروب الواتساب.");
@@ -5185,20 +5207,6 @@ function copyExamLink(examId) {
   } else {
     prompt("انسخ الرابط ده يدويًا:", link);
   }
-}
-
-async function shareExamLink(examId) {
-  const ex = exams.find(x => x.id === examId);
-  const link = examShareUrl(ex || { id: examId });
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: (ex && ex.title) || "امتحان", url: link });
-      return;
-    } catch (e) {
-      if (e && e.name === "AbortError") return;
-    }
-  }
-  copyExamLink(examId);
 }
 
 async function deleteExam(examId) {
@@ -6168,8 +6176,7 @@ async function saveExam() {
       showSuccess("تم حفظ التعديلات بنجاح.");
     } else {
       examData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-      const newExamRef = await examsCol.add(examData);
-      ensureExamCodes([{ id: newExamRef.id }]);
+      await examsCol.add(examData);
       showSuccess("تم حفظ الامتحان بنجاح.");
     }
     closeExamBuilder();
@@ -6262,10 +6269,9 @@ async function ensureExamResultsLoaded(examId, force) {
 function markExamSeen(examId) {
   try { localStorage.setItem("examSeen_" + examId, Date.now().toString()); } catch (e) {}
 }
-async function viewExamResults(examId, opts) {
+async function viewExamResults(examId) {
   viewingExamId = examId;
-  // لما نفتح نتيجة طالب واحد من الإشعارات (keepUnseen) مابنعلّمش باقي نتائج الامتحان كمتشافة
-  if (!(opts && opts.keepUnseen)) markExamSeen(examId);
+  markExamSeen(examId);
   const ex = exams.find(e => e.id === examId);
   document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
   const searchInput = document.getElementById("examResultsSearchInput");
@@ -6732,7 +6738,7 @@ function renderExamResultsList() {
         ` : ""}
       </div>` : "";
     return `
-      <div class="result-row-wrap" id="resultRow_${r.id}">
+      <div class="result-row-wrap">
         <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
           <div style="display:flex; align-items:center; gap:0.6rem;">
             <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
@@ -6764,8 +6770,8 @@ function sendExamResultWhatsapp(r) {
   const waNumber = formatPhoneForWhatsapp(r.parentPhone);
   if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
-  const url = buildWaUrl(waNumber, message);
+  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
 
@@ -6778,7 +6784,7 @@ function startWhatsappQueue() {
   waQueue = list.map(r => {
     const waNumber = formatPhoneForWhatsapp(r.parentPhone);
     const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-    const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+    const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
     return { name: r.studentName, phone: r.parentPhone || "", waNumber, message };
   });
   waQueueIndex = 0;
@@ -6836,7 +6842,7 @@ function renderWaQueueStep() {
 function waQueueOpenCurrent() {
   const item = waQueue[waQueueIndex];
   if (!item || !item.waNumber) return;
-  const url = buildWaUrl(item.waNumber, item.message);
+  const url = "https://wa.me/" + item.waNumber + "?text=" + encodeURIComponent(item.message);
   window.open(url, "_blank");
 }
 
@@ -6960,7 +6966,7 @@ function sendExamReminderWhatsapp(s, examTitle, target) {
   const message = target === "parent"
     ? `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${examTitle}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`
     : `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
-  const url = buildWaUrl(waNumber, message);
+  const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
 
@@ -7703,9 +7709,7 @@ async function showApp() {
   document.querySelectorAll(".app-content").forEach(el => {
     el.style.display = el.classList.contains("tab-nav") ? "flex" : "block";
   });
-  switchTab(getSavedTab());
-  restoreSavedScroll();
-  if (!_productLocksSynced) { _productLocksSynced = true; syncProductLocks(); }
+  switchTab("students");
   try {
     await ensureTeacherDoc(currentTeacherId);
     await migrateLegacyDataToTeacher(currentTeacherId);
@@ -7715,20 +7719,16 @@ async function showApp() {
 }
 
 // قفل تلقائي بعد فترة عدم استخدام (بالميلي ثانية). عدّل الرقم لو حابب مدة مختلفة.
-// 0 = بدون قفل تلقائي (التطبيق يفضل مفتوح حتى لو خرجت منه لتطبيق تاني). لو حابب تفعّل القفل
-// التلقائي تاني حط مدة بالميلي ثانية (مثلًا 30 * 60 * 1000 = 30 دقيقة). تسجيل الخروج اليدوي شغال دايمًا.
-const INACTIVITY_TIMEOUT_MS = 0;
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 دقيقة
 let inactivityTimer = null;
 const inactivityEvents = ["mousemove", "keydown", "click", "touchstart", "scroll"];
 
 function resetInactivityTimer() {
-  if (!INACTIVITY_TIMEOUT_MS) return;
   if (inactivityTimer) clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(() => { logoutApp(); }, INACTIVITY_TIMEOUT_MS);
 }
 
 function startInactivityWatcher() {
-  if (!INACTIVITY_TIMEOUT_MS) return;
   inactivityEvents.forEach(evt => document.addEventListener(evt, resetInactivityTimer));
   resetInactivityTimer();
 }
@@ -7802,32 +7802,7 @@ function handleAvatarChange(file) {
   }
 })();
 
-// حفظ مكان التمرير عشان لو المتصفح أعاد تحميل الصفحة بعد ما خرجت لتطبيق تاني ترجع لنفس المكان.
-function saveScrollPosition() {
-  try {
-    if (!auth.currentUser) return;
-    localStorage.setItem("lastScroll", JSON.stringify({ tab: getSavedTab(), y: Math.round(window.scrollY || 0), at: Date.now() }));
-  } catch (e) {}
-}
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveScrollPosition(); });
-window.addEventListener("pagehide", saveScrollPosition);
-
-function restoreSavedScroll() {
-  let saved = null;
-  try { saved = JSON.parse(localStorage.getItem("lastScroll") || "null"); } catch (e) {}
-  if (!saved || saved.tab !== getSavedTab() || !(saved.y > 0)) return;
-  if (Date.now() - (saved.at || 0) > 12 * 60 * 60 * 1000) return; // أقدم من 12 ساعة: مش لازم
-  // المحتوى بيتحمّل بعد لحظات، فبنجرّب كذا مرة لحد ما الصفحة تبقى طويلة كفاية.
-  [150, 600, 1500, 3000].forEach(ms => setTimeout(() => {
-    if (document.documentElement.scrollHeight >= saved.y + window.innerHeight * 0.5 && Math.abs(window.scrollY - saved.y) > 40) {
-      window.scrollTo({ top: saved.y });
-    }
-  }, ms));
-}
-
 function logoutApp() {
-  try { localStorage.removeItem("lastScroll"); } catch (e) {}
-  try { if (navigator.clearAppBadge) navigator.clearAppBadge(); } catch (e) {}
   stopInactivityWatcher();
   auth.signOut().then(() => location.reload()).catch(() => location.reload());
 }
