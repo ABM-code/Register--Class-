@@ -56,6 +56,12 @@
   .yt-stage { position: relative; width: 100%; padding-top: 56.25%; }
   .yt-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .yt-shield-b { position: absolute; left: 0; right: 0; bottom: 0; height: 22%; z-index: 2; display: none; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  /* قبل أول تشغيل: بنسيب منتصف الفيديو مفتوح عشان أول ضغطة توصل لليوتيوب نفسه (ضغطة حقيقية من المستخدم، بتشتغل على كل الأجهزة حتى الآيفون)، وبنغطي الشريط العلوي والسفلي بس عشان الروابط */
+  .yt-player:not(.live):not(.plain) .yt-shield { bottom: auto; height: 22%; }
+  .yt-player:not(.live):not(.plain) .yt-shield-b { display: block; }
+  .yt-player:not(.ready):not(.plain) .yt-controls { opacity: 0.55; pointer-events: none; }
+  .yt-err-code { display: block; margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.65; direction: ltr; }
   .yt-bigplay { position: absolute; inset: 0; z-index: 1; display: none; place-items: center; pointer-events: none; }
   .yt-bigplay span { width: 3.6rem; height: 3.6rem; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; }
   .yt-bigplay .ic { width: 1.5rem; height: 1.5rem; fill: currentColor; }
@@ -92,7 +98,7 @@
   .yt-speedmenu.open { display: flex; }
   .yt-speedmenu button { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: none; color: #fff; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 600; }
   .yt-speedmenu button.on { background: var(--yt-accent); color: #1B2420; border-color: transparent; }
-  .yt-player.plain .yt-shield, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-err, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
+  .yt-player.plain .yt-shield, .yt-player.plain .yt-shield-b, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-err, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
   .yt-player.yt-fs { display: flex; flex-direction: column; border-radius: 0; margin: 0; width: 100%; height: 100%; }
   .yt-player.yt-fs .yt-stage { padding-top: 0; flex: 1; min-height: 0; }
   .yt-player.yt-fs .yt-controls { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0)); padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)); }
@@ -301,9 +307,10 @@ function videoPlayerHtml(url) {
       <div class="yt-seekfx yt-seekfx-l"><div class="yt-seekfx-in">${icon("rewind")}<span><b>10</b> ثواني</span></div></div>
       <div class="yt-seekfx yt-seekfx-r"><div class="yt-seekfx-in">${icon("fast-forward")}<span><b>10</b> ثواني</span></div></div>
       <div class="yt-end"><button type="button" class="yt-replay">${icon("rotate-ccw")} إعادة التشغيل</button></div>
-      <div class="yt-err"><div>${icon("alert")}<span class="yt-err-msg"></span></div></div>
+      <div class="yt-err"><div>${icon("alert")}<span class="yt-err-msg"></span><small class="yt-err-code"></small></div></div>
       <div class="yt-toast"></div>
       <div class="yt-shield"></div>
+      <div class="yt-shield-b"></div>
     </div>
     <div class="yt-speedmenu"></div>
     <div class="yt-controls">
@@ -318,14 +325,31 @@ function videoPlayerHtml(url) {
     </div>
   </div>`;
 }
+let ytFrameSeq = 0;
+function ytFrameHtml(id, fid) {
+  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin);
+  return `<iframe id="${fid}" src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+}
 function initVideoPlayers(root) {
   root.querySelectorAll(".yt-player:not([data-ready])").forEach(box => {
     box.setAttribute("data-ready", "1");
     const url = box.getAttribute("data-src");
     const id = ytIdFromUrl(url);
     const stage = box.querySelector(".yt-stage");
-    const plain = () => { box.classList.add("plain"); stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen></iframe>`); };
+    let touched = false;
+    box.addEventListener("pointerdown", () => { touched = true; }, { once: true });
+    // لو مشغّلنا ما اشتغلش: بنرجّع لمشغّل يوتيوب العادي (بأزراره). لو الطالب بدأ يشاهد فعلًا بنسيبه من غير ما نعيد تحميله.
+    const plain = () => {
+      box.classList.add("plain");
+      const f = stage.querySelector("iframe");
+      if (f && touched) return;
+      const src = id ? `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1` : url;
+      if (f) { f.src = src; f.setAttribute("allowfullscreen", ""); }
+      else stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(src)}" allowfullscreen></iframe>`);
+    };
     if (!id) return plain();
+    // الفيديو بيظهر فورًا (قبل ما مكتبة يوتيوب تتحمّل) وأول ضغطة عليه بتشتغل من غير ما نستنى
+    stage.insertAdjacentHTML("afterbegin", ytFrameHtml(id, "ytf_" + (++ytFrameSeq)));
     ensureYT(ok => ok ? buildVideoPlayer(box, stage, id) : plain());
   });
 }
@@ -357,12 +381,10 @@ function ytBindKeys() {
 }
 
 function buildVideoPlayer(box, stage, id) {
-  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin);
-  stage.insertAdjacentHTML("afterbegin", `<iframe src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
   const frame = stage.querySelector("iframe");
   const $ = s => box.querySelector(s);
   const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs-btn"), btnSpeed = $(".yt-speed"), btnMute = $(".yt-mute");
-  const shield = $(".yt-shield"), toast = $(".yt-toast"), speedMenu = $(".yt-speedmenu"), fxL = $(".yt-seekfx-l"), fxR = $(".yt-seekfx-r");
+  const shield = $(".yt-shield"), shieldB = $(".yt-shield-b"), toast = $(".yt-toast"), speedMenu = $(".yt-speedmenu"), fxL = $(".yt-seekfx-l"), fxR = $(".yt-seekfx-r");
   let player = null, timer = null, dragging = false, fsMode = null, autoFs = false, hideTimer = null, toastTimer = null, fxTimer = null;
   let speedList = YT_SPEEDS.slice();
   let speed = parseFloat(ytStore("ytspeed")) || 1;
@@ -372,7 +394,22 @@ function buildVideoPlayer(box, stage, id) {
   btnSpeed.textContent = speed + "x";
 
   const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
-  const toggle = () => { if (player && player.getPlayerState) (player.getPlayerState() === 1 ? player.pauseVideo() : player.playVideo()); };
+  let wdTimer = null;
+  const isPlaying = () => !!(player && player.getPlayerState && player.getPlayerState() === 1);
+  const toggle = () => {
+    if (!player || !player.getPlayerState) return;
+    if (isPlaying()) player.pauseVideo(); else { player.playVideo(); armWatchdog(); }
+  };
+  // لو أمر التشغيل البرمجي اتحجب (سياسات الموبايل)، بنفتح منتصف الفيديو عشان الضغطة الجاية توصل ليوتيوب مباشرة
+  function armWatchdog() {
+    clearTimeout(wdTimer);
+    wdTimer = setTimeout(() => {
+      const c = box.classList;
+      if (c.contains("playing") || c.contains("buffering") || c.contains("errored") || c.contains("ended")) return;
+      c.remove("live");
+      showToast("اضغط على منتصف الفيديو عشان يبدأ", 4500);
+    }, 2500);
+  }
   function showToast(html, ms) {
     toast.innerHTML = html;
     toast.classList.add("show");
@@ -421,12 +458,12 @@ function buildVideoPlayer(box, stage, id) {
   }
   // الجانب اللي اتضغط عليه (حتى لو الفيديو متدوّر بالـCSS على الآيفون)
   function zoneOf(e) {
-    const r = shield.getBoundingClientRect();
+    const r = stage.getBoundingClientRect();
     const rotated = box.classList.contains("yt-fake") && /rotate/.test(box.style.transform || "");
     const f = rotated ? (e.clientY - r.top) / r.height : (e.clientX - r.left) / r.width;
     return f < 0.35 ? "left" : f > 0.65 ? "right" : "mid";
   }
-  shield.addEventListener("click", e => {
+  const onShield = e => {
     speedMenu.classList.remove("open");
     const now = Date.now(), zone = zoneOf(e), dir = zone === "left" ? -1 : zone === "right" ? 1 : 0;
     if (dir && streak.dir === dir && now - streak.last < 700) { clearTimeout(tapTimer); lastTap = { t: 0, zone: "" }; doSeek(dir); return; }   // ضغطات سريعة زيادة = 10 ثواني كمان
@@ -437,9 +474,14 @@ function buildVideoPlayer(box, stage, id) {
     }
     lastTap = { t: now, zone };
     clearTimeout(tapTimer);
-    tapTimer = setTimeout(() => { lastTap = { t: 0, zone: "" }; toggle(); poke(); }, 280);                                                    // ضغطة واحدة = تشغيل/إيقاف
-  });
+    // التشغيل لازم يتنفذ فورًا جوه الضغطة نفسها (شرط الآيفون)؛ الانتظار (للتمييز عن الضغط المزدوج) بس قبل الإيقاف
+    if (!isPlaying()) { toggle(); poke(); return; }
+    tapTimer = setTimeout(() => { lastTap = { t: 0, zone: "" }; toggle(); poke(); }, 280);
+  };
+  shield.addEventListener("click", onShield);
+  shieldB.addEventListener("click", onShield);
   shield.addEventListener("contextmenu", e => e.preventDefault());
+  shieldB.addEventListener("contextmenu", e => e.preventDefault());
 
   /* ملء الشاشة + تدوير: نظام الجهاز لو متاح، وإلا تدوير بالـCSS (آيفون) */
   function poke() {
@@ -591,6 +633,7 @@ function buildVideoPlayer(box, stage, id) {
     onStateChange: e => {
       const st = e.data, playing = st === 1;
       box.classList.toggle("playing", playing);
+      if (playing) { box.classList.add("live"); clearTimeout(wdTimer); }
       box.classList.toggle("buffering", st === 3);
       box.classList.toggle("ended", st === 0);
       btnPlay.innerHTML = icon(playing ? "pause" : "play");
@@ -605,6 +648,7 @@ function buildVideoPlayer(box, stage, id) {
     },
     onError: e => {
       box.querySelector(".yt-err-msg").textContent = ERR[e.data] || "حصلت مشكلة في تشغيل الفيديو.";
+      box.querySelector(".yt-err-code").textContent = "code " + e.data + " · " + id;
       box.classList.remove("playing", "buffering");
       box.classList.add("errored");
     }
