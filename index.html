@@ -1687,7 +1687,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v82 — إصلاح تشغيل الفيديو (أول ضغطة مباشرة على الفيديو + ظهور فوري + مراقبة البدء + كود الخطأ) وعبارة «رسالة مسجلة» في رسائل واتساب كارت الطالب — 2 أكتوبر 2026";
+const APP_VERSION = "v83 — رسالة مسجلة في كل رسائل الواتساب + إلغاء الخروج التلقائي من الجلسة + زر الرجوع في التليفون بيرجّع جوه التطبيق — 3 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1707,6 +1707,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+// الجلسة بتفضل محفوظة على الجهاز (حتى بعد قفل المتصفح أو التطبيق) لحد ما المعلم يعمل تسجيل خروج بنفسه
+try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => console.warn("auth persistence", e)); } catch (e) {}
 const studentsCol = db.collection("students");
 const examsCol = db.collection("exams");
 const examResultsCol = db.collection("examResults");
@@ -2584,9 +2586,9 @@ function sendAbsenceWhatsapp(group) {
   waQueue = list.map(item => {
     const waNumber = formatPhoneForWhatsapp(item.phone);
     const datesText = item.dates.join("، ");
-    const message = item.dates.length > 1
+    const message = waMsg(item.dates.length > 1
       ? `تحية طيبة،\nنفيدكم بغياب الطالب/ة ${item.name} في الأيام التالية: ${datesText}.\nبرجاء المتابعة.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`
-      : `تحية طيبة،\nنفيدكم بغياب الطالب/ة ${item.name} بتاريخ ${datesText}.\nبرجاء المتابعة.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`;
+      : `تحية طيبة،\nنفيدكم بغياب الطالب/ة ${item.name} بتاريخ ${datesText}.\nبرجاء المتابعة.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`);
     return { name: item.name, phone: item.phone || "", waNumber, message };
   });
   waQueueIndex = 0;
@@ -6817,7 +6819,7 @@ function sendExamResultWhatsapp(r) {
   const waNumber = formatPhoneForWhatsapp(r.parentPhone);
   if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-  const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+  const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
@@ -6831,7 +6833,7 @@ function startWhatsappQueue() {
   waQueue = list.map(r => {
     const waNumber = formatPhoneForWhatsapp(r.parentPhone);
     const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-    const message = `تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`;
+    const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
     return { name: r.studentName, phone: r.parentPhone || "", waNumber, message };
   });
   waQueueIndex = 0;
@@ -6850,7 +6852,7 @@ function buildOverduePaymentReminderQueue(group) {
   }
   waQueue = list.map(s => {
     const waNumber = formatPhoneForWhatsapp(s.parentPhone);
-    const message = `تحية طيبة،\nنفيدكم بأن هناك مبلغ مستحق متأخر السداد على الطالب/ة ${s.name}، برجاء التكرم بسداده في أقرب وقت ممكن.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`;
+    const message = waMsg(`تحية طيبة،\nنفيدكم بأن هناك مبلغ مستحق متأخر السداد على الطالب/ة ${s.name}، برجاء التكرم بسداده في أقرب وقت ممكن.\nشكرًا لحضرتكم.\n${TEACHER_NAME}`);
     return { name: s.name, phone: s.parentPhone || "", waNumber, message };
   });
   waQueueIndex = 0;
@@ -6965,7 +6967,7 @@ function startMissingParentReminderQueue() {
   if (list.length === 0) return;
   waQueue = list.map(s => {
     const waNumber = formatPhoneForWhatsapp(s.parentPhone);
-    const message = `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${ex.title}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
+    const message = waMsg(`تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${ex.title}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`);
     return { name: s.name, phone: s.parentPhone || "", waNumber, message };
   });
   waQueueIndex = 0;
@@ -7010,9 +7012,9 @@ function sendExamReminderWhatsapp(s, examTitle, target) {
     showError(target === "parent" ? "مفيش رقم ولي أمر مسجل لهذا الطالب." : "مفيش رقم هاتف مسجل لهذا الطالب.");
     return;
   }
-  const message = target === "parent"
+  const message = waMsg(target === "parent"
     ? `تحية طيبة،\nنفيدكم بأن الطالب/ة ${s.name} لسه ما دخلش امتحان "${examTitle}"، برجاء المتابعة معاه للدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`
-    : `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`;
+    : `تحية طيبة،\nلسه ما دخلتش امتحان "${examTitle}"، برجاء الدخول والامتحان في أقرب وقت.\n${TEACHER_NAME}`);
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
@@ -7762,29 +7764,12 @@ async function showApp() {
     await migrateLegacyDataToTeacher(currentTeacherId);
   } catch (e) { console.error(e); }
   startSync();
-  startInactivityWatcher();
+  if (typeof AppBack !== "undefined") AppBack.start();   // زر الرجوع في التليفون
 }
 
-// قفل تلقائي بعد فترة عدم استخدام (بالميلي ثانية). عدّل الرقم لو حابب مدة مختلفة.
-const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 دقيقة
-let inactivityTimer = null;
-const inactivityEvents = ["mousemove", "keydown", "click", "touchstart", "scroll"];
-
-function resetInactivityTimer() {
-  if (inactivityTimer) clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(() => { logoutApp(); }, INACTIVITY_TIMEOUT_MS);
-}
-
-function startInactivityWatcher() {
-  inactivityEvents.forEach(evt => document.addEventListener(evt, resetInactivityTimer));
-  resetInactivityTimer();
-}
-
-function stopInactivityWatcher() {
-  if (inactivityTimer) clearTimeout(inactivityTimer);
-  inactivityTimer = null;
-  inactivityEvents.forEach(evt => document.removeEventListener(evt, resetInactivityTimer));
-}
+// تسجيل الخروج بيحصل بس لما المعلم يضغط "تسجيل الخروج" بنفسه. (اتشال القفل التلقائي بعد فترة عدم الاستخدام.)
+function startInactivityWatcher() {}
+function stopInactivityWatcher() {}
 
 function applyTheme(theme) {
   if (theme === "light") {
@@ -7897,6 +7882,108 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+</script>
+<script>
+/* ===== زر الرجوع في التليفون: بيرجّع خطوة جوه التطبيق بدل ما يخرج ===== */
+const AppBack = (() => {
+  const st = { started: false, layers: [], baseline: new Set(), ignore: 0, armedUntil: 0, raf: 0, snap: new Map() };
+  const byId = id => document.getElementById(id);
+  const rendered = el => !!el && el.getClientRects().length > 0;
+  const call = (name, ...a) => { try { if (typeof window[name] === "function") window[name](...a); } catch (e) { console.warn(e); } };
+  const hide = id => { const el = byId(id); if (el) el.style.display = "none"; };
+
+  // كل "طبقة" (نافذة / صفحة فرعية / قسم مفتوح) ليها: هل هي مفتوحة؟ وإزاي تتقفل؟
+  function snapshot() {
+    const m = new Map();
+    const add = (id, open, close) => { if (open) m.set(id, close); };
+    // الترتيب من الأعمق للأعلى: لو أكتر من طبقة اتفتحت في نفس اللحظة، الرجوع بيقفل الأعلى الأول
+    const home = byId("tabStudentsBtn");
+    add("tab", !!home && !home.classList.contains("active") && rendered(home), () => call("switchTab", "students"));
+    document.querySelectorAll(".tools-toggle-btn.open").forEach(btn => { if (btn.id && rendered(btn)) m.set("sec:" + btn.id, () => btn.click()); });
+    add("examBuilderView", rendered(byId("examBuilderView")), () => {
+      const n = (typeof currentBuilderQuestions !== "undefined" && currentBuilderQuestions) ? currentBuilderQuestions.length : 0;
+      if (n > 0 && !confirm("فيه أسئلة في الامتحان. لو خرجت من غير ما تحفظ التعديلات هتضيع. تخرج؟")) return;
+      call("closeExamBuilder");
+    });
+    add("examResultsView", rendered(byId("examResultsView")), () => call("closeExamResults"));
+    add("examMissingView", rendered(byId("examMissingView")), () => call("closeExamMissing"));
+    add("productBuilderView", rendered(byId("productBuilderView")), () => call("closeProductBuilder"));
+    add("productDetailView", rendered(byId("productDetailView")), () => call("closeProductDetail"));
+    add("notifCenterPanel", rendered(byId("notifCenterPanel")), () => hide("notifCenterPanel"));
+    add("waQueueModal", rendered(byId("waQueueModal")), () => call("waQueueClose"));
+    add("bankPickerModal", rendered(byId("bankPickerModal")), () => call("closeQuestionBankPicker"));
+    add("smartSearchModal", rendered(byId("smartSearchModal")), () => call("closeSmartSearch"));
+    add("brandSettingsModal", rendered(byId("brandSettingsModal")), () => call("closeBrandSettings"));
+    const dr = byId("settingsDrawer");
+    add("settingsDrawer", !!dr && dr.classList.contains("open"), () => call("closeSettingsDrawer"));
+    const fake = document.querySelector(".yt-player.yt-fake");
+    if (fake) m.set("video", () => { if (fake._ytApi) fake._ytApi.fs(); });
+    return m;
+  }
+
+  // بتقارن الحالة الحالية بالسابقة، وتضيف/تشيل خطوات في سجل المتصفح بنفس عدد الطبقات
+  function sync() {
+    st.raf = 0;
+    if (!st.started) return;
+    const snap = snapshot();
+    st.snap = snap;
+    const before = st.layers.length;
+    st.layers = st.layers.filter(id => snap.has(id));
+    const removed = before - st.layers.length;
+    for (const id of [...st.baseline]) if (!snap.has(id)) st.baseline.delete(id);
+    const fresh = [...snap.keys()].filter(id => !st.layers.includes(id) && !st.baseline.has(id));
+    const net = fresh.length - removed;
+    st.layers.push(...fresh);
+    if (net > 0) for (let i = 0; i < net; i++) history.pushState({ navLayer: true }, "");
+    else if (net < 0) { st.ignore++; history.go(net); }
+  }
+  const schedule = () => { if (!st.raf) st.raf = requestAnimationFrame(sync); };
+
+  function toast(msg) {
+    let t = byId("backToast");
+    if (!t) {
+      t = document.createElement("div");
+      t.id = "backToast";
+      t.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);bottom:calc(5.6rem + env(safe-area-inset-bottom,0px));z-index:2147483600;background:rgba(0,0,0,0.85);color:#fff;padding:0.6rem 1.1rem;border-radius:999px;font-size:0.85rem;font-weight:600;max-width:90vw;text-align:center;pointer-events:none;transition:opacity 0.2s ease;";
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.opacity = "1";
+    clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = "0"; }, 2300);
+  }
+
+  function onPop() {
+    if (!st.started) return;
+    if (st.ignore > 0) { st.ignore--; return; }
+    const id = st.layers.pop();                 // زر الرجوع استهلك خطوة الطبقة دي
+    if (id) {
+      const close = st.snap.get(id);
+      if (close) close();                       // لو فضلت مفتوحة (مثلًا رفضت تأكيد الخروج) هتتسجل من جديد
+      schedule();
+      return;
+    }
+    const now = Date.now();                     // الصفحة الرئيسية: ضغطتين متتاليتين للخروج
+    if (now < st.armedUntil) { st.started = false; history.back(); return; }
+    st.armedUntil = now + 2500;
+    history.pushState({ navGuard: true }, "");
+    toast("اضغط رجوع مرة تانية للخروج من التطبيق");
+  }
+
+  function start() {
+    if (st.started) return;
+    st.started = true;
+    st.snap = snapshot();
+    st.baseline = new Set(st.snap.keys());      // اللي مفتوح من الأول مش بيتحسب طبقة
+    history.replaceState({ navRoot: true }, "");
+    history.pushState({ navGuard: true }, "");
+    window.addEventListener("popstate", onPop);
+    new MutationObserver(muts => {
+      // تحديثات المشغّل الداخلية (شريط التقدم...) مالهاش علاقة
+      if (muts.every(m => { const p = m.target.closest && m.target.closest(".yt-player"); return p && m.target !== p; })) return;
+      schedule();
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["style", "class"] });
+  }
+  return { start, _state: st, _sync: sync };
+})();
 </script>
 </body>
 </html>
