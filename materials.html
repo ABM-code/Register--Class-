@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#16302B">
 <title>المكتبة التعليمية</title>
@@ -63,7 +64,7 @@
   .mat-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.3rem; }
   .mat-category { font-size: 0.78rem; color: var(--c-muted); margin-bottom: 0.7rem; }
   /* مشغّل الفيديو الداخلي: بدون أي روابط قابلة للضغط لليوتيوب + ملء الشاشة مع تدوير + إيماءات */
-  .yt-player { --yt-fg: #F5F1E6; --yt-muted: #9FB8AD; --yt-accent: var(--accent, var(--c-accent, #D4A93B)); position: relative; margin: 0.5rem 0; border-radius: 12px; overflow: hidden; background: #000; }
+  .yt-player { --yt-fg: #F5F1E6; --yt-muted: #9FB8AD; --yt-accent: var(--accent, var(--c-accent, #D4A93B)); position: relative; margin: 0.5rem 0; background: #000; }
   .yt-stage { position: relative; width: 100%; padding-top: 56.25%; }
   .yt-stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .yt-shield { position: absolute; inset: 0; z-index: 2; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
@@ -96,7 +97,7 @@
   .yt-player.ended .yt-end { display: grid; }
   .yt-player.errored .yt-err { display: grid; }
   .yt-replay { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 0.6rem 1.1rem; font-size: 0.9rem; font-weight: 700; }
-  .yt-controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; background: #0F1F1C; color: var(--yt-fg); direction: ltr; transition: opacity 0.25s ease; }
+  .yt-controls { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.6rem; border-radius: 0 0 12px 12px; background: #0F1F1C; color: var(--yt-fg); direction: ltr; transition: opacity 0.25s ease; }
   .yt-controls button { width: auto; box-shadow: none; border: none; font-family: inherit; cursor: pointer; background: none; color: inherit; padding: 0.3rem; min-width: 2.4rem; min-height: 2.4rem; border-radius: 8px; display: grid; place-items: center; font-size: 0.78rem; font-weight: 700; }
   .yt-controls button:hover { background: rgba(255,255,255,0.1); }
   .yt-controls .ic { fill: none; }
@@ -109,7 +110,19 @@
   .yt-speedmenu.open { display: flex; }
   .yt-speedmenu button { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: none; color: #fff; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 600; }
   .yt-speedmenu button.on { background: var(--yt-accent); color: #1B2420; border-color: transparent; }
-  .yt-player.plain .yt-shield, .yt-player.plain .yt-shield-b, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-err, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
+  .yt-player.plain .yt-shield, .yt-player.plain .yt-shield-b, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
+  .yt-help { background: #0F1F1C; color: var(--yt-fg); direction: rtl; border-radius: 0 0 12px 12px; }
+  .yt-player:not(.plain) .yt-help { border-radius: 0; }
+  .yt-help-btn { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; display: block; margin: 0 auto; background: none; border: none; color: var(--yt-muted); font-size: 0.74rem; font-weight: 600; padding: 0.35rem 0.8rem 0.5rem; text-decoration: underline; text-underline-offset: 2px; }
+  .yt-help-panel { display: none; padding: 0.2rem 0.8rem 0.8rem; font-size: 0.8rem; line-height: 1.7; }
+  .yt-help-panel.open { display: block; }
+  .yt-help-msg { margin: 0 0 0.5rem; color: var(--yt-fg); }
+  .yt-help-msg b { color: var(--yt-accent); }
+  .yt-help-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .yt-help-actions button { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; padding: 0.3rem 0.8rem; font-size: 0.76rem; font-weight: 600; }
+  .yt-help-actions button.on { background: var(--yt-accent); color: #1B2420; border-color: transparent; }
+  .yt-report { width: 100%; min-height: 6.5rem; direction: ltr; text-align: left; font-family: monospace; font-size: 0.68rem; line-height: 1.5; background: rgba(0,0,0,0.35); color: #cfe3d8; border: 1px solid rgba(255,255,255,0.18); border-radius: 8px; padding: 0.5rem; resize: vertical; }
+  .yt-err-try { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; margin-top: 0.6rem; background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 0.35rem 0.9rem; font-size: 0.78rem; font-weight: 600; }
   .yt-player.yt-fs { display: flex; flex-direction: column; border-radius: 0; margin: 0; width: 100%; height: 100%; }
   .yt-player.yt-fs .yt-stage { padding-top: 0; flex: 1; min-height: 0; }
   .yt-player.yt-fs .yt-controls { position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0)); padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px)); }
@@ -472,7 +485,7 @@ function videoPlayerHtml(url) {
       <div class="yt-seekfx yt-seekfx-l"><div class="yt-seekfx-in">${icon("rewind")}<span><b>10</b> ثواني</span></div></div>
       <div class="yt-seekfx yt-seekfx-r"><div class="yt-seekfx-in">${icon("fast-forward")}<span><b>10</b> ثواني</span></div></div>
       <div class="yt-end"><button type="button" class="yt-replay">${icon("rotate-ccw")} إعادة التشغيل</button></div>
-      <div class="yt-err"><div>${icon("alert")}<span class="yt-err-msg"></span><small class="yt-err-code"></small></div></div>
+      <div class="yt-err"><div>${icon("alert")}<span class="yt-err-msg"></span><small class="yt-err-code"></small><button type="button" class="yt-err-try">جرّب طريقة تشغيل تانية</button></div></div>
       <div class="yt-toast"></div>
       <div class="yt-shield"></div>
       <div class="yt-shield-b"></div>
@@ -488,34 +501,180 @@ function videoPlayerHtml(url) {
       <button type="button" class="yt-speed" aria-label="سرعة التشغيل">1x</button>
       <button type="button" class="yt-fs-btn" aria-label="ملء الشاشة">${icon("maximize")}</button>
     </div>
+    <div class="yt-help">
+      <button type="button" class="yt-help-btn">الفيديو مش بيشتغل؟</button>
+      <div class="yt-help-panel">
+        <p class="yt-help-msg"></p>
+        <div class="yt-help-actions">
+          <button type="button" data-v="1">مشغّل يوتيوب العادي</button>
+          <button type="button" data-v="2">طريقة تانية (youtube.com)</button>
+          <button type="button" data-v="0">المشغّل المطوّر</button>
+          <button type="button" data-copy="1">نسخ تقرير المشكلة</button>
+        </div>
+        <textarea class="yt-report" readonly></textarea>
+      </div>
+    </div>
   </div>`;
 }
 let ytFrameSeq = 0;
-function ytFrameHtml(id, fid) {
-  const q = "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + encodeURIComponent(location.origin);
-  return `<iframe id="${fid}" src="https://www.youtube-nocookie.com/embed/${id}?${q}" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+/* طرق التشغيل: 0 = المطوّر (أزرارنا) ، 1 = مشغّل يوتيوب العادي ، 2 = العادي من youtube.com (لو الدومين التاني متحجب) */
+function ytVariant() {
+  const raw = String(ytStore("ytvariant") || "");
+  const [v, t] = raw.split("@");
+  const n = parseInt(v, 10), ts = parseInt(t, 10) || 0;
+  if (![0, 1, 2].includes(n)) return 0;
+  if (ts && Date.now() - ts > 24 * 3600 * 1000) return 0;   // التحويل التلقائي بيخلص بعد 24 ساعة ونجرّب المطوّر تاني
+  return n;
+}
+function ytFrameHtml(id, fid, variant) {
+  const origin = encodeURIComponent(location.origin);
+  const host = variant === 2 ? "www.youtube.com" : "www.youtube-nocookie.com";
+  const q = variant === 0
+    ? "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + origin
+    : "enablejsapi=1&rel=0&modestbranding=1&playsinline=1&origin=" + origin;
+  const allow = variant === 0 ? "autoplay; encrypted-media" : "autoplay; encrypted-media; picture-in-picture; fullscreen";
+  return `<iframe id="${fid}" src="https://${host}/embed/${id}?${q}" allow="${allow}" referrerpolicy="strict-origin-when-cross-origin"${variant === 0 ? "" : " allowfullscreen"}></iframe>`;
+}
+function ytInAppName() {
+  const ua = navigator.userAgent || "";
+  const m = /(FBAN|FBAV|FB_IAB|Instagram|Messenger|Line\/|MicroMessenger|Snapchat|TikTok|BytedanceWebview|Twitter|WhatsApp|GSA\/)/i.exec(ua);
+  if (m) return m[1];
+  if (/; wv\)/.test(ua) || (/iPhone|iPad|iPod/.test(ua) && !/Safari\//.test(ua))) return "WebView";
+  return "";
+}
+async function ytProbe(id) {
+  const ctrl = new AbortController(), tm = setTimeout(() => ctrl.abort(), 6000);
+  try {
+    const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + id), { signal: ctrl.signal });
+    if (r.ok) return { ok: true, text: "متاح ومسموح بتضمينه" };
+    if (r.status === 401) return { ok: false, text: "صاحب الفيديو مقفّل التضمين (Allow embedding)" };
+    if (r.status === 403 || r.status === 404) return { ok: false, text: "الفيديو خاص أو اتحذف" };
+    return { ok: null, text: "رد غير متوقع من يوتيوب (" + r.status + ")" };
+  } catch (e) {
+    return { ok: null, text: "مقدرتش أفحصه من المتصفح (" + (e.name === "AbortError" ? "انتهت المهلة" : "الشبكة أو CORS") + ")" };
+  } finally { clearTimeout(tm); }
+}
+const YT_VARIANT_NAMES = ["المطوّر", "يوتيوب العادي (nocookie)", "يوتيوب العادي (youtube.com)"];
+function ytReport(box, probeText) {
+  const d = box._diag || {};
+  const meta = document.querySelector('meta[name="referrer"]');
+  return [
+    "تقرير تشغيل الفيديو",
+    "الصفحة: " + location.origin + location.pathname,
+    "الفيديو: " + (d.id || "-"),
+    "طريقة التشغيل: " + (YT_VARIANT_NAMES[d.variant] || "-") + (d.note ? " | " + d.note : ""),
+    "مكتبة يوتيوب (API): " + (d.api || "-") + " | جاهز: " + (d.ready ? "نعم" : "لا"),
+    "آخر حالة: " + (d.state === undefined ? "-" : d.state) + " | آخر خطأ: " + (d.error || "مفيش"),
+    "فحص الفيديو: " + (probeText || "لسه"),
+    "متصفح داخل تطبيق: " + (ytInAppName() || "لا"),
+    "HTTPS: " + (location.protocol === "https:" ? "نعم" : "لا (" + location.protocol + ")"),
+    "referrer meta: " + (meta ? meta.content : "مش موجودة") + " | document.referrer: " + (document.referrer ? "موجود" : "فاضي"),
+    "الجهاز: " + (navigator.userAgent || "").slice(0, 160),
+    "الوقت: " + new Date().toISOString(),
+  ].join("\n");
+}
+function ytShowError(box, code) {
+  const d = box._diag || {};
+  d.error = String(code);
+  const MSG = {
+    2: "رابط الفيديو غير صالح.",
+    5: "المتصفح مقدرش يشغّل الفيديو ده. جرّب تحدّث الصفحة.",
+    100: "الفيديو ده اتحذف أو بقى خاص.",
+    101: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
+    150: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
+    153: "يوتيوب مش قادر يتأكد من مصدر الصفحة. افتح التطبيق من Chrome أو Safari مباشرة (مش من داخل واتساب أو فيسبوك) وعطّل أي حاجب إعلانات.",
+  };
+  box.querySelector(".yt-err-msg").textContent = MSG[code] || "حصلت مشكلة في تشغيل الفيديو.";
+  box.querySelector(".yt-err-code").textContent = "code " + code + " · " + (d.id || "");
+  box.querySelector(".yt-err-try").style.display = code === 100 ? "none" : "";
+  box.classList.remove("playing", "buffering");
+  box.classList.add("errored");
+}
+function ytSwitch(box, v, opts) {
+  opts = opts || {};
+  ytStore("ytvariant", v + "@" + (opts.auto ? Date.now() : 0));   // الاختيار اليدوي دايم، والتلقائي 24 ساعة
+  const wrap = document.createElement("div");
+  wrap.innerHTML = videoPlayerHtml(box.getAttribute("data-src"));
+  const fresh = wrap.firstElementChild;
+  box.replaceWith(fresh);
+  ytMount(fresh, v, opts.note || "");
+}
+function ytBindHelp(box) {
+  const btn = box.querySelector(".yt-help-btn"), panel = box.querySelector(".yt-help-panel"), msg = box.querySelector(".yt-help-msg"), rep = box.querySelector(".yt-report");
+  const render = async () => {
+    const d = box._diag || {};
+    const parts = [];
+    parts.push("طريقة التشغيل دلوقتي: <b>" + YT_VARIANT_NAMES[d.variant] + "</b>.");
+    if (d.note) parts.push(escapeHtml(d.note) + ".");
+    const app = ytInAppName();
+    if (app) parts.push("<b>أنت فاتح الصفحة من داخل تطبيق (" + escapeHtml(app) + ").</b> الفيديوهات ممكن ما تشتغلش هنا، افتح الرابط من Chrome أو Safari.");
+    if (d.error) parts.push("آخر خطأ من يوتيوب: <b>" + escapeHtml(d.error) + "</b>.");
+    msg.innerHTML = parts.join(" ") + "<br>جرّب طريقة تشغيل تانية من الأزرار، ولو لسه مش شغال انسخ التقرير وابعته للمعلم.";
+    box.querySelectorAll(".yt-help-actions button[data-v]").forEach(b => b.classList.toggle("on", Number(b.dataset.v) === d.variant));
+    rep.value = ytReport(box, "جاري الفحص...");
+    const pr = await ytProbe(d.id);
+    rep.value = ytReport(box, pr.text);
+    if (pr.ok === false) msg.innerHTML += "<br><b>" + escapeHtml(pr.text) + ".</b>";
+  };
+  btn.addEventListener("click", () => { panel.classList.toggle("open"); if (panel.classList.contains("open")) render(); });
+  box.querySelector(".yt-help-actions").addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.copy) {
+      rep.select();
+      let ok = false;
+      try { ok = document.execCommand("copy"); } catch (x) {}
+      if (!ok && navigator.clipboard) navigator.clipboard.writeText(rep.value).catch(() => {});
+      b.textContent = "اتنسخ";
+      setTimeout(() => { b.textContent = "نسخ تقرير المشكلة"; }, 1500);
+      return;
+    }
+    if (b.dataset.v !== undefined) ytSwitch(box, Number(b.dataset.v), { note: "اخترت الطريقة دي بنفسك" });
+  });
+  box.querySelector(".yt-err-try").addEventListener("click", () => {
+    const cur = (box._diag && box._diag.variant) || 0;
+    ytSwitch(box, (cur + 1) % 3, { note: "اتغيّرت بعد خطأ " + ((box._diag && box._diag.error) || "") });
+  });
+}
+function ytAutoFallback(box, reason) {
+  if (!box.isConnected || (box._diag && box._diag.variant !== 0)) return;
+  if (box._touched) { box.classList.add("plain"); return; }   // لو الطالب بدأ يشاهد فعلًا ما نعيدش التحميل عليه
+  ytSwitch(box, 1, { auto: true, note: "اتحوّل تلقائيًا للمشغّل العادي: " + reason });
 }
 function initVideoPlayers(root) {
-  root.querySelectorAll(".yt-player:not([data-ready])").forEach(box => {
-    box.setAttribute("data-ready", "1");
-    const url = box.getAttribute("data-src");
-    const id = ytIdFromUrl(url);
-    const stage = box.querySelector(".yt-stage");
-    let touched = false;
-    box.addEventListener("pointerdown", () => { touched = true; }, { once: true });
-    // لو مشغّلنا ما اشتغلش: بنرجّع لمشغّل يوتيوب العادي (بأزراره). لو الطالب بدأ يشاهد فعلًا بنسيبه من غير ما نعيد تحميله.
-    const plain = () => {
-      box.classList.add("plain");
+  root.querySelectorAll(".yt-player:not([data-ready])").forEach(box => ytMount(box, ytVariant(), ""));
+}
+function ytMount(box, variant, note) {
+  box.setAttribute("data-ready", "1");
+  const url = box.getAttribute("data-src");
+  const id = ytIdFromUrl(url);
+  const stage = box.querySelector(".yt-stage");
+  const diag = box._diag = { id, variant, api: "pending", ready: false, state: undefined, error: "", note };
+  box.addEventListener("pointerdown", () => { box._touched = true; }, { once: true });
+  ytBindHelp(box);
+  if (!id) {                                               // رابط مش يوتيوب معروف: iframe عادي
+    box.classList.add("plain"); diag.api = "n/a";
+    stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
+    return;
+  }
+  stage.insertAdjacentHTML("afterbegin", ytFrameHtml(id, "ytf_" + (++ytFrameSeq), variant));   // الفيديو بيظهر فورًا
+  if (variant !== 0) {
+    box.classList.add("plain");
+    // تشخيص بس: بنسمع لأخطاء يوتيوب ونعرضها بدل الشاشة السودا
+    ensureYT(ok => {
+      if (!box.isConnected) return;
+      diag.api = ok ? "loaded" : "failed";
+      if (!ok) return;
       const f = stage.querySelector("iframe");
-      if (f && touched) return;
-      const src = id ? `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&playsinline=1` : url;
-      if (f) { f.src = src; f.setAttribute("allowfullscreen", ""); }
-      else stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(src)}" allowfullscreen></iframe>`);
-    };
-    if (!id) return plain();
-    // الفيديو بيظهر فورًا (قبل ما مكتبة يوتيوب تتحمّل) وأول ضغطة عليه بتشتغل من غير ما نستنى
-    stage.insertAdjacentHTML("afterbegin", ytFrameHtml(id, "ytf_" + (++ytFrameSeq)));
-    ensureYT(ok => ok ? buildVideoPlayer(box, stage, id) : plain());
+      try { new YT.Player(f, { events: { onReady: () => { diag.ready = true; }, onStateChange: e => { diag.state = e.data; }, onError: e => ytShowError(box, e.data) } }); } catch (e) { diag.api = "error"; }
+    });
+    return;
+  }
+  ensureYT(ok => {
+    if (!box.isConnected) return;
+    if (!ok) { diag.api = "failed"; ytAutoFallback(box, "مكتبة يوتيوب ما اتحمّلتش"); return; }
+    diag.api = "loaded";
+    buildVideoPlayer(box, stage, id);
   });
 }
 
@@ -550,6 +709,8 @@ function buildVideoPlayer(box, stage, id) {
   const $ = s => box.querySelector(s);
   const btnPlay = $(".yt-play"), seek = $(".yt-seek"), time = $(".yt-time"), btnFs = $(".yt-fs-btn"), btnSpeed = $(".yt-speed"), btnMute = $(".yt-mute");
   const shield = $(".yt-shield"), shieldB = $(".yt-shield-b"), toast = $(".yt-toast"), speedMenu = $(".yt-speedmenu"), fxL = $(".yt-seekfx-l"), fxR = $(".yt-seekfx-r");
+  const diag = box._diag || (box._diag = {});
+  let readyTimer = null, startTimer = null;
   let player = null, timer = null, dragging = false, fsMode = null, autoFs = false, hideTimer = null, toastTimer = null, fxTimer = null;
   let speedList = YT_SPEEDS.slice();
   let speed = parseFloat(ytStore("ytspeed")) || 1;
@@ -560,10 +721,19 @@ function buildVideoPlayer(box, stage, id) {
 
   const fmt = t => { t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
   let wdTimer = null;
+  // لو المشغّل المطوّر ما بدأش بعد الضغط على الفيديو (٥ ثواني) بنحوّل للمشغّل العادي تلقائيًا
+  function armStartWatch() {
+    clearTimeout(startTimer);
+    startTimer = setTimeout(() => {
+      const c = box.classList;
+      if (c.contains("playing") || c.contains("buffering") || c.contains("errored") || c.contains("ended")) return;
+      ytAutoFallback(box, "الفيديو مبدأش بعد الضغط");
+    }, 5000);
+  }
   const isPlaying = () => !!(player && player.getPlayerState && player.getPlayerState() === 1);
   const toggle = () => {
     if (!player || !player.getPlayerState) return;
-    if (isPlaying()) player.pauseVideo(); else { player.playVideo(); armWatchdog(); }
+    if (isPlaying()) player.pauseVideo(); else { player.playVideo(); armWatchdog(); armStartWatch(); }
   };
   // لو أمر التشغيل البرمجي اتحجب (سياسات الموبايل)، بنفتح منتصف الفيديو عشان الضغطة الجاية توصل ليوتيوب مباشرة
   function armWatchdog() {
@@ -786,17 +956,15 @@ function buildVideoPlayer(box, stage, id) {
   });
   window.addEventListener("pagehide", () => { if (box.classList.contains("playing")) savePos(false); });
 
-  const ERR = {
-    2: "رابط الفيديو غير صالح.",
-    5: "المتصفح مقدرش يشغّل الفيديو ده. جرّب تحدّث الصفحة.",
-    100: "الفيديو ده اتحذف أو بقى خاص.",
-    101: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
-    150: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
-  };
+  // الضغط جوه الفيديو نفسه (مش على غطاءنا) بيعمل blur للنافذة: نراقب إن التشغيل بدأ
+  window.addEventListener("blur", () => { setTimeout(() => { if (box.isConnected && document.activeElement === frame) armStartWatch(); }, 0); });
+  readyTimer = setTimeout(() => { if (!diag.ready) ytAutoFallback(box, "المشغّل المطوّر ما استجابش"); }, 7000);
   player = new YT.Player(frame, { events: {
-    onReady: () => { box.classList.add("ready"); buildSpeedMenu(); syncMute(); tick(); },
+    onReady: () => { diag.ready = true; clearTimeout(readyTimer); box.classList.add("ready"); buildSpeedMenu(); syncMute(); tick(); },
     onStateChange: e => {
       const st = e.data, playing = st === 1;
+      diag.state = st;
+      if (playing || st === 3) clearTimeout(startTimer);
       box.classList.toggle("playing", playing);
       if (playing) { box.classList.add("live"); clearTimeout(wdTimer); }
       box.classList.toggle("buffering", st === 3);
@@ -811,12 +979,7 @@ function buildVideoPlayer(box, stage, id) {
       if (st === 0) savePos(true);
       tick(); poke();
     },
-    onError: e => {
-      box.querySelector(".yt-err-msg").textContent = ERR[e.data] || "حصلت مشكلة في تشغيل الفيديو.";
-      box.querySelector(".yt-err-code").textContent = "code " + e.data + " · " + id;
-      box.classList.remove("playing", "buffering");
-      box.classList.add("errored");
-    }
+    onError: e => { clearTimeout(startTimer); ytShowError(box, e.data); }
   }});
   seek.addEventListener("input", () => { dragging = true; time.textContent = fmt(seek.value) + " / " + fmt(seek.max); });
   seek.addEventListener("change", () => { if (player && player.seekTo) player.seekTo(Number(seek.value), true); dragging = false; tick(); seek.blur(); });
