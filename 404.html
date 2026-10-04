@@ -3,44 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex">
-<title>جاري فتح الرابط...</title>
+<title>جاري فتح الامتحان...</title>
 <style>
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif; background: #F4F1EA; color: #1B2420; text-align: center; padding: 1.5rem; box-sizing: border-box; }
-  .box { max-width: 26rem; }
-  h1 { font-size: 1.25rem; margin: 0 0 .6rem; }
-  p { margin: 0 0 1rem; line-height: 1.7; }
-  a { display: inline-block; padding: .6rem 1.2rem; border-radius: .6rem; background: #1B2420; color: #fff; text-decoration: none; }
-  .spin { width: 2rem; height: 2rem; border: 3px solid #cfcabd; border-top-color: #1B2420; border-radius: 50%; margin: 0 auto 1rem; animation: s 0.8s linear infinite; }
-  @keyframes s { to { transform: rotate(360deg); } }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #16302B; color: #F5F1E6; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; text-align: center; padding: 1.5rem; }
+  p { font-size: 1.05rem; line-height: 1.9; }
+  a { color: #D4A93B; }
 </style>
 </head>
 <body>
-<div class="box" id="box">
-  <div class="spin" id="spin"></div>
-  <h1 id="title">جاري فتح الرابط...</h1>
-  <p id="msg"></p>
-</div>
+<p id="msg">جاري فتح الامتحان...</p>
 <script>
-/* GitHub Pages بيعرض الملف ده لأي مسار مالوش ملف حقيقي. لو المسار شكله /e/CODE
-   بنحوّله لـ exam.html?code=CODE (اللي بيرجّع العنوان لـ /e/CODE بعد التحميل). غير كده: رسالة "غير موجود". */
-(function () {
-  var m = /^(.*\/)e\/([A-Za-z0-9]{4,12})\/?$/.exec(window.location.pathname);
-  if (m) {
-    var target = m[1] + "exam.html?code=" + encodeURIComponent(m[2]) + (window.location.hash || "");
-    window.location.replace(target);
-    return;
-  }
-  document.getElementById("spin").style.display = "none";
-  document.getElementById("title").textContent = "الصفحة غير موجودة";
-  var base = window.location.pathname.replace(/[^\/]*$/, "");
-  var msg = document.getElementById("msg");
-  msg.textContent = "الرابط اللي فتحته غير صحيح أو لم يعد متاحًا.";
-  var a = document.createElement("a");
-  a.href = base.split("/").length > 2 ? "/" + base.split("/")[1] + "/" : "/";
-  a.textContent = "الصفحة الرئيسية";
-  msg.parentNode.appendChild(a);
-})();
+/* الرابط القصير: .../e/ABC123 → بنسأل الـWorker عن الامتحان وبنحوّل لـexam.html.
+   GitHub Pages بيعرض الصفحة دي لأي مسار مش موجود، فبنتعامل بس مع شكل /e/كود. */
+const WORKER = "https://register-class-auth.abm319.workers.dev";
+const m = /^(.*)\/e\/([A-Za-z0-9]{6})\/?$/.exec(location.pathname);
+const msg = document.getElementById("msg");
+function bad(t) { msg.innerHTML = t + "<br><a href=\"" + (m ? m[1] : "") + "/\">الصفحة الرئيسية</a>"; }
+if (!m) {
+  bad("الصفحة دي مش موجودة.");
+} else {
+  fetch(WORKER + "/resolve-exam?code=" + encodeURIComponent(m[2].toUpperCase()))
+    .then(r => r.json().catch(() => ({})))
+    .then(d => {
+      if (d && d.ok && d.examId) location.replace(m[1] + "/exam.html?examId=" + encodeURIComponent(d.examId));
+      else bad("رابط الامتحان غير صالح أو الامتحان اتحذف. اطلب الرابط من المعلم تاني.");
+    })
+    .catch(() => bad("مقدرتش أفتح الامتحان. تأكد من النت وحاول تاني."));
+}
 </script>
 </body>
 </html>
