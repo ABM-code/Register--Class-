@@ -464,8 +464,19 @@ function ensureYT(cb) {
   }
 }
 function ytIdFromUrl(u) {
-  const m = /(?:embed\/|[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(u || "");
+  const s = String(u || "").trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  const m = /(?:embed\/|shorts\/|live\/|\/v\/|[?&]v=|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(s);
   return m ? m[1] : null;
+}
+/* بيدوّر على الفيديو في أي حقل ممكن السيرفر يرجّعه بيه، ويطلّع رابط embed موحّد */
+function matVideoSrc(m) {
+  const cands = [m.url, m.videoUrl, m.embedUrl, m.youtubeUrl, m.link, m.videoId, m.youtubeId, m.ytId, m.id_video];
+  for (const c of cands) {
+    const id = ytIdFromUrl(c);
+    if (id) return "https://www.youtube.com/embed/" + id;
+  }
+  return String(m.url || "");
 }
 const YT_SEEK_STEP = 10;
 const YT_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
@@ -477,8 +488,8 @@ function ytStore(k, v) {
   } catch (e) {}
   return null;
 }
-function videoPlayerHtml(url) {
-  return `<div class="yt-player" data-src="${escapeHtml(url)}">
+function videoPlayerHtml(url, keys) {
+  return `<div class="yt-player" data-src="${escapeHtml(url)}" data-keys="${escapeHtml(keys || "")}">
     <div class="yt-stage">
       <div class="yt-bigplay"><span>${icon("play")}</span></div>
       <div class="yt-spinner"></div>
@@ -562,6 +573,8 @@ function ytReport(box, probeText) {
     "تقرير تشغيل الفيديو",
     "الصفحة: " + location.origin + location.pathname,
     "الفيديو: " + (d.id || "-"),
+    "الرابط اللي وصل للصفحة: " + (box.getAttribute("data-src") ? box.getAttribute("data-src").slice(0, 140) : "فاضي"),
+    "الحقول اللي وصلت من السيرفر: " + (box.getAttribute("data-keys") || "-"),
     "طريقة التشغيل: " + (YT_VARIANT_NAMES[d.variant] || "-") + (d.note ? " | " + d.note : ""),
     "مكتبة يوتيوب (API): " + (d.api || "-") + " | جاهز: " + (d.ready ? "نعم" : "لا"),
     "آخر حالة: " + (d.state === undefined ? "-" : d.state) + " | آخر خطأ: " + (d.error || "مفيش"),
@@ -582,11 +595,12 @@ function ytShowError(box, code) {
     100: "الفيديو ده اتحذف أو بقى خاص.",
     101: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
     150: "صاحب الفيديو منع تشغيله خارج يوتيوب. (للمعلم: فعّل \"السماح بالتضمين\" للفيديو من YouTube Studio)",
+    "no-id": "رابط الفيديو مش واصل للصفحة بشكل صحيح. بلّغ المعلم وابعتله تقرير المشكلة.",
     153: "يوتيوب مش قادر يتأكد من مصدر الصفحة. افتح التطبيق من Chrome أو Safari مباشرة (مش من داخل واتساب أو فيسبوك) وعطّل أي حاجب إعلانات.",
   };
   box.querySelector(".yt-err-msg").textContent = MSG[code] || "حصلت مشكلة في تشغيل الفيديو.";
   box.querySelector(".yt-err-code").textContent = "code " + code + " · " + (d.id || "");
-  box.querySelector(".yt-err-try").style.display = code === 100 ? "none" : "";
+  box.querySelector(".yt-err-try").style.display = (code === 100 || code === "no-id") ? "none" : "";
   box.classList.remove("playing", "buffering");
   box.classList.add("errored");
 }
@@ -594,7 +608,7 @@ function ytSwitch(box, v, opts) {
   opts = opts || {};
   ytStore("ytvariant", v + "@" + (opts.auto ? Date.now() : 0));   // الاختيار اليدوي دايم، والتلقائي 24 ساعة
   const wrap = document.createElement("div");
-  wrap.innerHTML = videoPlayerHtml(box.getAttribute("data-src"));
+  wrap.innerHTML = videoPlayerHtml(box.getAttribute("data-src"), box.getAttribute("data-keys"));
   const fresh = wrap.firstElementChild;
   box.replaceWith(fresh);
   ytMount(fresh, v, opts.note || "");
@@ -652,8 +666,10 @@ function ytMount(box, variant, note) {
   const diag = box._diag = { id, variant, api: "pending", ready: false, state: undefined, error: "", note };
   box.addEventListener("pointerdown", () => { box._touched = true; }, { once: true });
   ytBindHelp(box);
-  if (!id) {                                               // رابط مش يوتيوب معروف: iframe عادي
-    box.classList.add("plain"); diag.api = "n/a";
+  if (!id) {                                               // رابط مش يوتيوب معروف
+    diag.api = "n/a";
+    if (!/^https?:\/\//i.test(url || "") || /youtube|youtu\.be/i.test(url)) { ytShowError(box, "no-id"); return; }   // فاضي أو يوتيوب مش مفهوم: رسالة واضحة بدل الشاشة السودا
+    box.classList.add("plain");
     stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
     return;
   }
@@ -996,7 +1012,7 @@ function buildVideoPlayer(box, stage, id) {
 function renderMaterialCard(m) {
   let bodyHtml = "";
   if (m.type === "video") {
-    bodyHtml = videoPlayerHtml(m.url);
+    bodyHtml = videoPlayerHtml(matVideoSrc(m), Object.keys(m).join(","));
   } else if (m.type === "image") {
     bodyHtml = `<img class="mat-image" src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}">`;
   } else if (m.type === "pdf") {
