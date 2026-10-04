@@ -1721,7 +1721,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v86 — رجوع زرار مشاركة الامتحان + الرابط القصير للامتحانات (/e/كود) — 4 أكتوبر 2026";
+const APP_VERSION = "v87 — عبارة «رسالة مسجلة» بخط عريض في منتصف السطر الأول + درجة الامتحان في سطر جديد داخل رسائل واتساب — 4 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -3437,7 +3437,8 @@ function toEnglishDigits(str) {
   });
 }
 // أول سطر في أي رسالة واتساب بتتبعت من كارت الطالب (غيّر النص هنا لو عايز عبارة تانية)
-const WA_AUTO_PREFIX = "رسالة مسجلة";
+/* واتساب مش بيدعم توسيط، فبنحط زخرفة متماثلة على الجنبين عشان العبارة تبان في النص، و*...* بتخلّيها بخط عريض */
+const WA_AUTO_PREFIX = "━━ *رسالة مسجلة* ━━";
 function waMsg(text) { return WA_AUTO_PREFIX + "\n" + text; }
 function formatPhoneForWhatsapp(phone) {
   let digits = (phone || "").replace(/[^0-9]/g, "");
@@ -7181,7 +7182,7 @@ function sendExamResultWhatsapp(r) {
   const waNumber = formatPhoneForWhatsapp(r.parentPhone);
   if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-  const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
+  const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
 }
@@ -7195,7 +7196,7 @@ function startWhatsappQueue() {
   waQueue = list.map(r => {
     const waNumber = formatPhoneForWhatsapp(r.parentPhone);
     const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
-    const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}": ${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
+    const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
     return { name: r.studentName, phone: r.parentPhone || "", waNumber, message };
   });
   waQueueIndex = 0;
