@@ -471,6 +471,22 @@
   .yt-player.yt-fs.hide-controls .yt-speedmenu { display: none; }
   .yt-player.yt-fake { position: fixed; top: 0; left: 0; z-index: 2147483000; transform-origin: 0 0; }
   @media (prefers-reduced-motion: reduce) { .yt-spinner { animation: none; } .yt-seekfx, .yt-toast, .yt-controls { transition: none; } }
+  /* لوحة الإشعارات: متثبّتة على الشاشة (كانت بتتقص من الحافة بعد نقل الأزرار لقائمة الإعدادات) */
+  #notifCenterPanel { position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(92vw, 380px); max-height: min(70vh, 560px); overflow-y: auto; background: var(--c-cardbg); border-radius: 14px; box-shadow: 0 10px 28px rgba(0,0,0,0.3); z-index: 60; padding: 0.7rem; }
+  @media (min-width: 900px) { #notifCenterPanel { left: calc(50% - 116px); } }
+  /* ===== الإشعارات التفصيلية ===== */
+  .nt-item { cursor: pointer; padding: 0.65rem 0.55rem; border-bottom: 1px solid rgba(0,0,0,0.07); font-size: 0.85rem; color: var(--c-textoncard); border-radius: 8px; transition: background 0.15s ease; }
+  .nt-item:hover { background: rgba(0,0,0,0.04); }
+  .nt-top { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.15rem; }
+  .nt-mid { color: var(--c-mutedoncard); font-size: 0.8rem; margin-bottom: 0.35rem; line-height: 1.6; }
+  .nt-bot { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .nt-time { font-size: 0.72rem; color: var(--c-mutedoncard); }
+  .nt-more { text-align: center; font-size: 0.75rem; color: var(--c-mutedoncard); padding: 0.55rem; }
+  .res-flash { animation: resflash 2.8s ease; }
+  @keyframes resflash { 0%, 70% { box-shadow: 0 0 0 3px var(--c-accent); background: var(--c-warnbg); } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .nt-toast { position: fixed; top: calc(0.8rem + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%) translateY(-140%); z-index: 400; width: min(92vw, 380px); background: var(--c-cardbg); color: var(--c-textoncard); border-radius: 14px; padding: 0.7rem 0.9rem; box-shadow: 0 10px 28px rgba(0,0,0,0.32); border-right: 4px solid var(--c-accent); cursor: pointer; font-size: 0.85rem; line-height: 1.6; transition: transform 0.3s ease; direction: rtl; }
+  .nt-toast.show { transform: translateX(-50%) translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .res-flash { animation: none; } .nt-toast { transition: none; } }
   /* ===== المرحلة 3: الداشبورد + الامتحانات + النتائج + حالات فاضية ===== */
   .stats-row { flex-wrap: wrap; }
   .stats-row .stat-card { min-width: 105px; padding: 0.8rem 0.85rem 0.7rem; border-radius: 14px; border-top: 3px solid var(--sc, var(--c-accent)); }
@@ -585,6 +601,7 @@
   <div class="sd-list">
     <button class="sd-item" id="smartSearchBtn" onclick="closeSettingsDrawer(); openSmartSearch()"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>البحث الشامل</span></button>
     <button class="sd-item" id="themeToggleBtn" onclick="toggleTheme()"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg><span>الشكل الفاتح</span></button>
+    <button class="sd-item" id="notifSoundBtn" onclick="toggleNotifSound()"><svg class="ic" aria-hidden="true"><use href="#i-volume-2"/></svg><span>صوت الإشعارات: شغّال</span></button>
     <div class="sd-sep"></div>
     <button class="sd-item" id="brandSettingsBtn" onclick="closeSettingsDrawer(); openBrandSettings()"><svg class="ic" aria-hidden="true"><use href="#i-tag"/></svg><span>الهوية والعلامة</span></button>
     <button class="sd-item" id="changePasswordBtn" onclick="closeSettingsDrawer(); openChangePassword()"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><span>كلمة السر</span></button>
@@ -624,7 +641,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
         <svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>
         <span id="notifCenterBadge" class="badge-dot" style="display:none; position:absolute; top:-4px; left:-4px;">0</span>
       </button>
-      <div id="notifCenterPanel" style="display:none; position:absolute; top:calc(100% + 8px); left:0; width:300px; max-width:80vw; max-height:380px; overflow-y:auto; background:var(--c-cardbg); border-radius:12px; box-shadow:0 10px 28px rgba(0,0,0,0.28); z-index:60; padding:0.7rem;">
+      <div id="notifCenterPanel" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
           <strong style="font-family:'Fraunces',serif; font-size:0.95rem; color:var(--c-textoncard);">الإشعارات</strong>
           <span onclick="markAllNotificationsSeen()" style="cursor:pointer; font-size:0.72rem; color:var(--c-mutedoncard); font-weight:600;">تعليم الكل كمقروء</span>
@@ -1704,7 +1721,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v84 — الفيديو: طرق تشغيل بديلة تلقائية + تقرير تشخيص + فاحص فيديوهات المكتبة + سياسة referrer — 3 أكتوبر 2026";
+const APP_VERSION = "v85 — إشعارات تفصيلية (اسم الطالب + المرحلة + الامتحان + الدرجة) + الضغط على الإشعار يروح لنتيجة الطالب من غير فتح إجاباته + صوت تنبيه + عدّاد على أيقونة التطبيق — 4 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1783,14 +1800,93 @@ function isStatsTabVisible() {
   return el && el.style.display !== "none";
 }
 
-function maybeNotifyNewResult(r) {
-  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+/* ===== إشعارات النتائج الجديدة: تفاصيل + صوت + إشعار نظام + تنبيه جوه التطبيق ===== */
+const NOTIF_BASE_TITLE = document.title;
+function notifResultInfo(r) {
+  const ex = exams.find(e => e.id === r.examId);
+  const st = students.find(x => x.id === r.studentId);
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  return { examTitle: (ex && ex.title) || r.examTitle || "", stage: (st && st.stage) || r.stage || (ex && ex.stage) || "", examStage: (ex && ex.stage) || "", pct };
+}
+function notifSoundEnabled() { try { return localStorage.getItem("notifSound") !== "0"; } catch (e) { return true; } }
+let lastNotifSoundAt = 0;
+function playNotifSound(force) {
+  if (!force && !notifSoundEnabled()) return;
+  const now = Date.now();
+  if (!force && now - lastNotifSoundAt < 1200) return;   // لو وصلت نتايج كتير مرة واحدة، صوت واحد بس
+  lastNotifSoundAt = now;
+  try { playToneSequence([{ freq: 988, start: 0, duration: 0.12 }, { freq: 1319, start: 0.12, duration: 0.14 }, { freq: 1568, start: 0.26, duration: 0.24 }]); } catch (e) {}
+}
+function renderNotifSoundBtn() {
+  const b = document.getElementById("notifSoundBtn");
+  if (!b) return;
+  const on = notifSoundEnabled();
+  b.innerHTML = icon(on ? "volume-2" : "volume-x") + "<span>صوت الإشعارات: " + (on ? "شغّال" : "مقفول") + "</span>";
+}
+function toggleNotifSound() {
+  const on = !notifSoundEnabled();
+  try { localStorage.setItem("notifSound", on ? "1" : "0"); } catch (e) {}
+  renderNotifSoundBtn();
+  if (on) playNotifSound(true);
+}
+// المتصفح بيمنع الصوت لحد أول لمسة، فبنجهّز الصوت عند أول لمسة
+document.addEventListener("pointerdown", () => { try { getQrAudioCtx(); } catch (e) {} }, { once: true });
+
+// عدد الإشعارات على أيقونة التطبيق (لما يكون متثبّت على الموبايل/الكمبيوتر) وعلى عنوان التاب
+function updateAppBadge(n) {
   try {
-    new Notification("نتيجة جديدة: " + (r.studentName || ""), {
-      body: `${r.examTitle || ""} — ${r.score}/${r.total} (${pct}%)`,
+    if ("setAppBadge" in navigator) {
+      if (n > 0) navigator.setAppBadge(n).catch(() => {});
+      else if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+    }
+  } catch (e) {}
+  try { document.title = (n > 0 ? "(" + (n > 99 ? "99+" : n) + ") " : "") + NOTIF_BASE_TITLE; } catch (e) {}
+}
+function timeAgoAr(ms) {
+  const sec = Math.max(0, Math.round((Date.now() - ms) / 1000));
+  if (sec < 45) return "الآن";
+  const min = Math.round(sec / 60);
+  if (min < 60) return min === 1 ? "من دقيقة" : min === 2 ? "من دقيقتين" : min <= 10 ? "من " + min + " دقايق" : "من " + min + " دقيقة";
+  const h = Math.round(min / 60);
+  if (h < 24) return h === 1 ? "من ساعة" : h === 2 ? "من ساعتين" : h <= 10 ? "من " + h + " ساعات" : "من " + h + " ساعة";
+  const d = Math.round(h / 24);
+  return d === 1 ? "من يوم" : d === 2 ? "من يومين" : "من " + d + " أيام";
+}
+function getNotifSeenIds() {
+  try { return new Set(JSON.parse(localStorage.getItem("notifSeenIds") || "[]")); } catch (e) { return new Set(); }
+}
+function markNotifResultSeen(resultId) {
+  try {
+    const ids = [...getNotifSeenIds(), resultId].slice(-400);
+    localStorage.setItem("notifSeenIds", JSON.stringify(ids));
+  } catch (e) {}
+}
+let notifToastTimer = null;
+function showNewResultToast(r, info) {
+  let t = document.getElementById("ntToast");
+  if (!t) { t = document.createElement("div"); t.id = "ntToast"; t.className = "nt-toast"; document.body.appendChild(t); }
+  t.innerHTML = `<strong>نتيجة جديدة: ${escapeHtml(r.studentName || "")}</strong>${info.stage ? ` <span class="stage-tag">${escapeHtml(info.stage)}</span>` : ""}<br><span style="color:var(--c-mutedoncard);">${escapeHtml(info.examTitle)} · ${r.score}/${r.total} (${info.pct}%)</span>`;
+  t.onclick = () => { t.classList.remove("show"); openNotificationResult(r.id, r.examId); };
+  requestAnimationFrame(() => t.classList.add("show"));
+  clearTimeout(notifToastTimer);
+  notifToastTimer = setTimeout(() => t.classList.remove("show"), 6000);
+}
+function maybeNotifyNewResult(r) {
+  playNotifSound();
+  const info = notifResultInfo(r);
+  try { showNewResultToast(r, info); } catch (e) {}
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  try {
+    const n = new Notification("نتيجة جديدة: " + (r.studentName || ""), {
+      body: `امتحان «${info.examTitle}»${info.stage ? " — " + info.stage : ""}\n${r.score}/${r.total} (${info.pct}%)`,
       icon: "icon-192.png",
+      badge: "icon-192.png",
+      tag: "result_" + (r.id || Date.now()),
+      renotify: true,
+      vibrate: [200, 100, 200],
+      silent: false,
     });
+    n.onclick = () => { try { window.focus(); n.close(); } catch (e) {} openNotificationResult(r.id, r.examId); };
   } catch (e) {}
 }
 
@@ -1879,7 +1975,7 @@ function startSync() {
     if (!firstResultsSnapshot) {
       snapshot.docChanges().forEach(change => {
         if (change.type === "added" && !change.doc.metadata.hasPendingWrites && !change.doc.data().deletedAt) {
-          maybeNotifyNewResult(change.doc.data());
+          maybeNotifyNewResult({ id: change.doc.id, ...change.doc.data() });
         }
       });
     }
@@ -3948,32 +4044,34 @@ function updateExamsBadge() {
 function computeNotifications() {
   const notifications = [];
   const now = Date.now();
-  exams.forEach(ex => {
-    const examLastSeen = getExamLastSeen(ex.id);
-    const newCount = examResults.filter(r => r.examId === ex.id && r.submittedAt && r.submittedAt.toMillis && r.submittedAt.toMillis() > examLastSeen).length;
-    if (newCount > 0) {
-      notifications.push({
-        kind: "new_results",
-        examId: ex.id,
-        sortKey: 2000000000000 + newCount,
-        html: `<strong>${newCount}</strong> نتيجة جديدة في "${escapeHtml(ex.title)}"`,
-      });
+  const seenIds = getNotifSeenIds();
+  const examById = new Map(exams.map(e => [e.id, e]));
+  // كل نتيجة جديدة إشعار مستقل (اسم الطالب + المرحلة + الامتحان + الدرجة)
+  examResults.forEach(r => {
+    const ex = examById.get(r.examId);
+    if (!ex || !r.submittedAt || !r.submittedAt.toMillis) return;
+    const ms = r.submittedAt.toMillis();
+    if (ms > getExamLastSeen(r.examId) && !seenIds.has(r.id)) {
+      notifications.push({ kind: "new_result", examId: r.examId, resultId: r.id, result: r, exam: ex, ms, sortKey: 2000000000000 + ms });
     }
+  });
+  exams.forEach(ex => {
     const deadlinePassed = !!(ex.deadline && new Date(ex.deadline) < now);
     const isClosed = !!ex.closedManually || deadlinePassed;
     if (!isClosed && ex.deadline) {
       const msLeft = new Date(ex.deadline).getTime() - now;
       if (msLeft > 0 && msLeft <= 24 * 60 * 60 * 1000) {
-        const stageStudentCount = students.filter(s => s.stage === ex.stage).length;
+        const stageStudents = students.filter(s => s.stage === ex.stage);
         const submittedIds = new Set(examResults.filter(r => r.examId === ex.id).map(r => r.studentId));
-        const missingCount = students.filter(s => s.stage === ex.stage && !submittedIds.has(s.id)).length;
-        if (missingCount > 0 && stageStudentCount > 0) {
+        const missing = stageStudents.filter(s => !submittedIds.has(s.id));
+        if (missing.length > 0 && stageStudents.length > 0) {
           const hoursLeft = Math.max(1, Math.round(msLeft / (60 * 60 * 1000)));
+          const names = missing.slice(0, 3).map(s => escapeHtml(s.name)).join("، ");
           notifications.push({
             kind: "deadline",
             examId: ex.id,
             sortKey: 1000000000000 - msLeft,
-            html: `<svg class="ic" aria-hidden="true"><use href="#i-alarm"/></svg> امتحان "${escapeHtml(ex.title)}" هيقفل خلال ${hoursLeft} ساعة، و${missingCount} طالب لسه ما دخلش`,
+            html: `<svg class="ic" aria-hidden="true"><use href="#i-alarm"/></svg> امتحان "${escapeHtml(ex.title)}"${ex.stage ? ` <span class="stage-tag">${escapeHtml(ex.stage)}</span>` : ""} هينتهي خلال ${hoursLeft} ساعة. <strong>${missing.length}</strong> طالب لسه ما سلّموش: ${names}${missing.length > 3 ? " وغيرهم" : ""}`,
           });
         }
       }
@@ -3983,26 +4081,60 @@ function computeNotifications() {
   return notifications;
 }
 
+function renderNotifItem(n) {
+  if (n.kind === "new_result") {
+    const r = n.result, info = notifResultInfo(r);
+    const tier = info.pct >= 85 ? "sc-high" : info.pct >= 50 ? "sc-mid" : "sc-low";
+    return `<div class="nt-item" onclick="openNotificationResult('${escapeHtml(r.id)}','${escapeHtml(r.examId)}')">
+      <div class="nt-top"><strong>${escapeHtml(r.studentName || "")}</strong>${info.stage ? ` <span class="stage-tag">${escapeHtml(info.stage)}</span>` : ""}${isResultTorail(r) ? ` <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">طوريل</span>` : ""}</div>
+      <div class="nt-mid">سلّم امتحان «${escapeHtml(info.examTitle)}»${info.examStage && info.examStage !== info.stage ? " (" + escapeHtml(info.examStage) + ")" : ""}</div>
+      <div class="nt-bot"><span class="result-row-score ${tier}">${r.score}/${r.total} (${info.pct}%)</span><span class="nt-time">${timeAgoAr(n.ms)}</span></div>
+    </div>`;
+  }
+  return `<div class="nt-item" onclick="openNotificationItem('${escapeHtml(n.examId)}')">${n.html}</div>`;
+}
 function renderNotificationCenter() {
   const badge = document.getElementById("notifCenterBadge");
   const list = document.getElementById("notifCenterList");
   if (!badge || !list) return;
   const notifications = computeNotifications();
-  if (notifications.length > 0) {
-    badge.textContent = notifications.length;
+  const count = notifications.length;
+  if (count > 0) {
+    badge.textContent = count > 99 ? "99+" : count;
     badge.style.display = "inline-block";
   } else {
     badge.style.display = "none";
   }
+  updateAppBadge(count);
   const panel = document.getElementById("notifCenterPanel");
   if (panel && panel.style.display === "block") {
-    list.innerHTML = notifications.length
-      ? notifications.map(n => `
-          <div onclick="openNotificationItem('${n.examId}')" style="cursor:pointer; padding:0.6rem 0.5rem; border-bottom:1px solid rgba(0,0,0,0.06); font-size:0.85rem; color:var(--c-textoncard);">
-            ${n.html}
-          </div>`).join("")
+    const shown = notifications.slice(0, 40);
+    list.innerHTML = count
+      ? shown.map(renderNotifItem).join("") + (count > shown.length ? `<div class="nt-more">و ${count - shown.length} إشعار أقدم</div>` : "")
       : `<div class="empty-state"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg><p>مفيش إشعارات جديدة <svg class="ic" aria-hidden="true"><use href="#i-sparkle"/></svg></p></div>`;
   }
+}
+
+// الضغط على إشعار نتيجة: يروح مباشرة لنتيجة الطالب (مقفولة، من غير ما تفتح إجاباته) ويعلّم عليها
+async function openNotificationResult(resultId, examId) {
+  const panel = document.getElementById("notifCenterPanel");
+  if (panel) panel.style.display = "none";
+  markNotifResultSeen(resultId);
+  switchTab("exams");
+  await viewExamResults(examId, { keepUnseen: true });
+  expandedResultId = null;
+  const list = getVisibleExamResultsList();
+  const idx = list.findIndex(r => r.id === resultId);
+  if (idx >= 0) resultsPage = Math.floor(idx / PAGE_SIZE) + 1;
+  renderExamResultsList();
+  renderNotificationCenter();
+  requestAnimationFrame(() => {
+    const el = document.getElementById("resrow_" + resultId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("res-flash");
+    setTimeout(() => el.classList.remove("res-flash"), 3000);
+  });
 }
 
 function toggleNotificationCenter() {
@@ -6512,9 +6644,9 @@ async function ensureExamResultsLoaded(examId, force) {
 function markExamSeen(examId) {
   try { localStorage.setItem("examSeen_" + examId, Date.now().toString()); } catch (e) {}
 }
-async function viewExamResults(examId) {
+async function viewExamResults(examId, opts) {
   viewingExamId = examId;
-  markExamSeen(examId);
+  if (!(opts && opts.keepUnseen)) markExamSeen(examId);   // opts.keepUnseen: فتح من إشعار واحد من غير ما نعلّم باقي نتائج الامتحان كمقروءة
   const ex = exams.find(e => e.id === examId);
   document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
   const searchInput = document.getElementById("examResultsSearchInput");
@@ -6981,7 +7113,7 @@ function renderExamResultsList() {
         ` : ""}
       </div>` : "";
     return `
-      <div class="result-row-wrap">
+      <div class="result-row-wrap" id="resrow_${r.id}">
         <div class="result-row" style="cursor:pointer;" onclick="toggleResultExpand('${r.id}')">
           <div style="display:flex; align-items:center; gap:0.6rem;">
             <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
@@ -7958,6 +8090,7 @@ async function showApp() {
     await migrateLegacyDataToTeacher(currentTeacherId);
   } catch (e) { console.error(e); }
   startSync();
+  try { renderNotifSoundBtn(); } catch (e) {}
   if (typeof AppBack !== "undefined") AppBack.start();   // زر الرجوع في التليفون
 }
 
@@ -8030,6 +8163,7 @@ function handleAvatarChange(file) {
 
 function logoutApp() {
   stopInactivityWatcher();
+  try { updateAppBadge(0); } catch (e) {}
   auth.signOut().then(() => location.reload()).catch(() => location.reload());
 }
 
