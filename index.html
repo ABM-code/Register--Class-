@@ -887,9 +887,14 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
       <p id="matStatusMsg" style="font-size:0.82rem; margin:0.6rem 0 0; display:none;"></p>
     </div>
 
-    <button id="copyMaterialsLinkBtn" class="backup-btn" onclick="copyMaterialsPageLink()" style="margin-bottom:1rem;">
-      <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> نسخ رابط المكتبة للطلاب
-    </button>
+    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+      <button id="copyMaterialsLinkBtn" class="backup-btn" onclick="copyMaterialsPageLink()" style="flex:1; margin:0;">
+        <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> نسخ رابط المكتبة للطلاب
+      </button>
+      <button id="openMaterialsLinkBtn" class="backup-btn" onclick="openMaterialsPage()" style="flex:1; margin:0;">
+        <svg class="ic" aria-hidden="true"><use href="#i-book"/></svg> فتح المكتبة
+      </button>
+    </div>
 
     <div class="tools-group-title" style="display:flex; align-items:center; justify-content:space-between;">
       المحتوى الحالي
@@ -1721,7 +1726,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v87 — عبارة «رسالة مسجلة» بخط عريض في منتصف السطر الأول + درجة الامتحان في سطر جديد داخل رسائل واتساب — 4 أكتوبر 2026";
+const APP_VERSION = "v88 — زرار «فتح المكتبة» بجوار نسخ رابط المكتبة في كارت المحتوى التعليمي — 4 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -4616,6 +4621,10 @@ function copyMaterialsPageLink() {
   } else {
     prompt("انسخ الرابط ده يدوي:", MATERIALS_PAGE_URL);
   }
+}
+
+function openMaterialsPage() {
+  window.open(MATERIALS_PAGE_URL, "_blank", "noopener");
 }
 
 function onMaterialTypeChange() {
