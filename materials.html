@@ -333,7 +333,40 @@ function renderStudentPicker() {
     suggestionsBox.innerHTML = "";
   }
 
+  /* ===== عدّاد القفل بعد 5 محاولات غلط (القفل نفسه بيتفرض من السيرفر، ده عرض بس) ===== */
+  const lockUntilByStudent = {};
+  let lockTimer = null;
+  function stopLockTimer() {
+    if (lockTimer) { clearInterval(lockTimer); lockTimer = null; }
+    pinInput.disabled = false;
+  }
+  function startLockCountdown(studentId, endMs) {
+    stopLockTimer();
+    pinInput.disabled = true;
+    pinInput.value = "";
+    enterBtn.disabled = true;
+    enterBtn.textContent = "ادخل المكتبة";
+    const tick = () => {
+      const left = Math.ceil((endMs - Date.now()) / 1000);
+      if (left <= 0) {
+        stopLockTimer();
+        delete lockUntilByStudent[studentId];
+        pinMsg.style.display = "none";
+        if (selectedStudent && selectedStudent.id === studentId) pinInput.focus();
+        return;
+      }
+      const mm = String(Math.floor(left / 60)).padStart(2, "0");
+      const ss = String(left % 60).padStart(2, "0");
+      pinMsg.textContent = `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. تقدر تحاول تاني بعد ${mm}:${ss}`;
+      pinMsg.style.color = "var(--c-danger)";
+      pinMsg.style.display = "block";
+    };
+    tick();
+    lockTimer = setInterval(tick, 1000);
+  }
+
   function resetPin() {
+    stopLockTimer();
     pinCard.style.display = "none";
     pinInput.value = "";
     pinMsg.style.display = "none";
@@ -361,7 +394,9 @@ function renderStudentPicker() {
         resetPin();
         if (selectedStudent) {
           pinCard.style.display = "block";
-          pinInput.focus();
+          const lu = lockUntilByStudent[selectedStudent.id];
+          if (lu && lu > Date.now()) startLockCountdown(selectedStudent.id, lu);
+          else pinInput.focus();
         }
       });
     });
@@ -395,9 +430,13 @@ function renderStudentPicker() {
       studentClaims = idTokenResult.claims;
       await loadMaterials();
     } catch (err) {
-      pinMsg.textContent = err.message === "locked"
-        ? `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. حاول تاني بعد ${err.remainingMin || 5} دقايق.`
-        : (err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.");
+      if (err.message === "locked") {
+        const endMs = Date.now() + (Number(err.remainingMin) || 5) * 60000;
+        lockUntilByStudent[selectedStudent.id] = endMs;
+        startLockCountdown(selectedStudent.id, endMs);
+        return;
+      }
+      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
       pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
       enterBtn.disabled = false;
