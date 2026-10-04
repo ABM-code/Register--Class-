@@ -213,6 +213,18 @@ const studentApp = firebase.apps.find(a => a.name === "student") || firebase.ini
 const auth = studentApp.auth();
 try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {}); } catch (e) {}
 
+/* زرار «الصفحة الرئيسية»: تسجيل خروج فوري للطالب (من جلسة المكتبة المنفصلة بس) وبعدها نرجع للرئيسية */
+document.addEventListener("click", e => {
+  const a = e.target.closest && e.target.closest(".home-back");
+  if (!a) return;
+  e.preventDefault();
+  const go = () => { location.href = a.getAttribute("href") || "index.html"; };
+  let done = false;
+  const once = () => { if (!done) { done = true; go(); } };
+  setTimeout(once, 1500); // لو الخروج اتأخر، منعلّقش المستخدم
+  auth.signOut().then(once, once);
+});
+
 const STAGES = ["Prep 1", "Prep 2", "Prep 3", "Sec 1", "Sec 2", "Sec 3"];
 
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
