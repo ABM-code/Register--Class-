@@ -176,9 +176,12 @@ const firebaseConfig = {
   messagingSenderId: "230991294181",
   appId: "1:230991294181:web:167cb0a370c68b6a6f6e0c"
 };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+/* تطبيق Firebase مستقل باسم "student" عشان دخول الطالب هنا ما يبدّلش جلسة المعلم في التطبيق الرئيسي.
+   الـ auth والـ Firestore لازم يطلعوا من نفس التطبيق عشان قراءات الطالب تفضل متوثّقة. */
+const studentApp = firebase.apps.find(a => a.name === "student") || firebase.initializeApp(firebaseConfig, "student");
+const db = studentApp.firestore();
+const auth = studentApp.auth();
+try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {}); } catch (e) {}
 
 function escapeHtml(s) {
   return (s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -313,7 +316,40 @@ function renderStudentPicker() {
     startBtn.textContent = "ابدأ الامتحان";
   }
 
+  /* ===== عدّاد القفل بعد 5 محاولات غلط (القفل نفسه بيتفرض من السيرفر، ده عرض بس) ===== */
+  const lockUntilByStudent = {};
+  let lockTimer = null;
+  function stopLockTimer() {
+    if (lockTimer) { clearInterval(lockTimer); lockTimer = null; }
+    pinInput.disabled = false;
+  }
+  function startLockCountdown(studentId, endMs) {
+    stopLockTimer();
+    pinInput.disabled = true;
+    pinInput.value = "";
+    startBtn.disabled = true;
+    startBtn.textContent = "ابدأ الامتحان";
+    const tick = () => {
+      const left = Math.ceil((endMs - Date.now()) / 1000);
+      if (left <= 0) {
+        stopLockTimer();
+        delete lockUntilByStudent[studentId];
+        pinMsg.style.display = "none";
+        if (selectedStudent && selectedStudent.id === studentId) pinInput.focus();
+        return;
+      }
+      const mm = String(Math.floor(left / 60)).padStart(2, "0");
+      const ss = String(left % 60).padStart(2, "0");
+      pinMsg.textContent = `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. تقدر تحاول تاني بعد ${mm}:${ss}`;
+      pinMsg.style.color = "var(--c-danger)";
+      pinMsg.style.display = "block";
+    };
+    tick();
+    lockTimer = setInterval(tick, 1000);
+  }
+
   function resetPin() {
+    stopLockTimer();
     pinVerified = false;
     pinCard.style.display = "none";
     pinInput.value = "";
@@ -332,7 +368,9 @@ function renderStudentPicker() {
     if (!selectedStudent) return;
     pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
     pinCard.style.display = "block";
-    pinInput.focus();
+    const lu = lockUntilByStudent[selectedStudent.id];
+    if (lu && lu > Date.now()) startLockCountdown(selectedStudent.id, lu);
+    else pinInput.focus();
   }
 
   searchInput.addEventListener("input", () => {
@@ -470,9 +508,13 @@ function renderStudentPicker() {
       pinMsg.style.display = "block";
       await checkAlreadySubmitted();
     } catch (err) {
-      pinMsg.textContent = err.message === "locked"
-        ? `تم قفل الدخول مؤقتًا بسبب محاولات كتيرة غلط. حاول تاني بعد ${err.remainingMin || 5} دقايق.`
-        : (err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.");
+      if (err.message === "locked") {
+        const endMs = Date.now() + (Number(err.remainingMin) || 5) * 60000;
+        lockUntilByStudent[selectedStudent.id] = endMs;
+        startLockCountdown(selectedStudent.id, endMs);
+        return;
+      }
+      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
       pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
       startBtn.disabled = true;
