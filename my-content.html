@@ -46,6 +46,10 @@
   .item-row:last-child { border-bottom: none; }
   .item-title { display: flex; align-items: center; gap: 0.55rem; font-weight: 500; font-size: 0.92rem; }
   .item-title .ic { color: var(--c-muted); }
+  .yt-lazy { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; display: grid; place-items: center; text-align: center; color: #fff; padding: 0.75rem; margin-top: 0.5rem; }
+  .yt-lazy-btn { width: auto; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--accent, #D4A93B); color: var(--c-onaccent, #1a1a1a); border: none; border-radius: 999px; padding: 0.7rem 1.4rem; font-family: inherit; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: none; }
+  .yt-lazy-btn[disabled] { opacity: 0.7; cursor: default; }
+  .yt-lazy-msg { display: block; margin-top: 0.6rem; font-size: 0.8rem; line-height: 1.7; color: #E0A458; }
   .na { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--c-dangertext); font-size: 0.8rem; white-space: nowrap; }
   .score-chip { padding: 0.35rem 0.85rem; border-radius: 999px; font-family: 'Fraunces', serif; background: var(--c-successbg); color: var(--c-success); }
   .score-chip.mid, .tier-chip.mid { background: var(--c-warnbg); color: var(--c-warntext); }
@@ -279,6 +283,32 @@ function renderAccessList() {
     btn.addEventListener("click", () => openExam(btn.getAttribute("data-exam-open")));
   });
   initVideoPlayers(content);
+  bindLazyVideos(content);
+}
+
+/* ===== تحميل الفيديو بعد التحقق من الصلاحية (/content-video) ===== */
+async function loadLazyVideo(lazy) {
+  const btn = lazy.querySelector(".yt-lazy-btn"), msg = lazy.querySelector(".yt-lazy-msg");
+  const fail = t => { msg.hidden = false; msg.textContent = t; btn.disabled = false; btn.lastChild.textContent = " جرّب تاني"; };
+  btn.disabled = true; msg.hidden = true;
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/content-video?materialId=${encodeURIComponent(lazy.dataset.mid)}`, { headers: { "Authorization": `Bearer ${idToken}` } });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 403) return fail("مش مسموحلك تشوف الفيديو ده. الصلاحية ممكن تكون خلصت.");
+    if (!res.ok || !data.ok || !data.url) return fail("تعذر تحميل الفيديو. تأكد من النت وحاول تاني.");
+    const wrap = document.createElement("div");
+    wrap.innerHTML = videoPlayerHtml(data.url);
+    const box = wrap.firstElementChild;
+    lazy.replaceWith(box);
+    ytMount(box, ytVariant(), "");
+  } catch (e) { fail("تعذر تحميل الفيديو. تأكد من النت وحاول تاني."); }
+}
+function bindLazyVideos(root) {
+  root.querySelectorAll(".yt-lazy:not([data-bound])").forEach(l => {
+    l.setAttribute("data-bound", "1");
+    l.querySelector(".yt-lazy-btn").addEventListener("click", () => loadLazyVideo(l));
+  });
 }
 
 /* ===== مشغّل فيديو داخلي ===== */
@@ -832,10 +862,10 @@ function renderItemRow(it, isExpired) {
   const unavailable = (typeIcon, title) => `<div class="item-row"><span class="item-title">${icon(typeIcon)} ${escapeHtml(title)}</span><span class="na">${icon("lock")} غير متاح</span></div>`;
   if (it.type === "material") {
     const typeIcon = it.mediaType === "video" ? "video" : it.mediaType === "image" ? "image" : "file";
-    const hasContent = it.mediaType === "pdf" ? it.hasFile : !!it.url;
+    const hasContent = it.mediaType === "pdf" ? it.hasFile : it.mediaType === "video" ? (!!it.hasVideo || !!it.url) : !!it.url;
     if (isExpired || it.unavailable || !hasContent) return unavailable(typeIcon, it.title);
     let bodyHtml = "";
-    if (it.mediaType === "video") bodyHtml = videoPlayerHtml(it.url);
+    if (it.mediaType === "video") bodyHtml = it.url ? videoPlayerHtml(it.url) : `<div class="yt-lazy" data-mid="${escapeHtml(it.id)}"><div><button type="button" class="yt-lazy-btn">${icon("play")} تشغيل الفيديو</button><span class="yt-lazy-msg" hidden></span></div></div>`;
     else if (it.mediaType === "image") bodyHtml = `<img class="mat-image" src="${escapeHtml(it.url)}" alt="${escapeHtml(it.title)}">`;
     else if (it.mediaType === "pdf") bodyHtml = `<button type="button" class="mat-pdf-link" data-pdf-id="${escapeHtml(it.id)}">${icon("file")} افتح ملف الـPDF</button>`;
     return `<div><div class="item-row"><span class="item-title">${icon(typeIcon)} ${escapeHtml(it.title)}</span></div>${bodyHtml}</div>`;
