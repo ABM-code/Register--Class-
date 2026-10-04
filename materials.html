@@ -73,6 +73,10 @@
   .yt-player:not(.live):not(.plain) .yt-shield { bottom: auto; height: 22%; }
   .yt-player:not(.live):not(.plain) .yt-shield-b { display: block; }
   .yt-player:not(.ready):not(.plain) .yt-controls { opacity: 0.55; pointer-events: none; }
+  .yt-lazy { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 12px; display: grid; place-items: center; text-align: center; color: #fff; padding: 0.75rem; }
+  .yt-lazy-btn { width: auto; display: inline-flex; align-items: center; gap: 0.5rem; background: var(--accent); color: var(--c-onaccent, #fff); border: none; border-radius: 999px; padding: 0.7rem 1.4rem; font-family: inherit; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: none; }
+  .yt-lazy-btn[disabled] { opacity: 0.7; cursor: default; }
+  .yt-lazy-msg { display: block; margin-top: 0.6rem; font-size: 0.8rem; line-height: 1.7; color: #E0A458; }
   .yt-err-code { display: block; margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.65; direction: ltr; }
   .yt-bigplay { position: absolute; inset: 0; z-index: 1; display: none; place-items: center; pointer-events: none; }
   .yt-bigplay span { width: 3.6rem; height: 3.6rem; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; display: grid; place-items: center; }
@@ -444,6 +448,32 @@ function renderMaterialsBrowser() {
     });
   });
   initVideoPlayers(content);
+  bindLazyVideos(content);
+}
+
+/* ===== تحميل الفيديو بعد التحقق من الصلاحية (/content-video) ===== */
+async function loadLazyVideo(lazy) {
+  const btn = lazy.querySelector(".yt-lazy-btn"), msg = lazy.querySelector(".yt-lazy-msg");
+  const fail = t => { msg.hidden = false; msg.textContent = t; btn.disabled = false; btn.lastChild.textContent = " جرّب تاني"; };
+  btn.disabled = true; msg.hidden = true;
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/content-video?materialId=${encodeURIComponent(lazy.dataset.mid)}`, { headers: { "Authorization": `Bearer ${idToken}` } });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 403) return fail("مش مسموحلك تشوف الفيديو ده. لو مشترك كلّم المعلم.");
+    if (!res.ok || !data.ok || !data.url) return fail("تعذر تحميل الفيديو. تأكد من النت وحاول تاني.");
+    const wrap = document.createElement("div");
+    wrap.innerHTML = videoPlayerHtml(data.url, lazy.dataset.keys || "");
+    const box = wrap.firstElementChild;
+    lazy.replaceWith(box);
+    ytMount(box, ytVariant(), "");
+  } catch (e) { fail("تعذر تحميل الفيديو. تأكد من النت وحاول تاني."); }
+}
+function bindLazyVideos(root) {
+  root.querySelectorAll(".yt-lazy:not([data-bound])").forEach(l => {
+    l.setAttribute("data-bound", "1");
+    l.querySelector(".yt-lazy-btn").addEventListener("click", () => loadLazyVideo(l));
+  });
 }
 
 /* ===== مشغّل فيديو داخلي ===== */
@@ -1012,7 +1042,11 @@ function buildVideoPlayer(box, stage, id) {
 function renderMaterialCard(m) {
   let bodyHtml = "";
   if (m.type === "video") {
-    bodyHtml = videoPlayerHtml(matVideoSrc(m), Object.keys(m).join(","));
+    if (m.url || m.hasVideo === false) {
+      bodyHtml = videoPlayerHtml(matVideoSrc(m), Object.keys(m).join(","));
+    } else {
+      bodyHtml = `<div class="yt-lazy" data-mid="${escapeHtml(m.id)}" data-keys="${escapeHtml(Object.keys(m).join(","))}"><div><button type="button" class="yt-lazy-btn">${icon("play")} تشغيل الفيديو</button><span class="yt-lazy-msg" hidden></span></div></div>`;
+    }
   } else if (m.type === "image") {
     bodyHtml = `<img class="mat-image" src="${escapeHtml(m.url)}" alt="${escapeHtml(m.title)}">`;
   } else if (m.type === "pdf") {
