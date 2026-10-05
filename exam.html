@@ -978,6 +978,13 @@ async function requestExplain(explainId, action, btnEl) {
   const payload = JSON.parse(btnEl.getAttribute("data-payload"));
   payload.action = action;
 
+  // نفس الشرح/الترجمة لنفس السؤال والإجابة بيتخزّنوا على الجهاز، فالضغطة التانية فورية ومش بتستهلك من الحد اليومي
+  const cacheKey = "exExplain:" + action + ":" + payload.prompt + "|" + payload.studentAnswer + "|" + payload.correctAnswer;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) { box.style.display = "block"; box.textContent = cached; return; }
+  } catch (e) {}
+
   explainBtn.disabled = true;
   translateBtn.disabled = true;
   const originalHtml = btnEl.innerHTML;
@@ -1002,6 +1009,7 @@ async function requestExplain(explainId, action, btnEl) {
       }
     } else {
       box.textContent = data.text;
+      try { localStorage.setItem(cacheKey, data.text); } catch (e) {}
     }
   } catch (err) {
     box.textContent = "معلش، حصلت مشكلة في الاتصال. جربي تاني كمان شوية.";
