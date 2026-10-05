@@ -905,6 +905,10 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
       <button type="button" id="videoCheckBtn" onclick="checkAllVideos()" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.65rem; font-weight:700; font-size:0.85rem; cursor:pointer;">فحص كل الفيديوهات (هل مسموح بتضمينها؟)</button>
       <div id="videoCheckResult" style="font-size:0.82rem; margin-top:0.6rem; line-height:1.7; display:none;"></div>
     </div>
+    <div style="margin-bottom:0.8rem; padding:0.8rem 1rem; background:var(--c-cardbg); color:var(--c-textoncard); border-radius:14px;">
+      <button type="button" id="videoStatsBtn" onclick="toggleVideoStats()" style="width:100%; background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.65rem; font-weight:700; font-size:0.85rem; cursor:pointer;"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg> إحصائيات مشاهدة الفيديوهات</button>
+      <div id="videoStatsPanel" style="display:none; margin-top:0.8rem;"></div>
+    </div>
     <div id="materialsListBox"></div>
   </div>
 
@@ -1726,7 +1730,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v88 — زرار «فتح المكتبة» بجوار نسخ رابط المكتبة في كارت المحتوى التعليمي — 4 أكتوبر 2026";
+const APP_VERSION = "v89 — إحصائيات مشاهدة فيديوهات المكتبة (عدد المشاهدات + متوسط المدة + قائمة الطلاب مع بحث وفتح صفحة الطالب) — 5 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -5322,6 +5326,117 @@ function renderMaterialPreview(m) {
 }
 
 /* ===== فاحص فيديوهات المكتبة: بيقولك أنهي فيديو مقفول التضمين أو خاص أو محذوف ===== */
+/* ===== إحصائيات مشاهدة فيديوهات المكتبة ===== */
+let videoStatsRows = [], videoStatsVideo = "", videoStatsQuery = "", videoStatsShown = 30;
+function fmtWatch(sec) {
+  sec = Math.max(0, Math.round(Number(sec) || 0));
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60;
+  if (h) return `${h} س ${m} د`;
+  if (m) return `${m} د ${x} ث`;
+  return `${x} ث`;
+}
+function fmtWatchDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return isNaN(d) ? "" : d.toLocaleString("ar-EG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+async function toggleVideoStats() {
+  const panel = document.getElementById("videoStatsPanel");
+  if (panel.style.display === "block") { panel.style.display = "none"; return; }
+  panel.style.display = "block";
+  await loadVideoStats();
+}
+async function loadVideoStats() {
+  const panel = document.getElementById("videoStatsPanel");
+  panel.innerHTML = `<div style="font-size:0.85rem; color:var(--c-mutedoncard);">جاري تحميل الإحصائيات...</div>`;
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/video-stats`, { headers: { "Authorization": `Bearer ${idToken}` } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error("bad");
+    videoStatsRows = data.rows || [];
+    videoStatsVideo = ""; videoStatsQuery = ""; videoStatsShown = 30;
+    renderVideoStats();
+  } catch (e) {
+    panel.innerHTML = `<div style="font-size:0.85rem; color:var(--c-danger);">تعذر تحميل الإحصائيات. تأكد من تحديث الـWorker وجرّب تاني.</div>
+      <button type="button" class="backup-btn" onclick="loadVideoStats()" style="margin-top:0.5rem;">إعادة المحاولة</button>`;
+  }
+}
+function renderVideoStats() {
+  const panel = document.getElementById("videoStatsPanel");
+  const rows = videoStatsRows;
+  if (!rows.length) {
+    panel.innerHTML = `<div style="font-size:0.85rem; color:var(--c-mutedoncard); line-height:1.8;">لسه مفيش مشاهدات متسجّلة. الإحصائيات بتبدأ من وقت تحديث الـWorker والصفحات، وهتظهر هنا أول ما طالب يشغّل فيديو.</div>`;
+    return;
+  }
+  const byVideo = new Map();
+  for (const r of rows) {
+    let v = byVideo.get(r.materialId);
+    if (!v) { v = { id: r.materialId, title: r.materialTitle || "فيديو", views: 0, secs: 0, ids: new Set() }; byVideo.set(r.materialId, v); }
+    v.views += r.views; v.secs += r.totalSeconds; v.ids.add(r.studentId);
+    if (r.materialTitle) v.title = r.materialTitle;
+  }
+  const videos = [...byVideo.values()].sort((a, b) => b.views - a.views);
+  const sel = videoStatsVideo ? rows.filter(r => r.materialId === videoStatsVideo) : rows;
+  const views = sel.reduce((n, r) => n + r.views, 0);
+  const secs = sel.reduce((n, r) => n + r.totalSeconds, 0);
+  const uniq = new Set(sel.map(r => r.studentId)).size;
+  const avg = views ? secs / views : 0;
+  const cell = (label, value) => `<div style="flex:1; min-width:46%; background:rgba(var(--c-subtle-rgb),0.08); border-radius:10px; padding:0.55rem 0.7rem;"><div style="font-size:0.72rem; color:var(--c-mutedoncard);">${label}</div><div style="font-size:1.05rem; font-weight:700;">${value}</div></div>`;
+  const chip = (id, text, active) => `<button type="button" class="vs-vid" data-vid="${escapeHtml(id)}" style="text-align:right; background:${active ? "var(--c-accent)" : "rgba(var(--c-subtle-rgb),0.08)"}; color:${active ? "var(--c-onaccent)" : "inherit"}; border:none; border-radius:10px; padding:0.5rem 0.7rem; font-family:inherit; font-size:0.82rem; cursor:pointer; width:100%; margin-bottom:0.35rem;">${text}</button>`;
+  panel.innerHTML = `
+    <div style="display:flex; flex-wrap:wrap; gap:0.45rem; margin-bottom:0.8rem;">
+      ${cell("إجمالي المشاهدات", views)}
+      ${cell("عدد الطلاب", uniq)}
+      ${cell("متوسط مدة المشاهدة", fmtWatch(avg))}
+      ${cell("إجمالي وقت المشاهدة", fmtWatch(secs))}
+    </div>
+    <div style="font-size:0.78rem; color:var(--c-mutedoncard); margin-bottom:0.4rem;">الفيديوهات (اضغط على فيديو لعرض طلابه)</div>
+    <div id="vsVideos">
+      ${chip("", "كل الفيديوهات", !videoStatsVideo)}
+      ${videos.map(v => chip(v.id, `<strong>${escapeHtml(v.title)}</strong><br><span style="font-size:0.74rem; opacity:0.85;">${v.views} مشاهدة · ${v.ids.size} طالب · متوسط ${fmtWatch(v.views ? v.secs / v.views : 0)}</span>`, videoStatsVideo === v.id)).join("")}
+    </div>
+    <div style="font-size:0.78rem; color:var(--c-mutedoncard); margin:0.7rem 0 0.4rem;">الطلاب اللي شاهدوا</div>
+    <input type="text" id="vsSearch" class="reg-input" placeholder="ابحث باسم الطالب..." value="${escapeHtml(videoStatsQuery)}" style="margin-bottom:0.5rem;">
+    <div id="vsList"></div>
+    <button type="button" class="backup-btn" onclick="loadVideoStats()" style="margin-top:0.6rem;"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> تحديث الإحصائيات</button>`;
+  panel.querySelectorAll(".vs-vid").forEach(b => b.addEventListener("click", () => {
+    videoStatsVideo = b.getAttribute("data-vid") || ""; videoStatsShown = 30; renderVideoStats();
+  }));
+  document.getElementById("vsSearch").addEventListener("input", e => {
+    videoStatsQuery = e.target.value; videoStatsShown = 30; renderVideoStatsList();
+  });
+  renderVideoStatsList();
+}
+function renderVideoStatsList() {
+  const box = document.getElementById("vsList");
+  if (!box) return;
+  const sel = videoStatsVideo ? videoStatsRows.filter(r => r.materialId === videoStatsVideo) : videoStatsRows;
+  const byStudent = new Map();
+  for (const r of sel) {
+    let x = byStudent.get(r.studentId);
+    if (!x) { x = { id: r.studentId, name: r.studentName || "—", stage: r.stage, isStudent: r.isStudent, views: 0, secs: 0, last: null, vids: new Set() }; byStudent.set(r.studentId, x); }
+    x.views += r.views; x.secs += r.totalSeconds; x.vids.add(r.materialId);
+    if (!x.last || (r.lastWatchedAt && r.lastWatchedAt > x.last)) x.last = r.lastWatchedAt;
+    if (r.studentName) x.name = r.studentName;
+  }
+  let list = [...byStudent.values()].sort((a, b) => String(b.last || "").localeCompare(String(a.last || "")));
+  const q = videoStatsQuery.trim().toLowerCase();
+  if (q) list = list.filter(x => x.name.toLowerCase().includes(q));
+  if (!list.length) { box.innerHTML = `<div style="font-size:0.82rem; color:var(--c-mutedoncard);">${q ? "مفيش طالب بالاسم ده." : "مفيش طلاب."}</div>`; return; }
+  const shown = list.slice(0, videoStatsShown);
+  box.innerHTML = `<div style="font-size:0.74rem; color:var(--c-mutedoncard); margin-bottom:0.35rem;">${list.length} طالب</div>` + shown.map(x => {
+    const inApp = x.isStudent && students.some(st => st.id === x.id);
+    return `<div style="display:flex; align-items:center; gap:0.5rem; background:rgba(var(--c-subtle-rgb),0.08); border-radius:10px; padding:0.5rem 0.7rem; margin-bottom:0.35rem;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-weight:700; font-size:0.88rem;">${escapeHtml(x.name)}${x.stage ? ` <span style="font-weight:500; font-size:0.74rem; color:var(--c-mutedoncard);">· ${escapeHtml(x.stage)}</span>` : ""}</div>
+        <div style="font-size:0.74rem; color:var(--c-mutedoncard); line-height:1.6;">${x.views} مشاهدة · ${fmtWatch(x.secs)}${x.vids.size > 1 ? ` · ${x.vids.size} فيديوهات` : ""}${x.last ? ` · آخر مشاهدة ${fmtWatchDate(x.last)}` : ""}</div>
+      </div>
+      ${inApp ? `<button type="button" class="backup-btn" onclick="goToStudentProfile('${escapeHtml(x.id)}')" style="flex:none; padding:0.4rem 0.7rem;">صفحة الطالب</button>` : ""}
+    </div>`;
+  }).join("") + (list.length > shown.length ? `<button type="button" class="backup-btn" onclick="videoStatsShown += 30; renderVideoStatsList();">عرض المزيد (${list.length - shown.length})</button>` : "");
+}
+
 async function checkAllVideos() {
   const out = document.getElementById("videoCheckResult");
   const btn = document.getElementById("videoCheckBtn");

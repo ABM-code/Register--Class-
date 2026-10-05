@@ -508,6 +508,27 @@ function renderMaterialsBrowser() {
   bindLazyVideos(content);
 }
 
+/* ===== تتبّع مدة المشاهدة (بيوصل للمعلم كإحصائيات) ===== */
+function trackVideoWatch(box, token) {
+  if (!token) return;
+  let acc = 0, started = false, startSent = false, last = Date.now();
+  const flush = () => {
+    const secs = Math.floor(acc);
+    if (!secs && !(started && !startSent)) return;
+    const body = JSON.stringify({ token, seconds: secs, started: started && !startSent });
+    acc -= secs; if (started) startSent = true;
+    try { fetch(`${STUDENT_AUTH_WORKER_URL}/video-watch`, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body, keepalive: true }).catch(() => {}); } catch (e) {}
+  };
+  const timer = setInterval(() => {
+    const now = Date.now(), dt = Math.min((now - last) / 1000, 5); last = now;
+    if (!box.isConnected) { flush(); clearInterval(timer); return; }
+    if (box._diag && box._diag.state === 1) { acc += dt; if (!started) { started = true; flush(); } }   // state 1 = شغّال
+    if (acc >= 60) flush();
+  }, 1000);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) flush(); });
+  window.addEventListener("pagehide", flush);
+}
+
 /* ===== تحميل الفيديو بعد التحقق من الصلاحية (/content-video) ===== */
 async function loadLazyVideo(lazy) {
   const btn = lazy.querySelector(".yt-lazy-btn"), msg = lazy.querySelector(".yt-lazy-msg");
@@ -524,6 +545,7 @@ async function loadLazyVideo(lazy) {
     const box = wrap.firstElementChild;
     lazy.replaceWith(box);
     ytMount(box, ytVariant(), "");
+    trackVideoWatch(box, data.watchToken);
   } catch (e) { fail("تعذر تحميل الفيديو. تأكد من النت وحاول تاني."); }
 }
 function bindLazyVideos(root) {
