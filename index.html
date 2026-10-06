@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v91 - 2026-10-06">
+<meta name="app-version" content="v92 - 2026-10-06">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -13,7 +13,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>Class Register — Mr. Abd El Rahman Moneer</title>
+<title>Class Register</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -570,6 +570,10 @@
       <input class="reg-input" id="brandCenterNameInput" placeholder="مثال: مركز النخبة لتعليم اللغة الإنجليزية">
     </div>
     <div class="field-group">
+      <label>الاسم بالإنجليزي (بيظهر أسفل ورقة الامتحان المطبوعة)</label>
+      <input class="reg-input" id="brandNameEnInput" placeholder="مثال: Mr. Mohamed Ahmed">
+    </div>
+    <div class="field-group">
       <label>لون العلامة</label>
       <input type="color" id="brandColorInput" value="#D4A93B" style="width:100%; height:44px; border-radius:9px; border:1px solid rgba(0,0,0,0.15); cursor:pointer; padding:2px;">
     </div>
@@ -663,12 +667,12 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
         <span class="brand-mark">CR</span>
         <span class="brand-name">Class Register</span>
       </div>
-      <h1 class="tname" id="teacherNameDisplay" onclick="editTeacherName()" title="اضغط لتعديل الاسم" style="cursor:pointer;">Mr. Abd El Rahman Moneer</h1>
+      <h1 class="tname" id="teacherNameDisplay" onclick="editTeacherName()" title="اضغط لتعديل الاسم" style="cursor:pointer;"></h1>
       <div id="centerNameDisplay" style="display:none; color:var(--c-mutedonpage); font-size:0.85rem; margin-top:0.15rem;"></div>
       <div class="subline">
         <span class="info-chip" onclick="editTeacherPhone()" title="اضغط لتعديل رقم التليفون">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          <span id="teacherPhoneDisplay">01220524090</span>
+          <span id="teacherPhoneDisplay"></span>
         </span>
       </div>
     </div>
@@ -1731,9 +1735,10 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v91 — تصحيح كلمة «توريل» في شارة الإشعارات (كانت «طوريل») + تقليل قراءات Firestore — 6 أكتوبر 2026";
-let TEACHER_NAME = "أ/ عبد الرحمن منير";
-let TEACHER_PHONE = "01220524090";
+const APP_VERSION = "v92 — دعم أكتر من معلم: رابط مكتبة خاص بكل معلم + بيانات المعلم (الاسم والرقم واللون) بدل القيم الثابتة — 6 أكتوبر 2026";
+let TEACHER_NAME = "";   // من هوية المعلم المحفوظة (teachers/{uid}) بعد تسجيل الدخول
+let TEACHER_NAME_EN = "";   // الاسم بالإنجليزي لورقة الامتحان المطبوعة
+let TEACHER_PHONE = "";
 let TEACHER_BRAND_COLOR = "#D4A93B";
 let TEACHER_CENTER_NAME = "";
 let TEACHER_FOOTER_TEXT = "";
@@ -4612,6 +4617,8 @@ function refreshMaterialsList() {
 }
 
 const MATERIALS_PAGE_URL = "https://abm-code.github.io/Register--Class-/materials.html";
+// رابط المكتبة الخاص بالمعلم الحالي (?t=رقم_المعلم): طلابه بس هم اللي بيظهروا في قايمة الدخول، وهويته هي اللي بتظهر.
+function materialsPageUrl() { return MATERIALS_PAGE_URL + (currentTeacherId ? "?t=" + encodeURIComponent(currentTeacherId) : ""); }
 let editingMaterialId = null;
 let activeMaterialsStageFilter = "الكل";
 
@@ -4623,16 +4630,16 @@ function copyMaterialsPageLink() {
     setTimeout(() => { btn.innerHTML = original; }, 2000);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(MATERIALS_PAGE_URL).then(done).catch(() => {
-      prompt("انسخ الرابط ده يدوي:", MATERIALS_PAGE_URL);
+    navigator.clipboard.writeText(materialsPageUrl()).then(done).catch(() => {
+      prompt("انسخ الرابط ده يدوي:", materialsPageUrl());
     });
   } else {
-    prompt("انسخ الرابط ده يدوي:", MATERIALS_PAGE_URL);
+    prompt("انسخ الرابط ده يدوي:", materialsPageUrl());
   }
 }
 
 function openMaterialsPage() {
-  window.open(MATERIALS_PAGE_URL, "_blank", "noopener");
+  window.open(materialsPageUrl(), "_blank", "noopener");
 }
 
 function onMaterialTypeChange() {
@@ -5807,7 +5814,7 @@ function buildPrintDocument(title, bodyHtml) {
       .footer-phone-box { direction: ltr; background: #D4A93B; color: #0a1f44; }
     </style></head>
     <body>
-      <div class="watermark">Mr. Abd El Rahman Moneer</div>
+      <div class="watermark">${escapeHtml(TEACHER_NAME_EN || TEACHER_NAME)}</div>
       <table class="page-table">
         <tbody><tr><td>
           <div class="page-frame">
@@ -5816,8 +5823,8 @@ function buildPrintDocument(title, bodyHtml) {
         </td></tr></tbody>
         <tfoot><tr><td>
           <div class="footer-row">
-            <div class="footer-name-box">Mr. Abd El Rahman Moneer</div>
-            <div class="footer-phone-box">01220524090</div>
+            <div class="footer-name-box">${escapeHtml(TEACHER_NAME_EN || TEACHER_NAME)}</div>
+            <div class="footer-phone-box">${escapeHtml(TEACHER_PHONE)}</div>
           </div>
         </td></tr></tfoot>
       </table>
@@ -8049,19 +8056,48 @@ document.getElementById("searchInput").addEventListener("input", () => {
   });
 });
 
+// معلم جديد: بنبدأ بقيم فاضية (مش بيانات أي معلم تاني) وبنسأله عن اسمه ورقمه مرة واحدة.
+// صورة افتراضية محايدة لأي معلم جديد (الصورة المدمجة في الصفحة هي صورة المعلم الأصلي)
+const NEUTRAL_AVATAR = "data:image/svg+xml;utf8," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#2c4a43"/><circle cx="32" cy="24" r="11" fill="#D4A93B"/><path d="M10 58c2-12 11-18 22-18s20 6 22 18z" fill="#D4A93B"/></svg>');
+function useNeutralAvatar(clearLocal) {
+  const img = document.getElementById("teacherAvatarImg");
+  if (img) img.src = NEUTRAL_AVATAR;
+  if (clearLocal) { try { localStorage.removeItem("customAvatar"); } catch (e) {} }
+}
+async function askNewTeacherProfile(uid) {
+  const name = prompt("أهلاً بيك! اكتب اسمك زي ما عايزه يظهر للطلاب (مثال: أ/ محمد أحمد):", "");
+  const phone = prompt("اكتب رقم تليفونك:", "");
+  const upd = {};
+  if (name && name.trim()) { TEACHER_NAME = name.trim(); upd.name = TEACHER_NAME; }
+  if (phone && phone.trim()) { TEACHER_PHONE = phone.trim(); upd.phone = TEACHER_PHONE; }
+  renderTeacherHeader();
+  if (Object.keys(upd).length) {
+    try { await teachersCol.doc(uid).update(upd); }
+    catch (e) { showError("تعذر حفظ بياناتك. اضغط على اسمك أو رقمك أعلى الصفحة وأعد المحاولة."); }
+  }
+}
+
+// الاسم الإنجليزي اللي كان بيطبع أسفل ورقة امتحان المعلم الأصلي: بنحفظه في بياناته مرة واحدة عشان الطباعة تفضل زي ما هي.
+const LEGACY_OWNER_NAME_MARK = "منير";
+const LEGACY_OWNER_NAME_EN = "Mr. Abd El Rahman Moneer";
+
 async function ensureTeacherDoc(uid) {
   const ref = teachersCol.doc(uid);
   const doc = await ref.get();
   if (!doc.exists) {
+    TEACHER_NAME = ""; TEACHER_PHONE = ""; TEACHER_NAME_EN = "";
     await ref.set({
-      name: TEACHER_NAME,
-      phone: TEACHER_PHONE,
+      name: "",
+      phone: "",
+      nameEn: "",
       brandColor: TEACHER_BRAND_COLOR,
       centerName: "",
       footerText: "",
       email: (auth.currentUser && auth.currentUser.email) || "",
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    useNeutralAvatar(true);
+    setTimeout(() => askNewTeacherProfile(uid), 800);
   } else {
     const d = doc.data();
     if (d.name) TEACHER_NAME = d.name;
@@ -8069,10 +8105,20 @@ async function ensureTeacherDoc(uid) {
     if (d.brandColor) TEACHER_BRAND_COLOR = d.brandColor;
     if (d.centerName) TEACHER_CENTER_NAME = d.centerName;
     if (d.footerText) TEACHER_FOOTER_TEXT = d.footerText;
+    if (typeof d.nameEn === "string") {
+      TEACHER_NAME_EN = d.nameEn;
+    } else if (d.name && String(d.name).indexOf(LEGACY_OWNER_NAME_MARK) !== -1) {
+      TEACHER_NAME_EN = LEGACY_OWNER_NAME_EN;
+      try { await ref.update({ nameEn: TEACHER_NAME_EN }); } catch (e) {}
+    }
     if (d.logoUrl) {
       const img = document.getElementById("teacherAvatarImg");
       if (img) img.src = d.logoUrl;
       try { localStorage.setItem("customAvatar", d.logoUrl); } catch (e) {}
+    } else if (String(d.name || "").indexOf(LEGACY_OWNER_NAME_MARK) === -1) {
+      let hasLocal = false;
+      try { hasLocal = !!localStorage.getItem("customAvatar"); } catch (e) {}
+      if (!hasLocal) useNeutralAvatar(false);
     }
   }
   applyBrandColor(TEACHER_BRAND_COLOR);
@@ -8097,6 +8143,7 @@ function openBrandSettings() {
   document.getElementById("brandCenterNameInput").value = TEACHER_CENTER_NAME;
   document.getElementById("brandColorInput").value = TEACHER_BRAND_COLOR;
   document.getElementById("brandFooterInput").value = TEACHER_FOOTER_TEXT;
+  document.getElementById("brandNameEnInput").value = TEACHER_NAME_EN;
   document.getElementById("brandSettingsModal").style.display = "flex";
 }
 
@@ -8108,13 +8155,15 @@ async function saveBrandSettings() {
   const centerName = document.getElementById("brandCenterNameInput").value.trim();
   const brandColor = document.getElementById("brandColorInput").value || "#D4A93B";
   const footerText = document.getElementById("brandFooterInput").value.trim();
+  const nameEn = document.getElementById("brandNameEnInput").value.trim();
   const btn = document.getElementById("brandSettingsSaveBtn");
   if (btn) { btn.disabled = true; btn.textContent = "جاري الحفظ..."; }
   try {
-    await teachersCol.doc(currentTeacherId).update({ centerName, brandColor, footerText });
+    await teachersCol.doc(currentTeacherId).update({ centerName, brandColor, footerText, nameEn });
     TEACHER_CENTER_NAME = centerName;
     TEACHER_BRAND_COLOR = brandColor;
     TEACHER_FOOTER_TEXT = footerText;
+    TEACHER_NAME_EN = nameEn;
     applyBrandColor(brandColor);
     renderTeacherHeader();
     closeBrandSettings();
@@ -8129,6 +8178,8 @@ async function saveBrandSettings() {
 function renderTeacherHeader() {
   const nameEl = document.getElementById("teacherNameDisplay");
   const phoneEl = document.getElementById("teacherPhoneDisplay");
+  const titleName = TEACHER_NAME_EN || TEACHER_NAME;
+  document.title = "Class Register" + (titleName ? " \u2014 " + titleName : "");
   const centerEl = document.getElementById("centerNameDisplay");
   const footerEl = document.getElementById("brandFooterDisplay");
   if (nameEl) nameEl.textContent = TEACHER_NAME;

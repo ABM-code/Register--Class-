@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta name="app-version" content="v89 - 2026-10-06">
+<meta name="app-version" content="v92 - 2026-10-06">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -158,7 +158,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-const TEACHER_NAME = "أ/ عبد الرحمن منير";
+let TEACHER_NAME = "";   // بيجي من هوية المعلم (الـWorker) — مفيش اسم معلم ثابت جوه الكود
 // إعدادات هوية المعلم — حدّثها يدويًا كل ما تغيّرها من لوحة "الهوية" في التطبيق الرئيسي
 // إعدادات هوية المعلم — دي قيم افتراضية احتياطية (fallback) لو الـ Worker مرجعش هوية،
 // وبتتحدّث تلقائيًا من رد /materials-students (حقل teacherBrand) لو موجود.
@@ -191,15 +191,18 @@ renderBrandFooter();
 // بعدين تعيد تطبيق اللون والفوتر. لو teacherBrand مش موجود أو فاضي، بتسيب القيم الاحتياطية زي ما هي.
 function applyTeacherBrandFromServer(brand) {
   if (!brand) return;
+  if (brand.name) TEACHER_NAME = brand.name;
   if (brand.centerName) TEACHER_CENTER_NAME = brand.centerName;
   if (brand.brandColor) TEACHER_BRAND_COLOR = brand.brandColor;
   if (brand.footerText) TEACHER_FOOTER_TEXT = brand.footerText;
-  TEACHER_DISPLAY_LINE = TEACHER_CENTER_NAME ? (TEACHER_CENTER_NAME + " — " + TEACHER_NAME) : TEACHER_NAME;
+  TEACHER_DISPLAY_LINE = [TEACHER_CENTER_NAME, TEACHER_NAME].filter(Boolean).join(" — ");
   applyBrandColor(TEACHER_BRAND_COLOR);
   renderBrandFooter();
 }
 
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
+/* رابط المكتبة الخاص بكل معلم: materials.html?t=رقم_المعلم. من غيره بيشتغل زي الأول (الرابط القديم). */
+const LIBRARY_TEACHER_ID = (new URLSearchParams(location.search).get("t") || "").trim();
 const firebaseConfig = {
   apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
   authDomain: "register-class-302e6.firebaseapp.com",
@@ -291,7 +294,7 @@ function renderStagePicker() {
     nextBtn.disabled = true;
     nextBtn.textContent = "جاري التحميل...";
     try {
-      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-students?stage=${encodeURIComponent(selectedStage)}`);
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-students?stage=${encodeURIComponent(selectedStage)}${LIBRARY_TEACHER_ID ? "&teacher=" + encodeURIComponent(LIBRARY_TEACHER_ID) : ""}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error("load_failed");
       applyTeacherBrandFromServer(data.teacherBrand);
@@ -306,7 +309,7 @@ function renderStagePicker() {
 }
 
 function renderStudentPicker() {
-  document.getElementById("pageSub").textContent = selectedStage + " — " + TEACHER_DISPLAY_LINE;
+  document.getElementById("pageSub").textContent = [selectedStage, TEACHER_DISPLAY_LINE].filter(Boolean).join(" — ");
   const content = document.getElementById("content");
   content.innerHTML = `
     <div class="card">
@@ -1161,6 +1164,6 @@ document.addEventListener("click", (e) => {
 
 init();
 </script>
-<div style="text-align:center; font-size:0.65rem; opacity:0.45; margin:1.2rem 0 0.8rem;">إصدار v89</div>
+<div style="text-align:center; font-size:0.65rem; opacity:0.45; margin:1.2rem 0 0.8rem;">إصدار v92</div>
 </body>
 </html>
