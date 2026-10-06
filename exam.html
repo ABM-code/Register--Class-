@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta name="app-version" content="v92 - 2026-10-06">
+<meta name="app-version" content="v95 - 2026-10-06">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#16302B">
@@ -81,9 +81,6 @@
   .option-row span { unicode-bidi: plaintext; text-align: start; flex: 1; }
   .option-row input { accent-color: var(--c-success); width: 1.05rem; height: 1.05rem; margin: 0; flex-shrink: 0; }
   .option-row.selected { border-color: var(--accent); background: var(--c-warnbg); box-shadow: inset 0 0 0 1px var(--accent); }
-  .exam-warning { display: flex; align-items: flex-start; gap: 0.6rem; border: 1px solid var(--accent); background: rgba(var(--accent-rgb, 212,169,59), 0.12); color: #fff; font-size: 0.9rem; line-height: 1.8; font-weight: 600; }
-  .exam-warning span { color: #fff; }
-  .exam-warning .ic { flex: none; margin-top: 0.3rem; color: var(--accent); }
   .submit-hint { display: flex; align-items: center; justify-content: center; gap: 0.4rem; color: var(--c-mutedonpage); font-size: 0.84rem; margin: 0.4rem 0 0.7rem; }
   .submit-hint.pending { color: var(--accent); }
   #submitBtn { padding: 0.85rem; }
@@ -532,9 +529,6 @@ function renderStudentPicker() {
 
 let answers = {};
 let examTimerInterval = null;
-let examActive = false;      // الامتحان معروض ولسه ماتسلّمش
-let examFrozen = false;      // بعد الخروج: الإجابات اتجمّدت
-let examSubmitting = false;  // تسليم شغّال حاليًا (منع التسليم المزدوج)
 
 function getTimerStorageKey() {
   const studentKey = selectedStudent.id || normalizeArabic(selectedStudent.name);
@@ -560,6 +554,51 @@ function loadAnswersFromStorage() {
     return {};
   }
 }
+
+/* ===== لو الطالب خرج من الامتحان ورجع: بنمسح كل إجاباته السابقة ويبدأ من الأول، والعدّاد بيكمّل عادي (وقت البداية متخزّن ومابنلمسوش) ===== */
+let examInProgress = false;   // الامتحان معروض ولسه ماتسلّمش
+function getLeftMarkerKey() {
+  const studentKey = selectedStudent.id || normalizeArabic(selectedStudent.name);
+  return "examLeft_" + exam.id + "_" + studentKey;
+}
+function markExamLeft() {
+  if (!examInProgress) return;
+  try { localStorage.setItem(getLeftMarkerKey(), "1"); } catch (e) {}
+}
+function hasLeftMarker() {
+  try { return !!localStorage.getItem(getLeftMarkerKey()); } catch (e) { return false; }
+}
+function clearLeftMarker() {
+  try { localStorage.removeItem(getLeftMarkerKey()); } catch (e) {}
+}
+function wipeSavedAnswers() {
+  answers = {};
+  try { localStorage.removeItem(getAnswersStorageKey()); } catch (e) {}
+}
+function leftResetNoticeHtml() {
+  return `<div class="card restored" id="leftResetNotice" style="color:var(--c-danger);">${icon("alert")}<span>خرجت من الامتحان، فاتمسحت إجاباتك السابقة. ابدأ إجاباتك من الأول. والوقت شغّال زي ما هو.</span></div>`;
+}
+function resetAnswersAfterLeave() {
+  wipeSavedAnswers();
+  clearLeftMarker();
+  document.querySelectorAll("#content .option-row").forEach(r => {
+    r.classList.remove("selected");
+    const inp = r.querySelector("input");
+    if (inp) inp.checked = false;
+  });
+  document.querySelectorAll('#content [id^="answer_"]').forEach(el => { el.value = ""; });
+  updateExamProgress();
+  if (!document.getElementById("leftResetNotice")) {
+    const who = document.querySelector("#content .who");
+    if (who) who.insertAdjacentHTML("afterend", leftResetNoticeHtml());
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (!examInProgress) return;
+  if (document.hidden) markExamLeft();
+  else if (hasLeftMarker()) resetAnswersAfterLeave();
+});
+window.addEventListener("pagehide", markExamLeft);
 
 function isAnswered(i) {
   const v = answers[i];
@@ -599,7 +638,9 @@ async function renderExam() {
     showError("تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.");
     return;
   }
-  answers = loadAnswersFromStorage();
+  const leftBefore = hasLeftMarker();
+  if (leftBefore) { wipeSavedAnswers(); clearLeftMarker(); }
+  else { answers = loadAnswersFromStorage(); }
   const hasRestoredAnswers = Object.keys(answers).length > 0;
   const content = document.getElementById("content");
   const questions = exam.questions || [];
@@ -612,14 +653,11 @@ async function renderExam() {
       <div class="exam-progress-track"><div class="exam-progress-fill" id="examProgressFill"></div></div>
     </div>`;
 
-  const restoredNoticeHtml = hasRestoredAnswers
+  const restoredNoticeHtml = leftBefore ? leftResetNoticeHtml() : hasRestoredAnswers
     ? `<div class="card restored">${icon("refresh")}<span>رجّعنالك إجاباتك اللي كتبتها قبل كده في نفس الامتحان.</span></div>`
     : "";
 
-  const leaveWarningHtml = `<div class="card exam-warning" role="alert">${icon("alert")}<span>تنبيه مهم: ممنوع تخرج من صفحة الامتحان أو تبدّل لتطبيق تاني. لو خرجت، الامتحان هيتسلّم فورًا بالإجابات اللي كتبتها لحد وقتها.</span></div>`;
-
   content.innerHTML = `
-    ${leaveWarningHtml}
     ${barHtml}
     <div class="card who">${icon("user")}<strong>${escapeHtml(selectedStudent.name)}</strong></div>
     ${restoredNoticeHtml}
@@ -659,7 +697,7 @@ async function renderExam() {
   if (exam.timeLimitMinutes) {
     startExamTimer();
   }
-  examActive = true;
+  examInProgress = true;
 }
 
 function startExamTimer() {
@@ -792,21 +830,18 @@ function gradeExam() {
   return { score, total, answerDetails };
 }
 
-async function submitExam(isTimeout, isLeave) {
-  if (examSubmitting) return;
-  examSubmitting = true;
+async function submitExam(isTimeout) {
   if (examTimerInterval) { clearInterval(examTimerInterval); examTimerInterval = null; }
   const submitBtn = document.getElementById("submitBtn");
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.textContent = isTimeout ? "انتهى الوقت، جاري التسليم..." : (isLeave ? "خرجت من الامتحان، جاري التسليم..." : "جاري التسليم...");
+    submitBtn.textContent = isTimeout ? "انتهى الوقت، جاري التسليم..." : "جاري التسليم...";
   }
   const { answerDetails } = gradeExam();
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous || !selectedStudent?.id) throw new Error("not_authenticated");
     const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/submit-result`, {
       method: "POST",
-      keepalive: true,   // يكمّل الإرسال حتى لو الصفحة اتقفلت أو راحت في الخلفية
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${await auth.currentUser.getIdToken()}`
@@ -821,15 +856,10 @@ async function submitExam(isTimeout, isLeave) {
     if (!res.ok || !data.ok) throw new Error(data.error || "submit_failed");
     try { localStorage.removeItem(getTimerStorageKey()); } catch (e) {}
     try { localStorage.removeItem(getAnswersStorageKey()); } catch (e) {}
-    examActive = false;
-    examSubmitting = false;
+    examInProgress = false;
+    clearLeftMarker();
     renderResult(data.score, data.total, data.answerDetails || answerDetails, true, isTimeout);
-    if (isLeave) {
-      const c = document.getElementById("content");
-      if (c) c.insertAdjacentHTML("afterbegin", `<div class="card exam-warning" role="alert">${icon("alert")}<span>الامتحان اتسلّم تلقائيًا لأنك خرجت من صفحة الامتحان.</span></div>`);
-    }
   } catch (err) {
-    examSubmitting = false;
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = "تسليم الإجابات";
@@ -837,25 +867,6 @@ async function submitExam(isTimeout, isLeave) {
     showError("تعذر تسليم الإجابات. تأكد من اتصالك بالإنترنت وحاول تاني.");
   }
 }
-
-// ============ تسليم تلقائي لو الطالب خرج من الامتحان ============
-// الخروج = الصفحة راحت للخلفية (تبديل تطبيق/تبويب، قفل الشاشة، رجوع للرئيسية) أو اتقفلت/اتحدّثت.
-// بنجمّد الإجابات فورًا وبنسلّم. لو التسليم فشل (النت)، بنعيد المحاولة أول ما الطالب يرجع.
-function freezeExamInputs() {
-  examFrozen = true;
-  document.querySelectorAll("#content input, #content textarea").forEach(el => { el.disabled = true; });
-  document.querySelectorAll("#content .option-row").forEach(r => { r.style.pointerEvents = "none"; });
-}
-function onExamLeave() {
-  if (!examActive || examFrozen) return;
-  freezeExamInputs();
-  submitExam(false, true);
-}
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) onExamLeave();
-  else if (examActive && examFrozen && !examSubmitting) submitExam(false, true);
-});
-window.addEventListener("pagehide", onExamLeave);
 
 // ============ صوت ظهور النتيجة (Web Audio API — بدون ملفات خارجية) ============
 let examAudioCtx = null;
@@ -1024,6 +1035,6 @@ async function requestExplain(explainId, action, btnEl) {
 
 init();
 </script>
-<div style="text-align:center; font-size:0.65rem; opacity:0.45; margin:1.2rem 0 0.8rem;">إصدار v92</div>
+<div style="text-align:center; font-size:0.65rem; opacity:0.45; margin:1.2rem 0 0.8rem;">إصدار v95</div>
 </body>
 </html>
