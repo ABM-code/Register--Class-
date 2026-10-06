@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="app-version" content="v89 - 2026-10-06 - worker-check">
+<title>فحص الـ Workers</title>
+<style>
+  body { margin: 0; background: #16302B; color: #F5F1E6; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif; padding: 1rem; line-height: 1.8; }
+  h1 { font-size: 1.15rem; margin: 0 0 0.3rem; }
+  .sub { font-size: 0.8rem; opacity: 0.75; margin-bottom: 1rem; }
+  .t { background: rgba(255,255,255,0.07); border-radius: 12px; padding: 0.7rem 0.9rem; margin-bottom: 0.7rem; }
+  .t b { display: block; font-size: 0.92rem; }
+  .url { font-size: 0.72rem; opacity: 0.7; direction: ltr; text-align: left; word-break: break-all; }
+  .st { font-weight: 700; margin-top: 0.3rem; }
+  .ok { color: #7BD88F; } .bad { color: #FF8A80; } .warn { color: #E0A458; }
+  pre { direction: ltr; text-align: left; white-space: pre-wrap; word-break: break-all; background: rgba(0,0,0,0.25); border-radius: 8px; padding: 0.5rem; font-size: 0.72rem; margin: 0.4rem 0 0; }
+  button { width: 100%; background: #D4A93B; color: #1a1a1a; border: none; border-radius: 999px; padding: 0.8rem; font-family: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; margin-bottom: 0.7rem; }
+  #sum { background: rgba(212,169,59,0.18); border: 1px solid #D4A93B; border-radius: 12px; padding: 0.7rem 0.9rem; margin-bottom: 0.9rem; font-weight: 600; display: none; }
+</style>
+</head>
+<body>
+<h1>فحص الـ Workers</h1>
+<div class="sub">الصفحة دي بتختبر الـ Workers الاتنين وتقولك اللي شغّال واللي لأ. بعد ما تخلص دوس "نسخ النتيجة" وابعتها.</div>
+<button id="runBtn" onclick="runAll()">ابدأ الفحص</button>
+<div id="sum"></div>
+<div id="out"></div>
+<button id="copyBtn" onclick="copyAll()" style="display:none;">نسخ النتيجة</button>
+<script>
+const AUTH = "https://register-class-auth.abm319.workers.dev";
+const AI = "https://register-class.abm319.workers.dev";
+const TESTS = [
+  { id: "a1", name: "Worker الدخول والمكتبة: رقم الإصدار", url: AUTH + "/version", worker: "auth" },
+  { id: "a2", name: "Worker الدخول: فحص كود امتحان وهمي", url: AUTH + "/resolve-exam?code=AAAAAA", worker: "auth" },
+  { id: "a3", name: "Worker الدخول: قايمة طلاب مرحلة (للمكتبة)", url: AUTH + "/materials-students?stage=test", worker: "auth" },
+  { id: "a4", name: "Worker الدخول: راوت إحصائيات الفيديو (من غير تسجيل دخول)", url: AUTH + "/video-stats", worker: "auth" },
+  { id: "b1", name: "Worker الذكاء الاصطناعي: الحالة", url: AI + "/status", worker: "ai" },
+];
+let REPORT = [];
+
+function judge(t, r) {
+  // r = { status, text, json, netError }
+  if (r.netError) return { cls: "bad", msg: "مفيش اتصال بالـ Worker (أو الـ Worker واقع / متحجوب). ده معناه إن المشكلة في الـ Worker نفسه أو في الشبكة." };
+  const j = r.json || {};
+  const err = j.error || "";
+  if (t.id === "a1") {
+    if (r.status === 200 && j.worker === "register-class-auth") return { cls: "ok", msg: "سليم ✅ نسخة Worker الدخول المنشورة: " + j.version };
+    if (r.status === 404 && err === "not_found") return { cls: "warn", msg: "ده Worker الدخول، بس نسخته قديمة (من غير راوت /version). لازم تلصق ملف register-class-auth-worker.js الجديد وتدوس Deploy." };
+    if (r.status === 405 || /Method not allowed/i.test(err)) return { cls: "bad", msg: "❌ الـ Worker ده فيه كود الذكاء الاصطناعي بالغلط! ملف register-class-worker.js اتلصق في Worker الدخول. الحل: الصق فيه register-class-auth-worker.js." };
+    if (r.status === 500) return { cls: "bad", msg: "❌ Worker الدخول بيرجّع خطأ داخلي. شوف النص تحت." };
+    return { cls: "bad", msg: "رد غير متوقع. ابعت النص اللي تحت." };
+  }
+  if (t.id === "a2") {
+    if (err === "exam_code_invalid") return { cls: "ok", msg: "سليم ✅ الراوت شغّال (والكود الوهمي مرفوض زي المطلوب)." };
+    if (r.status === 405 || /Method not allowed/i.test(err)) return { cls: "bad", msg: "❌ كود الذكاء الاصطناعي متلصق في Worker الدخول. ده سبب أن روابط الامتحانات مش شغالة." };
+    if (r.status === 404 && err === "not_found") return { cls: "bad", msg: "❌ الراوت ده مش موجود في الـ Worker المنشور (نسخة قديمة جداً أو ملف غلط)." };
+    if (r.status === 500) return { cls: "bad", msg: "❌ الـ Worker شغّال بس بيفشل وهو بيكلّم Firestore. ده غالباً سبب الروابط المعطّلة. شوف debugMessage في النص تحت." };
+    return { cls: "bad", msg: "رد غير متوقع. ابعت النص اللي تحت." };
+  }
+  if (t.id === "a3") {
+    if (r.status === 200 && j.ok) return { cls: "ok", msg: "سليم ✅ قايمة الطلاب بتتحمّل." };
+    if (r.status === 405 || /Method not allowed/i.test(err)) return { cls: "bad", msg: "❌ كود الذكاء الاصطناعي متلصق في Worker الدخول. ده سبب أن المكتبة مش بتتحمّل." };
+    if (r.status === 500) return { cls: "bad", msg: "❌ الـ Worker بيفشل وهو بيكلّم Firestore (شوف debugMessage تحت)." };
+    return { cls: "bad", msg: "رد غير متوقع. ابعت النص اللي تحت." };
+  }
+  if (t.id === "a4") {
+    if (r.status === 401 && err === "missing_auth") return { cls: "ok", msg: "سليم ✅ راوت الإحصائيات موجود في الـ Worker (رفض الطلب لأنه من غير تسجيل دخول، وده المطلوب)." };
+    if (r.status === 404) return { cls: "warn", msg: "الراوت مش موجود: Worker الدخول المنشور لسه من غير تعديلات الإحصائيات." };
+    if (r.status === 405) return { cls: "bad", msg: "❌ كود الذكاء الاصطناعي متلصق في Worker الدخول." };
+    return { cls: "bad", msg: "رد غير متوقع. ابعت النص اللي تحت." };
+  }
+  if (t.id === "b1") {
+    if (r.status === 200 && j.chain) return { cls: "ok", msg: "سليم ✅ Worker الذكاء الاصطناعي نسخته: " + j.version };
+    if (r.status === 404 || r.status === 405) return { cls: "bad", msg: "❌ الـ Worker ده مش فيه كود الذكاء الاصطناعي. ممكن يكون فيه كود الدخول بالغلط." };
+    return { cls: "bad", msg: "رد غير متوقع. ابعت النص اللي تحت." };
+  }
+  return { cls: "warn", msg: "" };
+}
+
+async function fetchOne(t) {
+  try {
+    const res = await fetch(t.url, { cache: "no-store" });
+    const text = await res.text();
+    let json = null; try { json = JSON.parse(text); } catch (e) {}
+    return { status: res.status, text, json };
+  } catch (e) {
+    return { netError: String(e && e.message || e) };
+  }
+}
+
+async function runAll() {
+  const btn = document.getElementById("runBtn");
+  btn.disabled = true; btn.textContent = "جاري الفحص...";
+  const out = document.getElementById("out"); out.innerHTML = "";
+  REPORT = ["فحص الـ Workers — " + new Date().toISOString(), "الصفحة: " + location.href, ""];
+  let bad = 0, warn = 0;
+  for (const t of TESTS) {
+    const r = await fetchOne(t);
+    const v = judge(t, r);
+    if (v.cls === "bad") bad++; if (v.cls === "warn") warn++;
+    const body = r.netError ? ("خطأ شبكة: " + r.netError) : ("HTTP " + r.status + "\n" + r.text.slice(0, 350));
+    const div = document.createElement("div");
+    div.className = "t";
+    div.innerHTML = `<b></b><div class="url"></div><div class="st ${v.cls}"></div><pre></pre>`;
+    div.querySelector("b").textContent = t.name;
+    div.querySelector(".url").textContent = t.url;
+    div.querySelector(".st").textContent = v.msg;
+    div.querySelector("pre").textContent = body;
+    out.appendChild(div);
+    REPORT.push("• " + t.name, "  " + t.url, "  النتيجة: " + v.msg, "  " + body.replace(/\n/g, "\n  "), "");
+  }
+  const sum = document.getElementById("sum");
+  sum.style.display = "block";
+  sum.textContent = bad ? "فيه مشكلة في الـ Workers ❌ (شوف الأحمر تحت)" : warn ? "الـ Workers شغّالين لكن فيه نسخة محتاجة تحديث ⚠️" : "كل الـ Workers شغّالين وسليمين ✅";
+  document.getElementById("copyBtn").style.display = "block";
+  btn.disabled = false; btn.textContent = "إعادة الفحص";
+}
+function copyAll() {
+  const text = REPORT.join("\n");
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => alert("تم النسخ")).catch(() => prompt("انسخ النتيجة:", text));
+  else prompt("انسخ النتيجة:", text);
+}
+</script>
+</body>
+</html>
