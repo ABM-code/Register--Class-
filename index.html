@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v89 - 2026-10-06">
+<meta name="app-version" content="v90 - 2026-10-06">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1731,7 +1731,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v89 — إحصائيات مشاهدة فيديوهات المكتبة (عدد المشاهدات + متوسط المدة + قائمة الطلاب مع بحث وفتح صفحة الطالب) — 6 أكتوبر 2026";
+const APP_VERSION = "v90 — تقليل قراءات Firestore (تخزين محلي + كاش في الـ Worker) + لوحة الإحصائيات بتتحمّل مرة واحدة — 6 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -1750,6 +1750,9 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+/* تخزين محلي لـ Firestore: لما التطبيق يتفتح تاني بيعرض من الجهاز فورًا وبياخد من السيرفر التغييرات بس،
+   بدل ما يقرا كل الطلاب والامتحانات والنتائج من الأول (ده أكبر مستهلك للحصة اليومية). */
+try { db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn("firestore persistence", e && e.code)); } catch (e) {}
 const auth = firebase.auth();
 // الجلسة بتفضل محفوظة على الجهاز (حتى بعد قفل المتصفح أو التطبيق) لحد ما المعلم يعمل تسجيل خروج بنفسه
 try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(e => console.warn("auth persistence", e)); } catch (e) {}
@@ -1942,7 +1945,7 @@ function startSync() {
       renderTorail();
       renderDeletedStudentsList();
       if (isStatsTabVisible()) renderStatsDashboard();
-      if (!autoBackupChecked) {
+      if (!autoBackupChecked && !snapshot.metadata.fromCache) {
         autoBackupChecked = true;
         setTimeout(maybeRunAutoBackup, 4000);
       }
@@ -1989,7 +1992,7 @@ function startSync() {
         }
       });
     }
-    firstResultsSnapshot = false;
+    if (!snapshot.metadata.fromCache) firstResultsSnapshot = false;   // أول لقطة من السيرفر هي "البداية" (من غير إشعارات) زي ما كان
     updateExamsBadge();
     renderNotificationCenter();
     renderExamsList();
@@ -5328,7 +5331,7 @@ function renderMaterialPreview(m) {
 
 /* ===== فاحص فيديوهات المكتبة: بيقولك أنهي فيديو مقفول التضمين أو خاص أو محذوف ===== */
 /* ===== إحصائيات مشاهدة فيديوهات المكتبة ===== */
-let videoStatsRows = [], videoStatsVideo = "", videoStatsQuery = "", videoStatsShown = 30;
+let videoStatsRows = [], videoStatsVideo = "", videoStatsQuery = "", videoStatsShown = 30, videoStatsLoaded = false;
 function fmtWatch(sec) {
   sec = Math.max(0, Math.round(Number(sec) || 0));
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60;
@@ -5345,22 +5348,23 @@ async function toggleVideoStats() {
   const panel = document.getElementById("videoStatsPanel");
   if (panel.style.display === "block") { panel.style.display = "none"; return; }
   panel.style.display = "block";
-  await loadVideoStats();
+  if (videoStatsLoaded) renderVideoStats(); else await loadVideoStats(false);
 }
-async function loadVideoStats() {
+async function loadVideoStats(force) {
   const panel = document.getElementById("videoStatsPanel");
   panel.innerHTML = `<div style="font-size:0.85rem; color:var(--c-mutedoncard);">جاري تحميل الإحصائيات...</div>`;
   try {
     const idToken = await auth.currentUser.getIdToken();
-    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/video-stats`, { headers: { "Authorization": `Bearer ${idToken}` } });
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/video-stats${force ? "?refresh=1" : ""}`, { headers: { "Authorization": `Bearer ${idToken}` } });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error("bad");
     videoStatsRows = data.rows || [];
+    videoStatsLoaded = true;
     videoStatsVideo = ""; videoStatsQuery = ""; videoStatsShown = 30;
     renderVideoStats();
   } catch (e) {
     panel.innerHTML = `<div style="font-size:0.85rem; color:var(--c-danger);">تعذر تحميل الإحصائيات. تأكد من تحديث الـWorker وجرّب تاني.</div>
-      <button type="button" class="backup-btn" onclick="loadVideoStats()" style="margin-top:0.5rem;">إعادة المحاولة</button>`;
+      <button type="button" class="backup-btn" onclick="loadVideoStats(true)" style="margin-top:0.5rem;">إعادة المحاولة</button>`;
   }
 }
 function renderVideoStats() {
@@ -5400,7 +5404,7 @@ function renderVideoStats() {
     <div style="font-size:0.78rem; color:var(--c-mutedoncard); margin:0.7rem 0 0.4rem;">الطلاب اللي شاهدوا</div>
     <input type="text" id="vsSearch" class="reg-input" placeholder="ابحث باسم الطالب..." value="${escapeHtml(videoStatsQuery)}" style="margin-bottom:0.5rem;">
     <div id="vsList"></div>
-    <button type="button" class="backup-btn" onclick="loadVideoStats()" style="margin-top:0.6rem;"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> تحديث الإحصائيات</button>`;
+    <button type="button" class="backup-btn" onclick="loadVideoStats(true)" style="margin-top:0.6rem;"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg> تحديث الإحصائيات</button>`;
   panel.querySelectorAll(".vs-vid").forEach(b => b.addEventListener("click", () => {
     videoStatsVideo = b.getAttribute("data-vid") || ""; videoStatsShown = 30; renderVideoStats();
   }));
