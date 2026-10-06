@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v90 - 2026-10-06">
+<meta name="app-version" content="v91 - 2026-10-06">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1731,7 +1731,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v90 — تقليل قراءات Firestore (تخزين محلي + كاش في الـ Worker) + لوحة الإحصائيات بتتحمّل مرة واحدة — 6 أكتوبر 2026";
+const APP_VERSION = "v91 — تصحيح كلمة «توريل» في شارة الإشعارات (كانت «طوريل») + تقليل قراءات Firestore — 6 أكتوبر 2026";
 let TEACHER_NAME = "أ/ عبد الرحمن منير";
 let TEACHER_PHONE = "01220524090";
 let TEACHER_BRAND_COLOR = "#D4A93B";
@@ -4100,7 +4100,7 @@ function renderNotifItem(n) {
     const r = n.result, info = notifResultInfo(r);
     const tier = info.pct >= 85 ? "sc-high" : info.pct >= 50 ? "sc-mid" : "sc-low";
     return `<div class="nt-item" onclick="openNotificationResult('${escapeHtml(r.id)}','${escapeHtml(r.examId)}')">
-      <div class="nt-top"><strong>${escapeHtml(r.studentName || "")}</strong>${info.stage ? ` <span class="stage-tag">${escapeHtml(info.stage)}</span>` : ""}${isResultTorail(r) ? ` <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">طوريل</span>` : ""}</div>
+      <div class="nt-top"><strong>${escapeHtml(r.studentName || "")}</strong>${info.stage ? ` <span class="stage-tag">${escapeHtml(info.stage)}</span>` : ""}${isResultTorail(r) ? ` <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>` : ""}</div>
       <div class="nt-mid">سلّم امتحان «${escapeHtml(info.examTitle)}»${info.examStage && info.examStage !== info.stage ? " (" + escapeHtml(info.examStage) + ")" : ""}</div>
       <div class="nt-bot"><span class="result-row-score ${tier}">${r.score}/${r.total} (${info.pct}%)</span><span class="nt-time">${timeAgoAr(n.ms)}</span></div>
     </div>`;
