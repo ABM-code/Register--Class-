@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v97 - 2026-10-07">
+<meta name="app-version" content="v99 - 2026-10-07">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1745,7 +1745,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v97 — إرسال نتيجة الطالب على الواتساب مع صورة بنفس شكل كارت النتيجة (اسم + المركز + توريل + التاريخ + الدرجة) — 7 أكتوبر 2026";
+const APP_VERSION = "v99 — صورة نتيجة الطالب بنفس كارت القايمة (مع الزراير) + فتح محادثة ولي الأمر مباشرة بالصورة منسوخة ونص الرسالة جاهز — 7 أكتوبر 2026";
 let TEACHER_NAME = "";   // من هوية المعلم المحفوظة (teachers/{uid}) بعد تسجيل الدخول
 let TEACHER_NAME_EN = "";   // الاسم بالإنجليزي لورقة الامتحان المطبوعة
 let TEACHER_PHONE = "";
@@ -7380,70 +7380,151 @@ async function buildResultCardBlob(r) {
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
   const rk = computeExamRankMap(r.examId).get(r.id);
+  const ex = exams.find(e => e.id === r.examId);
   const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString("ar-EG") : "";
   const bodyFont = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
-  const scale = 2, W = 1000, H = 400;
+  const serifFont = "'Fraunces', Georgia, serif";
+
+  // مقاسات الكارت مأخوذة من صورة قايمة النتايج (عرض 987)
+  const W = 987, M = 16, PADX = 47, PADTOP = 54, PADBOT = 38, GAP = 29, ROWGAP = 30;
+  const cardX = M, cardW = W - 2 * M;
+  const left = cardX + PADX, rightLimit = cardX + cardW - PADX;
+  const measure = document.createElement("canvas").getContext("2d");
+  const textW = (txt, font) => { measure.font = font; return measure.measureText(txt).width; };
+
+  // ===== الصف الأول: خانة الاختيار + (الاسم + الشارات) + التاريخ =====
+  const nameFont = `700 40px ${bodyFont}`, badgeFont = `600 26px ${bodyFont}`, dateFont = `400 24px ${bodyFont}`;
+  const badges = [];
+  if (rk) badges.push({ text: rankLabelAr(rk.rank), bg: cssVarColor("--c-warnbg", "#FBF0DE"), fg: cssVarColor("--c-warntext", "#8A6A1F"), info: true });
+  if (isResultTorail(r)) badges.push({ text: "توريل", bg: cssVarColor("--c-warnbg", "#FBF0DE"), fg: cssVarColor("--c-warntext", "#8A6A1F") });
+  if (r.manual) badges.push({ text: "غير مسجل", bg: cssVarColor("--c-infobg", "#E4EDF6"), fg: cssVarColor("--c-infotext", "#2E5C8A") });
+  badges.forEach(b => {
+    if (b.info) { b.bg = cssVarColor("--c-infobg", "#E4EDF6"); b.fg = cssVarColor("--c-infotext", "#2E5C8A"); }   // شارة المركز بلون المعلومات
+  });
+  const name = r.studentName || "";
+  const nameW = textW(name, nameFont);
+  badges.forEach(b => { b.w = textW(b.text, badgeFont) + 70; });
+  const BADGE_H = 53, BADGE_GAP = 11, NAME_GAP = 14;
+  const blockW = nameW + badges.reduce((n, b, i) => n + b.w + (i === 0 ? NAME_GAP : BADGE_GAP), 0);
+  const CB = 46, CB_GAP = 31;
+  const rowAH = 109;
+
+  // ===== صفوف الزراير (من الشمال لليمين، وبتلف لو مفيش مكان) =====
+  const items = [];
+  const scoreText = `${r.score}/${r.total} (${pct}%)`;
+  const tone = pct >= 85 ? ["--c-successbg", "#EAF2E7", "--c-success", "#3F6B4A"]
+             : pct >= 50 ? ["--c-warnbg", "#FBF0DE", "--c-warntext", "#8A6A1F"]
+                         : ["--c-dangerbg", "#FBE9E7", "--c-dangertext", "#A5382E"];
+  items.push({ kind: "score", w: textW(scoreText, `700 38px ${serifFont}`) + 94, h: 73, text: scoreText, bg: cssVarColor(tone[0], tone[1]), fg: cssVarColor(tone[2], tone[3]) });
+  const btnFont = `700 30px ${bodyFont}`;
+  if (r.studentId) items.push({ kind: "btn", w: textW("بيانات الطالب", btnFont) + 67, h: 87, text: "بيانات الطالب", bg: cssVarColor("--c-infosolid", "#5B8EC3"), fg: "#fff" });
+  if (r.parentPhone) items.push({ kind: "btn", w: textW("واتساب", btnFont) + 67, h: 87, text: "واتساب", bg: "#25D366", fg: "#fff" });
+  if (r.studentId) {
+    const allowed = !!(ex && ex.allowRetake && ex.allowRetake[r.studentId]);
+    if (allowed) {
+      const t = "\u2713 مسموح بالإعادة";
+      items.push({ kind: "btn", w: textW(t, btnFont) + 67, h: 87, text: t, bg: cssVarColor("--c-success", "#3F6B4A"), fg: "#fff" });
+    } else {
+      const t = "سماح بإعادة المحاولة";
+      items.push({ kind: "retake", w: textW(t, btnFont) + 61, h: 129, text: t, bg: cssVarColor("--c-warnsolid", "#966925"), fg: "#fff" });
+    }
+  }
+  const rows = [[]]; let x = left;
+  items.forEach(it => {
+    if (x + it.w > rightLimit && rows[rows.length - 1].length) { rows.push([]); x = left; }
+    it.x = x; rows[rows.length - 1].push(it); x += it.w + GAP;
+  });
+  const rowHeights = rows.map(rw => Math.max(...rw.map(i => i.h)));
+
+  const cardH = PADTOP + rowAH + rowHeights.reduce((n, h) => n + ROWGAP + h, 0) + PADBOT;
+  const H = cardH + 2 * M;
+  const scale = 2;
   const canvas = document.createElement("canvas");
   canvas.width = W * scale; canvas.height = H * scale;
   const ctx = canvas.getContext("2d");
   ctx.scale(scale, scale);
   ctx.fillStyle = "#16312C"; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = cssVarColor("--c-cardbg", "#F5F1E6");
-  canvasRoundRect(ctx, 24, 24, W - 48, H - 48, 40); ctx.fill();
-  ctx.direction = "rtl"; ctx.textBaseline = "middle";
+  canvasRoundRect(ctx, cardX, M, cardW, cardH, 44); ctx.fill();
+  ctx.textBaseline = "middle";
 
-  // الصف الأول: الاسم + شارات (المركز / توريل)
-  const right = W - 24 - 48, leftLimit = 24 + 48;
-  const badges = [];
-  if (rk) badges.push({ text: rankLabelAr(rk.rank), bg: cssVarColor("--c-infobg", "#E4EDF6"), fg: cssVarColor("--c-infotext", "#2E5C8A") });
-  if (isResultTorail(r)) badges.push({ text: "توريل", bg: cssVarColor("--c-warnbg", "#FBF0DE"), fg: cssVarColor("--c-warntext", "#8A6A1F") });
-  const name = r.studentName || "";
-  let nameSize = 54;
-  const measureAll = () => {
-    ctx.font = `700 ${nameSize}px ${bodyFont}`;
-    let w = ctx.measureText(name).width + 22;
-    ctx.font = `600 ${Math.round(nameSize * 0.58)}px ${bodyFont}`;
-    badges.forEach(b => { b.w = ctx.measureText(b.text).width + 52; w += b.w + 18; });
-    return w;
-  };
-  while (measureAll() > right - leftLimit && nameSize > 28) nameSize -= 2;
-  const y1 = 112;
-  ctx.font = `700 ${nameSize}px ${bodyFont}`; ctx.fillStyle = "#1E201B"; ctx.textAlign = "right";
-  ctx.fillText(name, right, y1);
-  let cursor = right - ctx.measureText(name).width - 22;
-  ctx.font = `600 ${Math.round(nameSize * 0.58)}px ${bodyFont}`;
+  // خانة الاختيار
+  const topA = M + PADTOP;
+  const cbY = topA + (rowAH - CB) / 2 - 6;
+  canvasRoundRect(ctx, left, cbY, CB, CB, 9);
+  ctx.fillStyle = "#fff"; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = "#787878"; ctx.stroke();
+
+  // الاسم + الشارات (الاسم على اليمين والشارات على شماله) والتاريخ تحتهم على الشمال
+  const blockLeft = left + CB + CB_GAP;
+  const nameRight = blockLeft + blockW;
+  const nameY = topA + BADGE_H / 2;
+  ctx.direction = "rtl"; ctx.textAlign = "right"; ctx.font = nameFont; ctx.fillStyle = "#1E201B";
+  ctx.fillText(name, nameRight, nameY);
+  let cursor = nameRight - nameW - NAME_GAP;
+  ctx.font = badgeFont;
   badges.forEach(b => {
-    const h = 64;
-    canvasRoundRect(ctx, cursor - b.w, y1 - h / 2, b.w, h, h / 2); ctx.fillStyle = b.bg; ctx.fill();
-    ctx.fillStyle = b.fg; ctx.textAlign = "center"; ctx.fillText(b.text, cursor - b.w / 2, y1 + 1);
-    cursor -= b.w + 18;
+    canvasRoundRect(ctx, cursor - b.w, topA, b.w, BADGE_H, BADGE_H / 2); ctx.fillStyle = b.bg; ctx.fill();
+    ctx.fillStyle = b.fg; ctx.textAlign = "center"; ctx.fillText(b.text, cursor - b.w / 2, nameY + 1);
+    cursor -= b.w + BADGE_GAP;
   });
+  ctx.font = dateFont; ctx.fillStyle = cssVarColor("--c-mutedoncard", "#6A6A5E"); ctx.textAlign = "left";
+  ctx.fillText(dateStr, blockLeft, topA + BADGE_H + 32);
 
-  // الصف التاني: التاريخ والوقت
-  ctx.font = `400 32px ${bodyFont}`; ctx.fillStyle = cssVarColor("--c-mutedoncard", "#6A6A5E"); ctx.textAlign = "right";
-  ctx.fillText(dateStr, right, 196);
-
-  // الصف التالت: الدرجة
-  const tone = pct >= 85 ? ["--c-successbg", "#EAF2E7", "--c-success", "#3F6B4A"]
-             : pct >= 50 ? ["--c-warnbg", "#FBF0DE", "--c-warntext", "#8A6A1F"]
-                         : ["--c-dangerbg", "#FBE9E7", "--c-dangertext", "#A5382E"];
-  const scoreText = `${r.score}/${r.total} (${pct}%)`;
-  ctx.direction = "ltr";
-  ctx.font = `700 54px 'Fraunces', Georgia, serif`;
-  const pw = ctx.measureText(scoreText).width + 100, ph = 104;
-  canvasRoundRect(ctx, right - pw, 262, pw, ph, ph / 2);
-  ctx.fillStyle = cssVarColor(tone[0], tone[1]); ctx.fill();
-  ctx.fillStyle = cssVarColor(tone[2], tone[3]); ctx.textAlign = "center";
-  ctx.fillText(scoreText, right - pw / 2, 262 + ph / 2 + 2);
+  // الدرجة + الزراير
+  let y = topA + rowAH;
+  rows.forEach((rw, ri) => {
+    y += ROWGAP;
+    const rh = rowHeights[ri];
+    rw.forEach(it => {
+      const iy = y + (rh - it.h) / 2;
+      canvasRoundRect(ctx, it.x, iy, it.w, it.h, it.kind === "score" ? it.h / 2 : 26);
+      ctx.fillStyle = it.bg; ctx.fill();
+      ctx.fillStyle = it.fg; ctx.textAlign = "center";
+      if (it.kind === "score") {
+        ctx.direction = "ltr"; ctx.font = `700 38px ${serifFont}`;
+        ctx.fillText(it.text, it.x + it.w / 2, iy + it.h / 2 + 2);
+        ctx.direction = "rtl";
+      } else if (it.kind === "retake") {
+        ctx.font = btnFont;
+        ctx.fillText(it.text, it.x + it.w / 2, iy + it.h - 44);
+        // أيقونة التحديث فوق النص (على الشمال)
+        ctx.save();
+        ctx.translate(it.x + 31, iy + 20); ctx.scale(34 / 24, 34 / 24);
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.lineCap = "round"; ctx.lineJoin = "round";
+        ["M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", "M21 3v5h-5", "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", "M8 16H3v5"].forEach(d => ctx.stroke(new Path2D(d)));
+        ctx.restore();
+      } else {
+        ctx.font = btnFont;
+        ctx.fillText(it.text, it.x + it.w / 2, iy + it.h / 2 + 1);
+      }
+    });
+    y += rh;
+  });
 
   return await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error("toBlob")), "image/png"));
 }
 function safeResultFileName(name) {
   return "نتيجة " + (String(name || "").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 40) || "الطالب") + ".png";
 }
-// بيفتح قايمة المشاركة (واتساب) بالصورة + نص الرسالة. لو الجهاز مش بيدعم مشاركة الملفات: بيحفظ الصورة وبيفتح محادثة واتساب بالنص.
-async function shareResultImageWithMessage(blob, studentName, message, waNumber) {
+// إرسال صورة النتيجة مع الرسالة لواتساب ولي الأمر:
+// 1) لو فيه رقم: بننسخ الصورة للحافظة وبنفتح محادثة ولي الأمر برقمه ونص الرسالة جاهز، وأنت بتلصق الصورة وتدوس إرسال.
+//    (واتساب مابيسمحش لأي موقع يبعت صورة لرقم مباشرة من غير الـAPI الرسمي، ودي أقرب طريقة مباشرة.)
+// 2) لو الجهاز مش بيدعم نسخ الصور: قايمة المشاركة (بتختار المحادثة بنفسك)، وبعدين حفظ الصورة كاحتياطي أخير.
+async function shareResultImageWithMessage(blobOrPromise, studentName, message, waNumber) {
+  const blobP = Promise.resolve(blobOrPromise);
   const fileName = safeResultFileName(studentName);
+  if (waNumber && navigator.clipboard && window.ClipboardItem) {
+    let copied = false;
+    try { await navigator.clipboard.write([new ClipboardItem({ "image/png": blobP })]); copied = true; } catch (e) {}
+    if (copied) {
+      window.open("https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message), "_blank");
+      showSuccess("الصورة اتنسخت. الصقها في محادثة ولي الأمر (اضغط مطولاً في خانة الكتابة ثم لصق) واضغط إرسال.");
+      return;
+    }
+  }
+  let blob;
+  try { blob = await blobP; }
+  catch (e) { showError("تعذر إنشاء صورة النتيجة. جرّب تاني."); return; }
   let file = null;
   try { file = new File([blob], fileName, { type: "image/png" }); } catch (e) {}
   if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -7460,10 +7541,7 @@ async function shareResultImageWithMessage(blob, studentName, message, waNumber)
 async function sendExamResultWhatsappWithImage(resultId) {
   const r = examResults.find(x => x.id === resultId);
   if (!r) return;
-  let blob;
-  try { blob = await buildResultCardBlob(r); }
-  catch (e) { showError("تعذر إنشاء صورة النتيجة. جرّب تاني."); return; }
-  await shareResultImageWithMessage(blob, r.studentName, examResultWhatsappMessage(r), formatPhoneForWhatsapp(r.parentPhone));
+  await shareResultImageWithMessage(buildResultCardBlob(r), r.studentName, examResultWhatsappMessage(r), formatPhoneForWhatsapp(r.parentPhone));
 }
 
 let waQueue = [];
@@ -7558,10 +7636,7 @@ async function waQueueOpenImageCurrent() {
   if (!item || !item.waNumber || !item.resultId) return;
   const r = examResults.find(x => x.id === item.resultId);
   if (!r) return;
-  let blob;
-  try { blob = await buildResultCardBlob(r); }
-  catch (e) { showError("تعذر إنشاء صورة النتيجة. جرّب تاني."); return; }
-  await shareResultImageWithMessage(blob, item.name, item.message, item.waNumber);
+  await shareResultImageWithMessage(buildResultCardBlob(r), item.name, item.message, item.waNumber);
 }
 
 function waQueueNext() {
