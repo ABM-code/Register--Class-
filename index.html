@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v96 - 2026-10-06">
+<meta name="app-version" content="v97 - 2026-10-07">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -538,6 +538,9 @@
     <div id="waQueuePhone" style="color:var(--c-mutedoncard); font-size:0.85rem; margin-bottom:1rem;"></div>
     <button id="waQueueOpenBtn" onclick="waQueueOpenCurrent()" style="background:#25D366; color:#fff; border:none; border-radius:10px; padding:0.75rem 1rem; font-weight:700; font-size:0.95rem; cursor:pointer; width:100%; margin-bottom:0.6rem;">
       <svg class="ic" aria-hidden="true"><use href="#i-send"/></svg> افتح واتساب وابعت
+    </button>
+    <button id="waQueueOpenImgBtn" onclick="waQueueOpenImageCurrent()" style="display:none; background:#128C7E; color:#fff; border:none; border-radius:10px; padding:0.75rem 1rem; font-weight:700; font-size:0.95rem; cursor:pointer; width:100%; margin-bottom:0.6rem;">
+      <svg class="ic" aria-hidden="true"><use href="#i-send"/></svg> افتح واتساب مع صورة النتيجة
     </button>
     <button onclick="waQueueNext()" style="background:var(--c-accent); color:var(--c-onaccent); border:none; border-radius:10px; padding:0.7rem 1rem; font-weight:700; font-size:0.9rem; cursor:pointer; width:100%; margin-bottom:0.5rem;">
       التالي ⬅️
@@ -1742,7 +1745,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v96 — ترتيب الطلاب في الامتحان (المركز الأول/الثاني...) يظهر للطالب بعد التسليم وللمعلم في قايمة النتايج — 6 أكتوبر 2026";
+const APP_VERSION = "v97 — إرسال نتيجة الطالب على الواتساب مع صورة بنفس شكل كارت النتيجة (اسم + المركز + توريل + التاريخ + الدرجة) — 7 أكتوبر 2026";
 let TEACHER_NAME = "";   // من هوية المعلم المحفوظة (teachers/{uid}) بعد تسجيل الدخول
 let TEACHER_NAME_EN = "";   // الاسم بالإنجليزي لورقة الامتحان المطبوعة
 let TEACHER_PHONE = "";
@@ -7330,6 +7333,7 @@ function renderExamResultsList() {
             <span class="result-row-score ${pct >= 85 ? 'sc-high' : pct >= 50 ? 'sc-mid' : 'sc-low'}">${r.score}/${r.total} (${pct}%)</span>
             ${r.studentId ? `<button class="wa-send-btn" style="background:var(--c-infosolid);" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
             ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
+            ${r.parentPhone ? `<button class="wa-send-btn" style="background:#128C7E;" onclick="event.stopPropagation(); sendExamResultWhatsappWithImage('${r.id}')">واتساب + صورة</button>` : ""}
             ${r.studentId ? (() => {
               const alreadyAllowed = !!(ex && ex.allowRetake && ex.allowRetake[r.studentId]);
               return alreadyAllowed
@@ -7352,6 +7356,114 @@ function sendExamResultWhatsapp(r) {
   const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
   window.open(url, "_blank");
+}
+
+/* ===== صورة نتيجة الطالب (بنفس شكل كارت قايمة النتايج) وإرسالها مع رسالة الواتساب ===== */
+function cssVarColor(name, fallback) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+function examResultWhatsappMessage(r) {
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  return waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
+}
+function canvasRoundRect(ctx, x, y, w, h, rad) {
+  ctx.beginPath();
+  ctx.moveTo(x + rad, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rad);
+  ctx.arcTo(x + w, y + h, x, y + h, rad);
+  ctx.arcTo(x, y + h, x, y, rad);
+  ctx.arcTo(x, y, x + w, y, rad);
+  ctx.closePath();
+}
+async function buildResultCardBlob(r) {
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) {}
+  const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
+  const rk = computeExamRankMap(r.examId).get(r.id);
+  const dateStr = r.submittedAt && r.submittedAt.toDate ? r.submittedAt.toDate().toLocaleString("ar-EG") : "";
+  const bodyFont = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
+  const scale = 2, W = 1000, H = 400;
+  const canvas = document.createElement("canvas");
+  canvas.width = W * scale; canvas.height = H * scale;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(scale, scale);
+  ctx.fillStyle = "#16312C"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = cssVarColor("--c-cardbg", "#F5F1E6");
+  canvasRoundRect(ctx, 24, 24, W - 48, H - 48, 40); ctx.fill();
+  ctx.direction = "rtl"; ctx.textBaseline = "middle";
+
+  // الصف الأول: الاسم + شارات (المركز / توريل)
+  const right = W - 24 - 48, leftLimit = 24 + 48;
+  const badges = [];
+  if (rk) badges.push({ text: rankLabelAr(rk.rank), bg: cssVarColor("--c-infobg", "#E4EDF6"), fg: cssVarColor("--c-infotext", "#2E5C8A") });
+  if (isResultTorail(r)) badges.push({ text: "توريل", bg: cssVarColor("--c-warnbg", "#FBF0DE"), fg: cssVarColor("--c-warntext", "#8A6A1F") });
+  const name = r.studentName || "";
+  let nameSize = 54;
+  const measureAll = () => {
+    ctx.font = `700 ${nameSize}px ${bodyFont}`;
+    let w = ctx.measureText(name).width + 22;
+    ctx.font = `600 ${Math.round(nameSize * 0.58)}px ${bodyFont}`;
+    badges.forEach(b => { b.w = ctx.measureText(b.text).width + 52; w += b.w + 18; });
+    return w;
+  };
+  while (measureAll() > right - leftLimit && nameSize > 28) nameSize -= 2;
+  const y1 = 112;
+  ctx.font = `700 ${nameSize}px ${bodyFont}`; ctx.fillStyle = "#1E201B"; ctx.textAlign = "right";
+  ctx.fillText(name, right, y1);
+  let cursor = right - ctx.measureText(name).width - 22;
+  ctx.font = `600 ${Math.round(nameSize * 0.58)}px ${bodyFont}`;
+  badges.forEach(b => {
+    const h = 64;
+    canvasRoundRect(ctx, cursor - b.w, y1 - h / 2, b.w, h, h / 2); ctx.fillStyle = b.bg; ctx.fill();
+    ctx.fillStyle = b.fg; ctx.textAlign = "center"; ctx.fillText(b.text, cursor - b.w / 2, y1 + 1);
+    cursor -= b.w + 18;
+  });
+
+  // الصف التاني: التاريخ والوقت
+  ctx.font = `400 32px ${bodyFont}`; ctx.fillStyle = cssVarColor("--c-mutedoncard", "#6A6A5E"); ctx.textAlign = "right";
+  ctx.fillText(dateStr, right, 196);
+
+  // الصف التالت: الدرجة
+  const tone = pct >= 85 ? ["--c-successbg", "#EAF2E7", "--c-success", "#3F6B4A"]
+             : pct >= 50 ? ["--c-warnbg", "#FBF0DE", "--c-warntext", "#8A6A1F"]
+                         : ["--c-dangerbg", "#FBE9E7", "--c-dangertext", "#A5382E"];
+  const scoreText = `${r.score}/${r.total} (${pct}%)`;
+  ctx.direction = "ltr";
+  ctx.font = `700 54px 'Fraunces', Georgia, serif`;
+  const pw = ctx.measureText(scoreText).width + 100, ph = 104;
+  canvasRoundRect(ctx, right - pw, 262, pw, ph, ph / 2);
+  ctx.fillStyle = cssVarColor(tone[0], tone[1]); ctx.fill();
+  ctx.fillStyle = cssVarColor(tone[2], tone[3]); ctx.textAlign = "center";
+  ctx.fillText(scoreText, right - pw / 2, 262 + ph / 2 + 2);
+
+  return await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error("toBlob")), "image/png"));
+}
+function safeResultFileName(name) {
+  return "نتيجة " + (String(name || "").replace(/[\\/:*?"<>|]+/g, " ").trim().slice(0, 40) || "الطالب") + ".png";
+}
+// بيفتح قايمة المشاركة (واتساب) بالصورة + نص الرسالة. لو الجهاز مش بيدعم مشاركة الملفات: بيحفظ الصورة وبيفتح محادثة واتساب بالنص.
+async function shareResultImageWithMessage(blob, studentName, message, waNumber) {
+  const fileName = safeResultFileName(studentName);
+  let file = null;
+  try { file = new File([blob], fileName, { type: "image/png" }); } catch (e) {}
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], text: message }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = fileName;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  if (waNumber) window.open("https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message), "_blank");
+  showSuccess("الصورة اتحفظت على جهازك. ارفقها في محادثة الواتساب.");
+}
+async function sendExamResultWhatsappWithImage(resultId) {
+  const r = examResults.find(x => x.id === resultId);
+  if (!r) return;
+  let blob;
+  try { blob = await buildResultCardBlob(r); }
+  catch (e) { showError("تعذر إنشاء صورة النتيجة. جرّب تاني."); return; }
+  await shareResultImageWithMessage(blob, r.studentName, examResultWhatsappMessage(r), formatPhoneForWhatsapp(r.parentPhone));
 }
 
 let waQueue = [];
@@ -7423,6 +7535,33 @@ function waQueueOpenCurrent() {
   if (!item || !item.waNumber) return;
   const url = "https://wa.me/" + item.waNumber + "?text=" + encodeURIComponent(item.message);
   window.open(url, "_blank");
+}
+
+// زرار "مع صورة النتيجة" في نافذة إرسال الطلاب واحد واحد (من غير ما نغيّر الدوال الأصلية: بنلفّها بس)
+function syncWaQueueImgBtn() {
+  const open = document.getElementById("waQueueOpenBtn"), img = document.getElementById("waQueueOpenImgBtn");
+  if (!open || !img) return;
+  const item = waQueue[waQueueIndex];
+  img.style.display = (open.style.display !== "none" && item && item.resultId) ? "block" : "none";
+}
+const _renderWaQueueStepOriginal = renderWaQueueStep;
+renderWaQueueStep = function () { _renderWaQueueStepOriginal(); syncWaQueueImgBtn(); };
+const _startWhatsappQueueOriginal = startWhatsappQueue;
+startWhatsappQueue = function () {
+  _startWhatsappQueueOriginal();
+  const list = getVisibleExamResultsList().filter(r => selectedResultIds.has(r.id));
+  list.forEach((r, i) => { if (waQueue[i]) waQueue[i].resultId = r.id; });
+  syncWaQueueImgBtn();
+};
+async function waQueueOpenImageCurrent() {
+  const item = waQueue[waQueueIndex];
+  if (!item || !item.waNumber || !item.resultId) return;
+  const r = examResults.find(x => x.id === item.resultId);
+  if (!r) return;
+  let blob;
+  try { blob = await buildResultCardBlob(r); }
+  catch (e) { showError("تعذر إنشاء صورة النتيجة. جرّب تاني."); return; }
+  await shareResultImageWithMessage(blob, item.name, item.message, item.waNumber);
 }
 
 function waQueueNext() {
