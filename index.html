@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v93 - 2026-10-06">
+<meta name="app-version" content="v96 - 2026-10-06">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1742,7 +1742,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v93 — تفعيل معلم جديد من التطبيق (للمالك) + ترحيل البيانات القديمة للمالك فقط + دعم أكتر من معلم — 6 أكتوبر 2026";
+const APP_VERSION = "v96 — ترتيب الطلاب في الامتحان (المركز الأول/الثاني...) يظهر للطالب بعد التسليم وللمعلم في قايمة النتايج — 6 أكتوبر 2026";
 let TEACHER_NAME = "";   // من هوية المعلم المحفوظة (teachers/{uid}) بعد تسجيل الدخول
 let TEACHER_NAME_EN = "";   // الاسم بالإنجليزي لورقة الامتحان المطبوعة
 let TEACHER_PHONE = "";
@@ -7224,12 +7224,36 @@ function getVisibleExamResultsList() {
   list = [...list].sort((a, b) => (isResultTorail(a) ? 1 : 0) - (isResultTorail(b) ? 1 : 0));
   return list;
 }
+function rankLabelAr(n) {
+  const w = ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر"];
+  return n >= 1 && n <= 10 ? "المركز " + w[n] : "المركز " + n;
+}
+// ترتيب كل طالب في الامتحان حسب الدرجة (الأعلى أولًا). نفس الدرجة = نفس المركز. بيتحسب من كل نتايج الامتحان مش من القايمة المفلترة.
+function computeExamRankMap(examId) {
+  const all = examResults.filter(r => r.examId === examId && !r.deletedAt);
+  const map = new Map();
+  all.forEach(r => {
+    const sc = Number(r.score) || 0;
+    const higher = all.filter(o => (Number(o.score) || 0) > sc).length;
+    const tied = all.filter(o => o !== r && (Number(o.score) || 0) === sc).length;
+    map.set(r.id, { rank: higher + 1, total: all.length, tied });
+  });
+  return map;
+}
+function rankBadgeHtml(rankMap, r) {
+  const k = rankMap.get(r.id);
+  if (!k) return "";
+  const tip = "من " + k.total + " طالب" + (k.tied > 0 ? " (بالتساوي مع " + k.tied + ")" : "");
+  return ` <span class="mini-badge" title="${tip}" style="background:var(--c-infobg, rgba(212,169,59,0.18)); color:var(--c-infotext, inherit);">${rankLabelAr(k.rank)}</span>`;
+}
+
 function renderExamResultsList() {
   if (document.getElementById("examQuestionStatsSection") && document.getElementById("examQuestionStatsSection").style.display === "block") {
     renderExamQuestionDifficulty();
   }
   const rawQuery = document.getElementById("examResultsSearchInput") ? document.getElementById("examResultsSearchInput").value.trim() : "";
   const list = getVisibleExamResultsList();
+  const rankMap = computeExamRankMap(viewingExamId);
   const allPill = document.getElementById("resultsAllPill");
   const torailPill = document.getElementById("resultsTorailPill");
   if (allPill) {
@@ -7298,7 +7322,7 @@ function renderExamResultsList() {
           <div style="display:flex; align-items:center; gap:0.6rem;">
             <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
             <div>
-              <div class="result-row-name">${escapeHtml(r.studentName)}${isResultTorail(r) ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>' : ''}${r.manual ? ' <span class="mini-badge" style="background:var(--c-infobg);color:var(--c-infotext);">غير مسجل</span>' : ''}</div>
+              <div class="result-row-name">${escapeHtml(r.studentName)}${rankBadgeHtml(rankMap, r)}${isResultTorail(r) ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>' : ''}${r.manual ? ' <span class="mini-badge" style="background:var(--c-infobg);color:var(--c-infotext);">غير مسجل</span>' : ''}</div>
               <div class="result-row-date">${dateStr}</div>
             </div>
           </div>

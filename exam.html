@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta name="app-version" content="v95 - 2026-10-06">
+<meta name="app-version" content="v96 - 2026-10-06">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#16302B">
@@ -63,6 +63,7 @@
   .timer-chip.timer-warning .timer-value, .timer-chip.timer-warning .ic { color: var(--c-danger); }
   .exam-progress-track { height: 8px; border-radius: 8px; background: rgba(159,184,173,0.25); overflow: hidden; }
   .exam-progress-fill { height: 100%; width: 0; border-radius: 8px; background: var(--accent); transition: width 0.25s ease; }
+  .rank-chip { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.6rem; padding: 0.4rem 0.95rem; border-radius: 999px; border: 1px solid var(--accent); font-weight: 700; font-size: 0.9rem; line-height: 1.6; }
   .restored { display: flex; align-items: center; gap: 0.5rem; background: var(--c-soft); padding: 0.6rem 0.9rem; margin-bottom: 0.5rem; font-size: 0.85rem; color: var(--c-success); }
   .note-card { border-right: 4px solid transparent; }
   .note-card.ok { border-right-color: var(--c-success); } .note-card.bad { border-right-color: var(--c-danger); }
@@ -113,7 +114,7 @@
 </style>
 </head>
 <body>
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol><symbol id="i-key" viewBox="0 0 24 24"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol></svg>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true"><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol><symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></symbol><symbol id="i-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol><symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol><symbol id="i-key" viewBox="0 0 24 24"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol></svg>
 <div class="wrap">
   <h1 id="examTitle">جاري التحميل…</h1>
   <p class="sub" id="examSub"></p>
@@ -858,6 +859,7 @@ async function submitExam(isTimeout) {
     try { localStorage.removeItem(getAnswersStorageKey()); } catch (e) {}
     examInProgress = false;
     clearLeftMarker();
+    lastRankInfo = data.rank ? { rank: data.rank, total: data.rankTotal, tied: data.rankTied || 0 } : null;
     renderResult(data.score, data.total, data.answerDetails || answerDetails, true, isTimeout);
   } catch (err) {
     if (submitBtn) {
@@ -900,6 +902,19 @@ function playExamResultSound() {
   });
 }
 
+function rankLabelAr(n) {
+  const w = ["", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس", "السابع", "الثامن", "التاسع", "العاشر"];
+  return n >= 1 && n <= 10 ? "المركز " + w[n] : "المركز " + n;
+}
+let lastRankInfo = null;   // ترتيب الطالب (من الـWorker) بعد التسليم مباشرة
+function rankChipHtml() {
+  const r = lastRankInfo;
+  if (!r || !r.rank || !r.total) return "";
+  let text;
+  if (r.total < 2) text = "أنت أول طالب بيسلّم الامتحان ده";
+  else text = "ترتيبك لحد دلوقتي: " + rankLabelAr(r.rank) + " من " + r.total + " طالب" + (r.tied > 0 ? " (بالتساوي مع " + r.tied + ")" : "");
+  return `<div class="rank-chip">${icon("trophy")} ${text}</div>`;
+}
 function renderResult(score, total, answerDetails, isFreshSubmission = true, wasTimedOut = false) {
   if (isFreshSubmission) playExamResultSound();
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
@@ -971,6 +986,7 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
       <div class="score-ring ${tier}${isFreshSubmission ? " animate" : ""}" style="--p:${pct}"><div class="score-ring-inner"><span class="score-pct">${pct}%</span></div></div>
       <div class="result-score">${score} / ${total}</div>
       <div class="tier-chip ${tier}">${tierText}</div>
+      ${isFreshSubmission ? rankChipHtml() : ""}
       <div class="result-counts">
         <span class="mini ok">${icon("check-circle")} ${correctCount} صح</span>
         <span class="mini bad">${icon("x-circle")} ${wrongCount} غلط</span>
@@ -1035,6 +1051,6 @@ async function requestExplain(explainId, action, btnEl) {
 
 init();
 </script>
-<div style="text-align:center; font-size:0.65rem; opacity:0.45; margin:1.2rem 0 0.8rem;">إصدار v95</div>
+<div style="text-align:center; font-size:0.65rem; opacity:0.45; margin:1.2rem 0 0.8rem;">إصدار v96</div>
 </body>
 </html>
