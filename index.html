@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v99 - 2026-10-07">
+<meta name="app-version" content="v100 - 2026-10-07">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -61,29 +61,30 @@
   --c-infosolid: #5B8FC4;
 }
 [data-theme="light"] {
-  --c-pagebg: #F6F4EE;
+  /* لوحة الشكل الفاتح مأخوذة من ورقة الامتحان: لافندر + بنفسجي + أزرق كحلي، وأصفر للتنبيهات */
+  --c-pagebg: #F0EEFC;
   --c-cardbg: #FFFFFF;
-  --c-textoncard: #1E2B24;
-  --c-mutedonpage: #6B7A72;
-  --c-mutedoncard: #74796F;
-  --c-accent: #1F6F54;
+  --c-textoncard: #1E1B4B;
+  --c-mutedonpage: #5F5E8F;
+  --c-mutedoncard: #5E5D8A;
+  --c-accent: #5B47D1 !important;
   --c-success: #2F8F5B;
   --c-danger: #B7583F;
   --c-dangertext: #9C4B32;
-  --c-cardalt: #F1EFE7;
+  --c-cardalt: #E6E3FB;
   --c-successbg: #E7F3EC;
   --c-dangerbg: #FBEAE6;
   --c-white: #FFFFFF;
-  --c-onaccent: #FFFFFF;
-  --c-textonpage: #1E2B24;
+  --c-onaccent: #FFFFFF !important;
+  --c-textonpage: #1E1B4B;
   --c-onsuccess: #FFFFFF;
-  --c-subtle-rgb: 30,43,36;
-  --c-warnbg: #FBF0DE;
-  --c-warntext: #8A6A1F;
+  --c-subtle-rgb: 30,27,75;
+  --c-warnbg: #FEF3C7;
+  --c-warntext: #7A5A08;
   --c-warnsolid: #946A26;
-  --c-infobg: #E4EDF6;
-  --c-infotext: #2E5C8A;
-  --c-infosolid: #5B8FC4;
+  --c-infobg: #E6ECFD;
+  --c-infotext: #2F4BB5;
+  --c-infosolid: #3F6FDB;
 }
 .theme-toggle-btn {
   position: absolute; top: 1rem; left: 7rem; background: rgba(var(--c-subtle-rgb),0.08);
@@ -520,6 +521,21 @@
   .chart-empty .ic { display: block; margin: 0 auto 0.5rem; width: 1.8rem; height: 1.8rem; opacity: 0.5; stroke-width: 1.5; }
   .ic { width:1.15em; height:1.15em; vertical-align:-0.2em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; pointer-events:none; }
   .eye-icon .ic { width:1em; height:1em; }
+
+  /* ===== الشكل الفاتح: توهّجات وتظليلات بنفسجي بدل الدهبي (نفس العناصر، لون بس) ===== */
+  [data-theme="light"] input:focus, [data-theme="light"] textarea:focus,
+  [data-theme="light"] .search-wrap input:focus, [data-theme="light"] #searchInput:focus,
+  [data-theme="light"] #torailSearchInput:focus, [data-theme="light"] #examResultsSearchInput:focus,
+  [data-theme="light"] input.reg-input:focus, [data-theme="light"] select.reg-input:focus,
+  [data-theme="light"] textarea.reg-textarea:focus { box-shadow: 0 0 0 3px rgba(91,71,209,0.18); }
+  [data-theme="light"] .tab-btn.active, [data-theme="light"] .tab-btn.active:hover { box-shadow: 0 3px 10px rgba(91,71,209,0.3); }
+  [data-theme="light"] .stage-pill.active { box-shadow: 0 2px 8px rgba(91,71,209,0.3); }
+  [data-theme="light"] #addBtn, [data-theme="light"] #torailAddBtn { box-shadow: 0 2px 8px rgba(91,71,209,0.3); }
+  [data-theme="light"] .info-chip-accent { background: rgba(91,71,209,0.1); border-color: rgba(91,71,209,0.3); }
+  [data-theme="light"] .info-chip-accent:hover { background: rgba(91,71,209,0.18); }
+  [data-theme="light"] .notif-card { background: rgba(91,71,209,0.07); border-color: rgba(91,71,209,0.28); }
+  [data-theme="light"] button[onclick="startOverduePaymentReminderQueue()"] { color: #FFFFFF !important; }   /* نص أبيض واضح على الزرار الطوبي */
+  [data-theme="light"] .brand-mark { background: linear-gradient(135deg, var(--c-accent), #8E73F4); color: #fff; box-shadow: 0 2px 6px rgba(91,71,209,0.4); }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -1745,7 +1761,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v99 — صورة نتيجة الطالب بنفس كارت القايمة (مع الزراير) + فتح محادثة ولي الأمر مباشرة بالصورة منسوخة ونص الرسالة جاهز — 7 أكتوبر 2026";
+const APP_VERSION = "v100 — ألوان جديدة للشكل الفاتح (لافندر وبنفسجي وكحلي وأصفر) مأخوذة من ورقة الامتحان — 7 أكتوبر 2026";
 let TEACHER_NAME = "";   // من هوية المعلم المحفوظة (teachers/{uid}) بعد تسجيل الدخول
 let TEACHER_NAME_EN = "";   // الاسم بالإنجليزي لورقة الامتحان المطبوعة
 let TEACHER_PHONE = "";
