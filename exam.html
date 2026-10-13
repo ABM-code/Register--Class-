@@ -421,16 +421,15 @@ function renderStudentPicker() {
       }
       if (snapDoc) {
         const prev = snapDoc.data();
+        // صلاحية الإعادة بتيجي من الـWorker (مش من Firestore مباشرة)
         let canRetake = false;
         try {
-          const examDocForRetake = await db.collection("exams").doc(exam.id).get();
-          if (examDocForRetake.exists) {
-            const examData = examDocForRetake.data();
-            if (examData.allowRetake && selectedStudent.id && examData.allowRetake[selectedStudent.id]) {
-              canRetake = true;
-              exam = { id: examDocForRetake.id, ...examData };
-            }
-          }
+          const token = await auth.currentUser.getIdToken();
+          const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/exam-questions?examId=${encodeURIComponent(exam.id)}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          const d = await r.json().catch(() => ({}));
+          canRetake = !!(d && d.ok && d.canRetake);
         } catch (e) { /* تجاهل، هيتعامل كأنه مش مسموح بالإعادة */ }
 
         if (canRetake) {
