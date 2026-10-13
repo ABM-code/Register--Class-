@@ -521,6 +521,83 @@ function renderStudentPicker() {
   });
 
   startBtn.addEventListener("click", renderExam);
+
+  // ===== حساب مربوط بكارت: ندخل مباشرة من غير اسم ولا PIN =====
+  function whenAuthReady() {
+    return new Promise(resolve => {
+      const unsub = auth.onAuthStateChanged(() => { unsub(); resolve(); });
+    });
+  }
+  async function tryLinkedAutoStart() {
+    await whenAuthReady();
+    const u = auth.currentUser;
+    if (!u || u.isAnonymous) return false;
+    const provs = (u.providerData || []).map(p => p.providerId);
+    const isAccount = provs.includes("google.com") || provs.includes("password");
+    if (!isAccount) return false;
+    if (provs.includes("password") && !u.emailVerified) return false;
+
+    let link;
+    try {
+      const token = await u.getIdToken();
+      const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/my-link`, { headers: { "Authorization": `Bearer ${token}` } });
+      link = await r.json().catch(() => ({}));
+      if (!r.ok || !link.ok || !link.linked || !link.student) return false;
+    } catch (e) { return false; }
+
+    selectedStudent = { id: link.student.id, name: link.student.name, stage: link.student.stage };
+    searchInput.closest(".card").style.display = "none";
+    pinCard.style.display = "none";
+    msgBox.innerHTML = `<div class="card who">${icon("user")}<strong>${escapeHtml(selectedStudent.name)}</strong></div>`;
+    startBtn.disabled = true;
+    startBtn.textContent = "جاري التحقق...";
+
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/exam-questions?examId=${encodeURIComponent(exam.id)}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) {
+        const map = {
+          exam_closed: "الامتحان ده مقفول دلوقتي.",
+          exam_paid: "الامتحان ده متاح لأصحاب الكود بس.",
+          not_allowed: "الامتحان ده مش متاح لمرحلتك.",
+          not_linked: "حسابك مش مربوط بكارت. اربط حسابك الأول."
+        };
+        msgBox.innerHTML += `<div class="card note-card bad"><p style="margin:0;">${escapeHtml(map[d.error] || "تعذر فتح الامتحان.")}</p></div>`;
+        startBtn.textContent = "ابدأ الامتحان";
+        return true;
+      }
+      if (d.alreadySubmitted && !d.canRetake && d.prevResult) {
+        const pr = d.prevResult;
+        const pct = pr.total > 0 ? Math.round((pr.score / pr.total) * 100) : 0;
+        msgBox.innerHTML += `<div class="card note-card bad">
+          <strong>${icon("alert")} لقد قدّمت هذا الامتحان من قبل</strong>
+          <p>نتيجتك السابقة: ${pr.score} / ${pr.total} (${pct}%)</p>
+          <button id="reviewPrevBtn" class="btn-green">مراجعة إجاباتك</button>
+        </div>`;
+        document.getElementById("reviewPrevBtn").addEventListener("click", async () => {
+          try {
+            await loadExamFromWorker();
+            renderResult(pr.score, pr.total, pr.answers || [], false);
+          } catch (e) { showError("تعذر تحميل الأسئلة. حاول تاني."); }
+        });
+        startBtn.textContent = "ابدأ الامتحان";
+        return true;
+      }
+      if (d.canRetake) {
+        msgBox.innerHTML += `<div class="card note-card ok"><strong>${icon("refresh")} المعلم سمحلك بإعادة الامتحان</strong></div>`;
+      }
+      startBtn.disabled = false;
+      startBtn.textContent = "ابدأ الامتحان";
+    } catch (e) {
+      showError("تعذر التحقق من الامتحان. تأكد من اتصالك بالإنترنت.");
+      startBtn.textContent = "ابدأ الامتحان";
+    }
+    return true;
+  }
+  tryLinkedAutoStart();
 }
 
 let answers = {};
