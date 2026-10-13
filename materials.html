@@ -325,7 +325,7 @@ function renderStagePicker() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) throw new Error("load_failed");
       applyTeacherBrandFromServer(data.teacherBrand);
-      studentsInStage = (data.students || []).sort((a,b) => (a.name||"").localeCompare(b.name||""));
+      studentsInStage = [];   // قايمة الطلاب الكاملة مابقتش بتتحمّل؛ البحث بيتم من الـWorker حرف بحرف
       renderStudentPicker();
     } catch (err) {
       nextBtn.disabled = false;
@@ -383,7 +383,7 @@ function renderStudentPicker() {
         stopLockTimer();
         delete lockUntilByStudent[studentId];
         pinMsg.style.display = "none";
-        if (selectedStudent && selectedStudent.id === studentId) pinInput.focus();
+        if (selectedStudent && lockKeyOf(selectedStudent) === studentId) pinInput.focus();
         return;
       }
       const mm = String(Math.floor(left / 60)).padStart(2, "0");
@@ -396,6 +396,8 @@ function renderStudentPicker() {
     lockTimer = setInterval(tick, 1000);
   }
 
+  const lockKeyOf = st => (st && (st.id || st.name)) || "";
+
   function resetPin() {
     stopLockTimer();
     pinCard.style.display = "none";
@@ -407,31 +409,52 @@ function renderStudentPicker() {
   searchInput.addEventListener("input", () => {
     if (selectedStudent) { selectedStudent = null; resetPin(); }
     const q = searchInput.value.trim();
-    if (q.length < 2) { hideSuggestions(); return; }
-    const normQ = normalizeArabic(q.toLowerCase());
-    const matches = studentsInStage.filter(s => normalizeArabic((s.name || "").toLowerCase()).includes(normQ)).slice(0, 6);
-    if (matches.length === 0) {
+    if (q.length < 2) { searchSeq++; clearTimeout(searchTimer); hideSuggestions(); return; }
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => runStudentSearch(q), 250);
+  });
+
+  // بحث بالاسم من الـWorker: بيرجّع أسماء + توكن مشفّر لكل اسم (من غير أي رقم طالب)
+  let searchTimer = null;
+  let searchSeq = 0;
+  async function runStudentSearch(q) {
+    const mySeq = ++searchSeq;
+    let results = [];
+    try {
+      const url = `${STUDENT_AUTH_WORKER_URL}/materials-search?stage=${encodeURIComponent(selectedStage)}${LIBRARY_TEACHER_ID ? "&teacher=" + encodeURIComponent(LIBRARY_TEACHER_ID) : ""}&q=${encodeURIComponent(q)}`;
+      const r = await fetch(url);
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error("search_failed");
+      results = d.results || [];
+    } catch (e) {
+      if (mySeq !== searchSeq) return;
+      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">تعذر البحث. تأكد من الإنترنت وحاول تاني.</div>`;
+      suggestionsBox.style.display = "block";
+      return;
+    }
+    if (mySeq !== searchSeq) return;   // نتيجة قديمة، المستخدم كتب حاجة جديدة
+    if (results.length === 0) {
       suggestionsBox.innerHTML = `<div class="student-suggestion-empty">مفيش اسم متطابق. تأكد من كتابة اسمك صح.</div>`;
       suggestionsBox.style.display = "block";
       return;
     }
-    suggestionsBox.innerHTML = matches.map(s => `<button type="button" class="student-suggestion-item" data-id="${s.id}">${escapeHtml(s.name)}</button>`).join("");
+    suggestionsBox.innerHTML = results.map((s, i) => `<button type="button" class="student-suggestion-item" data-i="${i}">${escapeHtml(s.name)}</button>`).join("");
     suggestionsBox.style.display = "block";
     suggestionsBox.querySelectorAll(".student-suggestion-item").forEach(btn => {
       btn.addEventListener("click", () => {
-        selectedStudent = studentsInStage.find(s => s.id === btn.dataset.id) || null;
-        searchInput.value = selectedStudent ? selectedStudent.name : "";
+        const chosen = results[Number(btn.dataset.i)];
+        if (!chosen) return;
+        selectedStudent = { id: "", name: chosen.name, lookupToken: chosen.token };
+        searchInput.value = chosen.name;
         hideSuggestions();
         resetPin();
-        if (selectedStudent) {
-          pinCard.style.display = "block";
-          const lu = lockUntilByStudent[selectedStudent.id];
-          if (lu && lu > Date.now()) startLockCountdown(selectedStudent.id, lu);
-          else pinInput.focus();
-        }
+        pinCard.style.display = "block";
+        const lu = lockUntilByStudent[lockKeyOf(selectedStudent)];
+        if (lu && lu > Date.now()) startLockCountdown(lockKeyOf(selectedStudent), lu);
+        else pinInput.focus();
       });
     });
-  });
+  }
 
   pinInput.addEventListener("input", () => {
     const typed = pinInput.value.replace(/\D/g, "");
@@ -445,10 +468,10 @@ function renderStudentPicker() {
     enterBtn.disabled = true;
     enterBtn.textContent = "جاري التحقق...";
     try {
-      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-login`, {
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-login-v2`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId: selectedStudent.id, pin: pinInput.value })
+        body: JSON.stringify({ lookupToken: selectedStudent.lookupToken, pin: pinInput.value })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.customToken) {
@@ -463,11 +486,13 @@ function renderStudentPicker() {
     } catch (err) {
       if (err.message === "locked") {
         const endMs = Date.now() + (Number(err.remainingMin) || 5) * 60000;
-        lockUntilByStudent[selectedStudent.id] = endMs;
-        startLockCountdown(selectedStudent.id, endMs);
+        lockUntilByStudent[lockKeyOf(selectedStudent)] = endMs;
+        startLockCountdown(lockKeyOf(selectedStudent), endMs);
         return;
       }
-      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
+      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح."
+        : err.message === "invalid_lookup" ? "انتهت صلاحية اختيار الاسم. اكتب اسمك وأختاره تاني."
+        : "تعذر التحقق. حاول تاني.";
       pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
       enterBtn.disabled = false;
