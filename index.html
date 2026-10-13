@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="app-version" content="v102 - 2026-10-07">
+<meta name="app-version" content="v103 - 2026-10-07">
 <meta charset="UTF-8">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
@@ -1761,7 +1761,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
 
 <script>
 function icon(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
-const APP_VERSION = "v102 — كارت الأكواد بالألوان (QR كحلي + إطارات أنيقة) + تعبئة الكود تلقائيًا من الـQR في صفحة التفعيل — 7 أكتوبر 2026";
+const APP_VERSION = "v103 — طباعة / PDF كروت الأكواد: 21 كارت في كل صفحة A4 (3×7) بالألوان والـQR — 7 أكتوبر 2026";
 let TEACHER_NAME = "";   // من هوية المعلم المحفوظة (teachers/{uid}) بعد تسجيل الدخول
 let TEACHER_NAME_EN = "";   // الاسم بالإنجليزي لورقة الامتحان المطبوعة
 let TEACHER_PHONE = "";
@@ -2382,6 +2382,7 @@ function renderGeneratedCodesBox() {
         <button type="button" onclick="exportGeneratedCodes()" style="flex:1; width:auto; background:var(--c-success); color:var(--c-onsuccess); padding:0.6rem; font-size:0.85rem; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg> تصدير Excel</button>
         <button type="button" onclick="printGeneratedCards()" style="flex:1; width:auto; background:var(--c-accent); color:var(--c-onaccent); padding:0.6rem; font-size:0.85rem; border-radius:8px;"><svg class="ic" aria-hidden="true"><use href="#i-printer"/></svg> طباعة الكروت</button>
       </div>
+      <p style="font-size:0.75rem; color:var(--c-mutedoncard); margin:0 0 0.6rem;">\u0627\u0644\u0637\u0628\u0627\u0639\u0629 21 \u0643\u0627\u0631\u062a \u0641\u064a \u0643\u0644 \u0635\u0641\u062d\u0629 A4. \u0644\u062d\u0641\u0638\u0647\u0627 PDF \u0627\u062e\u062a\u0627\u0631 \u00ab\u062d\u0641\u0638 \u0643\u0640 PDF\u00bb \u0645\u0646 \u0646\u0627\u0641\u0630\u0629 \u0627\u0644\u0637\u0628\u0627\u0639\u0629.</p>
       <div style="max-height:260px; overflow-y:auto; background:var(--c-white); border-radius:8px; padding:0.5rem;">${listHtml}${moreNote}${qrNote}</div>
     </div>`;
 }
@@ -2397,8 +2398,10 @@ function exportGeneratedCodes() {
   XLSX.writeFile(wb, `codes-${(batchName || "batch").replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, "_")}-${today}.xlsx`);
 }
 
+// 21 كارت في كل صفحة A4 (3 أعمدة × 7 صفوف). كل صفحة div مستقل عشان العدد يفضل ثابت مهما كان المتصفح.
+const VOUCHER_CARDS_PER_PAGE = 21;
 function buildVoucherCardsPrintHtml(codes, productTitle) {
-  const cardsHtml = codes.map(code => `
+  const cardHtml = code => `
     <div class="v-card">
       <div class="v-head">
         <div class="v-brand">${escapeHtml(TEACHER_NAME)}</div>
@@ -2412,37 +2415,42 @@ function buildVoucherCardsPrintHtml(codes, productTitle) {
         ${voucherQrImg(code, 4) ? `<div class="v-qr">${voucherQrImg(code, 4)}<div class="v-qr-note">\u0627\u0645\u0633\u062d \u0644\u0644\u062a\u0641\u0639\u064a\u0644</div></div>` : ""}
       </div>
       <div class="v-instructions">\u0627\u0641\u062a\u062d \u0627\u0644\u062a\u0637\u0628\u064a\u0642 \u2190 \u0633\u062c\u0651\u0644 \u062f\u062e\u0648\u0644/\u062d\u0633\u0627\u0628 \u062c\u062f\u064a\u062f \u2190 \u0641\u0639\u0651\u0644 \u0627\u0644\u0643\u0648\u062f</div>
-    </div>`).join("");
+    </div>`;
+  const pages = [];
+  for (let i = 0; i < codes.length; i += VOUCHER_CARDS_PER_PAGE) pages.push(codes.slice(i, i + VOUCHER_CARDS_PER_PAGE));
+  const pagesHtml = pages.map(group => `<div class="v-page">${group.map(cardHtml).join("")}</div>`).join("");
   return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
     <title>\u0643\u0631\u0648\u062a \u0627\u0644\u0623\u0643\u0648\u0627\u062f</title>
     <style>
       * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      @page { size: A4; margin: 10mm; }
+      @page { size: A4; margin: 8mm; }
       body { font-family: Arial, sans-serif; margin: 0; }
-      .v-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6mm; }
+      /* صفحة A4: 3 أعمدة × 7 صفوف = 21 كارت */
+      .v-page { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(7, 37mm); gap: 3mm; height: 277mm; page-break-after: always; break-after: page; }
+      .v-page:last-child { page-break-after: auto; break-after: auto; }
       /* الكارت: إطار كحلي + خط دهبي رفيع من جوه */
       .v-card {
-        border: 2px solid #0A1F44; border-radius: 12px; padding: 8px; text-align: center; background: #FFFFFF;
-        box-shadow: inset 0 0 0 2px #FFFFFF, inset 0 0 0 3px #D4A93B;
-        page-break-inside: avoid; break-inside: avoid;
+        height: 37mm; border: 0.5mm solid #0A1F44; border-radius: 3mm; padding: 1.3mm; text-align: center; background: #FFFFFF;
+        box-shadow: inset 0 0 0 0.5mm #FFFFFF, inset 0 0 0 0.75mm #D4A93B;
+        display: flex; flex-direction: column; gap: 1mm; overflow: hidden; page-break-inside: avoid; break-inside: avoid;
       }
       /* مجموعة 1: اسم المعلم + اسم المنتج (شريط كحلي) */
-      .v-head { background: linear-gradient(135deg, #0A1F44, #1B3A78); border: 1.5px solid #D4A93B; border-radius: 9px; padding: 5px 8px; }
-      .v-brand { font-size: 10pt; font-weight: bold; color: #F2D27A; }
-      .v-product { font-size: 11pt; font-weight: bold; color: #FFFFFF; margin-top: 2px; }
-      .v-main { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 7px; }
+      .v-head { background: linear-gradient(135deg, #0A1F44, #1B3A78); border: 0.3mm solid #D4A93B; border-radius: 2mm; padding: 0.7mm 1.5mm; }
+      .v-brand { font-size: 6.5pt; font-weight: bold; color: #F2D27A; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .v-product { font-size: 7.5pt; font-weight: bold; color: #FFFFFF; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .v-main { flex: 1; min-height: 0; display: flex; align-items: stretch; justify-content: space-between; gap: 1.5mm; }
       /* مجموعة 2: الكود */
-      .v-codebox { flex: 1; min-width: 0; text-align: center; border: 1.5px solid #0A1F44; border-radius: 9px; background: #EEF3FF; padding: 7px 4px; }
-      .v-label { font-size: 8pt; color: #3B5288; letter-spacing: 1.5px; font-weight: bold; }
-      .v-code { font-size: 13.5pt; font-weight: bold; letter-spacing: 1.2px; white-space: nowrap; direction: ltr; color: #0A1F44; margin: 3px 0 0; }
+      .v-codebox { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 0.35mm solid #0A1F44; border-radius: 2mm; background: #EEF3FF; padding: 0.8mm; }
+      .v-label { font-size: 5pt; color: #3B5288; letter-spacing: 0.8px; font-weight: bold; }
+      .v-code { font-size: 9pt; font-weight: bold; letter-spacing: 0.4px; white-space: nowrap; direction: ltr; color: #0A1F44; margin-top: 0.6mm; }
       /* مجموعة 3: QR + كلمة امسح للتفعيل */
-      .v-qr { flex: none; text-align: center; background: #FFFFFF; padding: 2mm; border: 1.5px solid #0A1F44; border-radius: 9px; }
-      .v-qr img { width: 22mm; height: 22mm; display: block; image-rendering: pixelated; }
-      .v-qr-note { font-size: 6.5pt; color: #0A1F44; font-weight: bold; margin-top: 1mm; }
+      .v-qr { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #FFFFFF; padding: 1mm; border: 0.35mm solid #0A1F44; border-radius: 2mm; }
+      .v-qr img { width: 15mm; height: 15mm; display: block; image-rendering: pixelated; }
+      .v-qr-note { font-size: 4.6pt; color: #0A1F44; font-weight: bold; margin-top: 0.4mm; white-space: nowrap; }
       /* مجموعة 4: خطوات التفعيل */
-      .v-instructions { margin-top: 7px; border: 1px dashed #D4A93B; border-radius: 9px; background: #FFF8E1; padding: 4px 6px; font-size: 7pt; color: #1F2F57; line-height: 1.4; text-align: center; }
+      .v-instructions { border: 0.3mm dashed #D4A93B; border-radius: 2mm; background: #FFF8E1; padding: 0.6mm 1mm; font-size: 4.8pt; color: #1F2F57; line-height: 1.25; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style></head>
-    <body><div class="v-grid">${cardsHtml}</div></body></html>`;
+    <body>${pagesHtml}</body></html>`;
 }
 
 function printGeneratedCards() {
