@@ -912,6 +912,12 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
     </div>
 
     <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+      <button id="copyStudentAccountLinkBtn" class="backup-btn" onclick="copyStudentAccountPageLink()" style="flex:1; margin:0;">
+        <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> نسخ رابط حساب الطالب (للربط)
+      </button>
+    </div>
+
+    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
       <button id="copyMaterialsLinkBtn" class="backup-btn" onclick="copyMaterialsPageLink()" style="flex:1; margin:0;">
         <svg class="ic" aria-hidden="true"><use href="#i-clipboard"/></svg> نسخ رابط المكتبة للطلاب
       </button>
@@ -4712,6 +4718,23 @@ function copyMaterialsPageLink() {
     });
   } else {
     prompt("انسخ الرابط ده يدوي:", materialsPageUrl());
+  }
+}
+
+const STUDENT_ACCOUNT_PAGE_URL = "https://abm-code.github.io/Register--Class-/account.html";
+function copyStudentAccountPageLink() {
+  const btn = document.getElementById("copyStudentAccountLinkBtn");
+  const done = () => {
+    const original = btn.innerHTML;
+    btn.textContent = "✓ اتنسخ الرابط";
+    setTimeout(() => { btn.innerHTML = original; }, 2000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(STUDENT_ACCOUNT_PAGE_URL).then(done).catch(() => {
+      prompt("انسخ الرابط ده يدوي:", STUDENT_ACCOUNT_PAGE_URL);
+    });
+  } else {
+    prompt("انسخ الرابط ده يدوي:", STUDENT_ACCOUNT_PAGE_URL);
   }
 }
 
