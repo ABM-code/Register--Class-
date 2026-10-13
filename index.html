@@ -8048,6 +8048,11 @@ function render() {
               ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مفعّل</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
               : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">لسه ما اتحددش</span>`}
           </span></div>
+          <div class="detail-row"><span class="detail-label">ربط الحساب</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            ${s.linkedUid
+              ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مربوط ✓</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="teacherUnlinkCard('${s.id}')">فك الربط</button>`
+              : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">غير مربوط</span><button class="wa-send-btn" onclick="teacherCreateLinkCode('${s.id}')">توليد كود ربط</button>`}
+          </span></div>
 
           <div class="payments-section">
             <div class="payments-title">الحضور</div>
@@ -8241,6 +8246,11 @@ function renderTorail() {
               ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مفعّل</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
               : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">لسه ما اتحددش</span>`}
           </span></div>
+          <div class="detail-row"><span class="detail-label">ربط الحساب</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            ${s.linkedUid
+              ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مربوط ✓</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="teacherUnlinkCard('${s.id}')">فك الربط</button>`
+              : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">غير مربوط</span><button class="wa-send-btn" onclick="teacherCreateLinkCode('${s.id}')">توليد كود ربط</button>`}
+          </span></div>
 
           <div class="payments-section">
             <div class="payments-title">الحضور</div>
@@ -8290,6 +8300,81 @@ function torailToggleOverdueFilter() { torailOverdueOnly = !torailOverdueOnly; t
 function torailToggleExemptFilter() { torailExemptOnly = !torailExemptOnly; torailPage = 1; renderTorail(); }
 function torailToggleBookletFilter(mode) { torailBookletFilter = torailBookletFilter === mode ? null : mode; torailPage = 1; renderTorail(); }
 function torailToggleNoParentFilter() { torailNoParentOnly = !torailNoParentOnly; torailPage = 1; renderTorail(); }
+
+// ===== ربط الكارت بالحساب (Worker v98) =====
+function linkErrorText(code) {
+  const map = {
+    already_linked: "الطالب ده مربوط بحساب بالفعل. افك الربط الأول.",
+    not_allowed: "مش مسموحلك تعمل كده مع الطالب ده.",
+    student_not_found: "الطالب مش موجود.",
+    missing_student: "بيانات الطالب ناقصة.",
+  };
+  return map[code] || "حصل خطأ، حاول تاني.";
+}
+
+function showLinkCodeModal(code, expiresAt, studentName) {
+  const old = document.getElementById("linkCodeOverlay");
+  if (old) old.remove();
+  const until = expiresAt ? new Date(expiresAt).toLocaleString("ar-EG") : "";
+  const ov = document.createElement("div");
+  ov.id = "linkCodeOverlay";
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;";
+  ov.innerHTML = `
+    <div style="background:var(--c-card, #fff);color:var(--c-text, #111);border-radius:14px;padding:1.2rem;max-width:360px;width:100%;text-align:center;">
+      <h3 style="margin:0 0 0.5rem;">كود ربط الكارت</h3>
+      <div style="margin-bottom:0.6rem;">${escapeHtml(studentName || "")}</div>
+      <div id="linkCodeValue" style="font-size:2rem;font-weight:800;letter-spacing:0.15em;direction:ltr;padding:0.6rem;border:2px dashed var(--c-border, #999);border-radius:10px;">${escapeHtml(code)}</div>
+      <p style="font-size:0.85rem;margin:0.6rem 0;">الكود بيتعرض <strong>مرة واحدة</strong> بس. صالح لحد: ${escapeHtml(until)}</p>
+      <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+        <button id="linkCodeCopyBtn" class="backup-btn">نسخ الكود</button>
+        <button id="linkCodeCloseBtn" class="backup-btn" style="background:var(--c-cardalt);">إغلاق</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  document.getElementById("linkCodeCloseBtn").onclick = () => ov.remove();
+  document.getElementById("linkCodeCopyBtn").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      showSuccess("اتنسخ الكود.");
+    } catch (e) {
+      showError("تعذر النسخ. انسخه بإيدك من الشاشة.");
+    }
+  };
+}
+
+async function teacherCreateLinkCode(studentId) {
+  if (!confirm("هيتولد كود ربط جديد للطالب. الكود بيتعرض مرة واحدة وصالح 72 ساعة. متأكد؟")) return;
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/teacher-link-code`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ studentId })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) { showError(linkErrorText(data.error)); return; }
+    showLinkCodeModal(data.code, data.expiresAt, data.studentName);
+  } catch (e) {
+    showError("تعذر توليد الكود. تأكد من اتصالك بالإنترنت.");
+  }
+}
+
+async function teacherUnlinkCard(studentId) {
+  if (!confirm("فك الربط هيخلي الطالب يحتاج كود ربط جديد عشان يدخل بحسابه. متأكد؟")) return;
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/teacher-unlink-card`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ studentId })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) { showError(linkErrorText(data.error)); return; }
+    showSuccess("تم فك الربط.");
+  } catch (e) {
+    showError("تعذر فك الربط. تأكد من اتصالك بالإنترنت.");
+  }
+}
 
 async function resetStudentPin(studentId) {
   if (!confirm("هيتم مسح الرمز السري الحالي، وأول طالب يختار الاسم ده هيقدر يحدد رمز جديد. متأكد؟")) return;
