@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+<meta name="app-version" content="v102 - 2026-10-07">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#16302B">
@@ -157,6 +158,24 @@ function renderAuthForm() {
   });
 }
 
+/* الكود جاي من الـQR المطبوع على الكارت (?code=XXXX-XXXX-XXXX): بنحفظه للجلسة وبنعبّيه لوحده لما خانة الكود تظهر بعد تسجيل الدخول */
+function formatRedeemCode(raw) {
+  const v = String(raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+  return v.length === 12 ? v.replace(/(.{4})(?=.)/g, "$1-") : "";
+}
+(function captureCodeFromUrl() {
+  try {
+    const fromUrl = formatRedeemCode(new URLSearchParams(location.search).get("code"));
+    if (fromUrl) {
+      sessionStorage.setItem("pendingRedeemCode", fromUrl);
+      history.replaceState(null, "", location.pathname);   // مانسيبش الكود ظاهر في شريط العنوان
+    }
+  } catch (e) {}
+})();
+function getPendingRedeemCode() {
+  try { return sessionStorage.getItem("pendingRedeemCode") || ""; } catch (e) { return ""; }
+}
+
 function renderRedeemForm() {
   document.getElementById("pageSub").textContent = "اكتب كود الوصول المطبوع على الكارت";
   document.getElementById("content").innerHTML = `
@@ -174,6 +193,14 @@ function renderRedeemForm() {
     v = v.replace(/(.{4})(?=.)/g, "$1-");
     codeInput.value = v;
   });
+  const pendingCode = getPendingRedeemCode();
+  if (pendingCode) {
+    codeInput.value = pendingCode;   // الكود اتملا من الـQR، يفضل الطالب يدوس "تفعيل الكود"
+    const hint = document.createElement("div");
+    hint.style.cssText = "font-size:0.8rem; margin-top:0.5rem; opacity:0.85;";
+    hint.textContent = "\u062a\u0645 \u0645\u0644\u0621 \u0627\u0644\u0643\u0648\u062f \u0645\u0646 \u0627\u0644\u0640QR. \u0627\u0636\u063a\u0637 \u062a\u0641\u0639\u064a\u0644 \u0627\u0644\u0643\u0648\u062f.";
+    codeInput.insertAdjacentElement("afterend", hint);
+  }
   document.getElementById("signOutBtn").addEventListener("click", async () => {
     await auth.signOut();
     mode = "login";
@@ -203,6 +230,7 @@ function renderRedeemForm() {
 }
 
 function renderSuccess(product, expiresAt) {
+  try { sessionStorage.removeItem("pendingRedeemCode"); } catch (e) {}
   const itemsHtml = (product.items || []).map(it => `<div class="item-line">${icon(it.type === 'exam' ? 'clipboard' : 'book')}<span>${it.type === 'exam' ? 'امتحان' : 'محتوى'}: ${escapeHtml(it.title || it.id)}</span></div>`).join("");
   const expiryHtml = expiresAt
     ? `<div class="status-chip">${icon("calendar")} الوصول متاح لحد ${new Date(expiresAt).toLocaleDateString('ar-EG')}</div>`
