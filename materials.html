@@ -265,8 +265,35 @@ let lockedCount = 0;
 let isSubscribed = false;
 let subscriptionExpiry = null;
 
-function init() {
-  renderStagePicker();
+async function init() {
+  document.getElementById("content").innerHTML = `<div class="loading"><span class="spinner"></span>جاري التحميل...</div>`;
+  const linked = await tryLinkedMaterials();
+  if (!linked) renderStagePicker();
+}
+
+// حساب مربوط بكارت: ندخل المكتبة مباشرة من غير اختيار مرحلة ولا اسم ولا PIN
+async function tryLinkedMaterials() {
+  await new Promise(resolve => {
+    const unsub = auth.onAuthStateChanged(() => { unsub(); resolve(); });
+  });
+  const u = auth.currentUser;
+  if (!u || u.isAnonymous) return false;
+  const provs = (u.providerData || []).map(p => p.providerId);
+  if (!provs.includes("google.com") && !provs.includes("password")) return false;
+  if (provs.includes("password") && !u.emailVerified) return false;
+
+  let link;
+  try {
+    const token = await u.getIdToken();
+    const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/my-link`, { headers: { "Authorization": `Bearer ${token}` } });
+    link = await r.json().catch(() => ({}));
+    if (!r.ok || !link.ok || !link.linked || !link.student) return false;
+  } catch (e) { return false; }
+
+  selectedStudent = { id: link.student.id, name: link.student.name, stage: link.student.stage };
+  selectedStage = link.student.stage;
+  await loadMaterials();
+  return true;
 }
 
 function renderStagePicker() {
