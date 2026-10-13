@@ -416,12 +416,8 @@ function renderStudentPicker() {
           .get();
         if (!snap.empty) snapDoc = snap.docs[0];
       } else {
-        const snap = await db.collection("examResults")
-          .where("examId", "==", exam.id)
-          .get();
-        const targetNorm = normalizeArabic(selectedStudent.name);
-        const match = snap.docs.find(d => normalizeArabic(d.data().studentName) === targetNorm);
-        if (match) snapDoc = match;
+        // لا يوجد studentId = لا يوجد تحقق آمن. ممنوع البحث بالاسم (كان بيكشف نتايج كل الزملاء).
+        throw new Error("student_id_missing");
       }
       if (snapDoc) {
         const prev = snapDoc.data();
@@ -459,8 +455,7 @@ function renderStudentPicker() {
           btn.textContent = "جاري التحميل...";
           try {
             if (!exam.questions) {
-              const examDoc = await db.collection("exams").doc(exam.id).get();
-              if (examDoc.exists) exam = { id: examDoc.id, ...examDoc.data() };
+              await loadExamFromWorker();
             }
             renderResult(prev.score, prev.total, prev.answers || [], false);
           } catch (e) {
@@ -629,12 +624,28 @@ function updateExamProgress() {
   }
 }
 
+// تحميل الامتحان (الأسئلة + إعدادات العرض) من الـWorker بعد التحقق من الصلاحية.
+// الأسئلة قبل التسليم بتيجي من غير الإجابات الصحيحة، وبعد التسليم بتيجي كاملة للمراجعة.
+async function loadExamFromWorker() {
+  const token = await auth.currentUser.getIdToken();
+  const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/exam-questions?examId=${encodeURIComponent(exam.id)}`, {
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) throw new Error(data.error || "exam_missing");
+  exam = {
+    ...exam,
+    id: exam.id,
+    title: data.title || exam.title,
+    timeLimitMinutes: data.timeLimitMinutes || 0,
+    questions: data.questions || []
+  };
+}
+
 async function renderExam() {
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error("not_authenticated");
-    const doc = await db.collection("exams").doc(exam.id).get();
-    if (!doc.exists) throw new Error("exam_missing");
-    exam = { id: doc.id, ...doc.data() };
+    await loadExamFromWorker();
   } catch (e) {
     showError("تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.");
     return;
