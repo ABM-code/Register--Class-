@@ -278,6 +278,106 @@ async function renderLinkState(user) {
     return;
   }
 
+  let enr = { status: "none" };
+  try {
+    const r = await workerFetch("/my-enrollment", { method: "GET" });
+    if (r.res.ok && r.data && r.data.ok) enr = r.data;
+  } catch (e) { /* لو فشل، نكمل بشاشة الربط العادية */ }
+
+  if (enr.status === "pending") return renderEnrollPending(user, enr);
+  if (enr.status === "rejected") setMsg("طلب التسجيل السابق اترفض. تقدر تقدّم طلب جديد أو تكلم المدرس.", "err");
+  renderLinkForm(user);
+}
+
+function enrollErrorText(code) {
+  const map = {
+    invalid_code: "كود الدعوة مش صحيح. اتأكد منه وحاول تاني.",
+    code_expired: "كود الدعوة انتهت صلاحيته. اطلب كود جديد من المدرس.",
+    code_revoked: "كود الدعوة ده اتلغى. اطلب كود جديد من المدرس.",
+    request_pending: "طلبك اتبعت قبل كده وفي انتظار موافقة المدرس.",
+    already_linked: "حسابك مربوط بكارت بالفعل.",
+    invalid_name: "اكتب اسمك بالكامل (3 حروف على الأقل).",
+    invalid_phone: "رقم التليفون مش صحيح. اكتبه أرقام بس.",
+    email_not_verified: "لازم تأكد الإيميل الأول.",
+    too_many_attempts: "محاولات كتير. استنى شوية وحاول تاني.",
+    invalid_auth: "انتهت الجلسة. سجّل دخول تاني.",
+    missing_auth: "انتهت الجلسة. سجّل دخول تاني.",
+  };
+  return map[code] || "حصل خطأ، حاول تاني.";
+}
+
+function renderEnrollPending(user, enr) {
+  setView(`
+    <div class="card center">
+      <div class="big">طلبك في الانتظار</div>
+      <p class="muted">طلب التسجيل بتاعك${enr.name ? " (<strong>" + esc(enr.name) + "</strong>)" : ""} وصل للمدرس.<br>
+      أول ما يوافق عليه حسابك هيتربط بكارتك تلقائيًا، وترجع تفتح الصفحة دي.</p>
+      <button class="btn" id="refreshBtn">تحديث الحالة</button>
+      <div class="center" style="margin-top:0.6rem;"><button class="link" id="signOutBtn">تسجيل خروج</button></div>
+    </div>
+  `);
+  document.getElementById("refreshBtn").onclick = () => renderLinkState(user);
+  document.getElementById("signOutBtn").onclick = () => auth.signOut();
+}
+
+function renderEnrollForm(user) {
+  setView(`
+    <div class="card">
+      <div class="big center">طلب تسجيل طالب جديد</div>
+      <p class="muted">اطلب من المدرس <strong>كود الدعوة</strong> (8 حروف وأرقام) واكتب بياناتك. المدرس هيراجع الطلب ويوافق عليه.</p>
+      <form id="enrollForm" novalidate>
+        <label for="ecode">كود الدعوة</label>
+        <input id="ecode" class="ltr" maxlength="9" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" required>
+        <label for="ename">اسمك بالكامل</label>
+        <input id="ename" autocomplete="name" maxlength="80" required>
+        <label for="eparent">رقم تليفون ولي الأمر</label>
+        <input id="eparent" type="tel" class="ltr" inputmode="tel" maxlength="20" autocomplete="off" required>
+        <label for="estudent">رقم تليفونك (اختياري)</label>
+        <input id="estudent" type="tel" class="ltr" inputmode="tel" maxlength="20" autocomplete="off">
+        <button class="btn" id="enrollBtn" type="submit">إرسال الطلب</button>
+      </form>
+      <div class="center" style="margin-top:0.6rem;"><button class="link" id="backToLinkBtn">رجوع</button></div>
+    </div>
+  `);
+
+  const ecode = document.getElementById("ecode");
+  ecode.addEventListener("input", () => {
+    const raw = ecode.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+    ecode.value = raw.length > 4 ? raw.slice(0, 4) + "-" + raw.slice(4) : raw;
+  });
+  document.getElementById("backToLinkBtn").onclick = () => { setMsg(""); renderLinkForm(user); };
+
+  document.getElementById("enrollForm").onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("enrollBtn");
+    const code = ecode.value.replace(/[^A-Z0-9]/gi, "");
+    const name = document.getElementById("ename").value.trim();
+    const parentPhone = document.getElementById("eparent").value.trim();
+    const studentPhone = document.getElementById("estudent").value.trim();
+    setMsg("");
+    if (code.length !== 8) return setMsg("كود الدعوة لازم يكون 8 حروف وأرقام.");
+    if (name.length < 3) return setMsg("اكتب اسمك بالكامل.");
+    if (!parentPhone) return setMsg("اكتب رقم تليفون ولي الأمر.");
+    setBusy(btn, true);
+    try {
+      const { res, data: d } = await workerFetch("/student-enroll-request", {
+        method: "POST", body: JSON.stringify({ code, name, parentPhone, studentPhone })
+      });
+      if (res.ok && d.ok) {
+        setMsg("اتبعت الطلب للمدرس.", "ok");
+        await renderLinkState(user);
+      } else if (d.error === "request_pending") {
+        await renderLinkState(user);
+      } else {
+        setMsg(enrollErrorText(d.error), "err");
+      }
+    } catch (err) {
+      setMsg("تعذر إرسال الطلب. تأكد من الإنترنت وحاول تاني.", "err");
+    } finally { setBusy(btn, false, "إرسال الطلب"); }
+  };
+}
+
+function renderLinkForm(user) {
   setView(`
     <div class="card">
       <div class="big center">اربط حسابك بكارت الطالب</div>
@@ -287,6 +387,8 @@ async function renderLinkState(user) {
         <input id="code" class="ltr" maxlength="9" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" required>
         <button class="btn" id="linkBtn" type="submit">ربط الحساب</button>
       </form>
+      <div class="divider">معيش كود ربط؟</div>
+      <button class="btn secondary" id="newStudentBtn" type="button">أنا طالب جديد، عايز أقدّم طلب تسجيل</button>
       <div class="center" style="margin-top:0.6rem;"><button class="link" id="signOutBtn">تسجيل خروج</button></div>
     </div>
   `);
@@ -319,6 +421,7 @@ async function renderLinkState(user) {
     } finally { setBusy(btn, false, "ربط الحساب"); }
   };
 
+  document.getElementById("newStudentBtn").onclick = () => { setMsg(""); renderEnrollForm(user); };
   document.getElementById("signOutBtn").onclick = () => auth.signOut();
 }
 
