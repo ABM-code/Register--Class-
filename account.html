@@ -107,7 +107,7 @@ function authErrorText(err) {
   return map[err && err.code] || "حصل خطأ، حاول تاني.";
 }
 
-function linkErrorText(code) {
+function linkErrorText(code, status) {
   const map = {
     invalid_code: "الكود مش صحيح. اتأكد منه وحاول تاني.",
     code_expired: "الكود ده انتهت صلاحيته. اطلب كود جديد من المدرس.",
@@ -117,7 +117,7 @@ function linkErrorText(code) {
     invalid_auth: "انتهت الجلسة. سجّل دخول تاني.",
     missing_auth: "انتهت الجلسة. سجّل دخول تاني.",
   };
-  return map[code] || "حصل خطأ، حاول تاني.";
+  return map[code] || ("حصل خطأ، حاول تاني." + ((code || status) ? " (" + (code || status) + ")" : ""));
 }
 
 async function workerFetch(path, options = {}) {
@@ -360,7 +360,7 @@ async function renderDashboard(user, student) {
   document.getElementById("signOutBtn").onclick = () => auth.signOut();
 }
 
-function enrollErrorText(code) {
+function enrollErrorText(code, status) {
   const map = {
     invalid_code: "كود الدعوة مش صحيح. اتأكد منه وحاول تاني.",
     code_expired: "كود الدعوة انتهت صلاحيته. اطلب كود جديد من المدرس.",
@@ -374,7 +374,7 @@ function enrollErrorText(code) {
     invalid_auth: "انتهت الجلسة. سجّل دخول تاني.",
     missing_auth: "انتهت الجلسة. سجّل دخول تاني.",
   };
-  return map[code] || "حصل خطأ، حاول تاني.";
+  return map[code] || ("حصل خطأ، حاول تاني." + ((code || status) ? " (" + (code || status) + ")" : ""));
 }
 
 function renderEnrollPending(user, enr) {
@@ -440,7 +440,7 @@ function renderEnrollForm(user) {
       } else if (d.error === "request_pending") {
         await renderLinkState(user);
       } else {
-        setMsg(enrollErrorText(d.error), "err");
+        setMsg(enrollErrorText(d.error, res.status), "err");
       }
     } catch (err) {
       setMsg("تعذر إرسال الطلب. تأكد من الإنترنت وحاول تاني.", "err");
@@ -485,7 +485,7 @@ function renderLinkForm(user) {
         setMsg("تم ربط حسابك بنجاح.", "ok");
         await renderLinkState(user);
       } else {
-        setMsg(linkErrorText(d.error), "err");
+        setMsg(linkErrorText(d.error, res.status), "err");
       }
     } catch (err) {
       setMsg("تعذر الربط. تأكد من الإنترنت وحاول تاني.", "err");
