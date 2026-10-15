@@ -35,6 +35,15 @@
   .muted { color:var(--muted); font-size:0.9rem; line-height:1.6; }
   .center { text-align:center; }
   .big { font-size:1.4rem; font-weight:700; margin:0.3rem 0; }
+  a.btn { display:block; text-align:center; text-decoration:none; }
+  .sec-title { font-size:1.1rem; font-weight:700; margin-bottom:0.6rem; }
+  .item { border:1px solid var(--border); border-radius:12px; padding:0.8rem; margin-bottom:0.7rem; }
+  .item-title { font-weight:700; margin-bottom:0.4rem; }
+  .badge { display:inline-block; padding:0.15rem 0.6rem; border-radius:999px; font-size:0.82rem; font-weight:600; border:1px solid var(--border); }
+  .badge.go { color:var(--accent); border-color:var(--accent); }
+  .badge.ok { color:var(--ok); border-color:var(--ok); }
+  .badge.warn { color:#b26a00; border-color:#b26a00; }
+  .badge.off { color:var(--muted); }
 </style>
 </head>
 <body>
@@ -267,14 +276,7 @@ async function renderLinkState(user) {
   }
 
   if (data && data.ok && data.linked) {
-    setView(`
-      <div class="card center">
-        <div class="big">حسابك مربوط ✓</div>
-        <p class="muted">أهلاً <strong>${esc(data.student?.name || "")}</strong>${data.student?.stage ? " — " + esc(data.student.stage) : ""}</p>
-        <p class="muted">ارجع لصفحة الامتحان وادخل بيه.</p>
-        <div class="center" style="margin-top:0.6rem;"><button class="link" id="signOutBtn">تسجيل خروج</button></div>
-      </div>`);
-    document.getElementById("signOutBtn").onclick = () => auth.signOut();
+    await renderDashboard(user, data.student);
     return;
   }
 
@@ -287,6 +289,75 @@ async function renderLinkState(user) {
   if (enr.status === "pending") return renderEnrollPending(user, enr);
   if (enr.status === "rejected") setMsg("طلب التسجيل السابق اترفض. تقدر تقدّم طلب جديد أو تكلم المدرس.", "err");
   renderLinkForm(user);
+}
+
+// ---------- لوحة الطالب (حساب مربوط) ----------
+function fmtDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return isNaN(d.getTime()) ? "" : d.toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" });
+}
+
+function examCardHtml(e) {
+  const href = "exam.html?examId=" + encodeURIComponent(e.id);
+  const score = Number(e.score) || 0, total = Number(e.total) || 0;
+  const pct = total > 0 ? Math.round((score / total) * 100) : 0;
+  let badge, action = "";
+  if (e.submitted) {
+    badge = `<span class="badge ok">تم التسليم: ${score} / ${total} (${pct}%)</span>`;
+    action = e.canStart
+      ? `<a class="btn" href="${href}">أعد الامتحان (المعلم سمحلك)</a>`
+      : `<a class="btn secondary" href="${href}">راجع نتيجتك وإجاباتك</a>`;
+  } else if (e.canStart) {
+    badge = e.closed ? `<span class="badge warn">مقفول، لكن المعلم سمحلك</span>` : `<span class="badge go">مفتوح</span>`;
+    action = `<a class="btn" href="${href}">ابدأ الامتحان</a>`;
+  } else {
+    badge = `<span class="badge off">مقفول</span>`;
+  }
+  const dl = (e.deadline && !e.closed && fmtDate(e.deadline)) ? `<div class="muted">آخر ميعاد: ${esc(fmtDate(e.deadline))}</div>` : "";
+  return `<div class="item"><div class="item-title">${esc(e.title)}</div>${badge}${dl}${action}</div>`;
+}
+
+function dashboardHtml(student, exams) {
+  const list = (exams || []).length
+    ? exams.map(examCardHtml).join("")
+    : `<p class="muted">مفيش امتحانات متاحة دلوقتي.</p>`;
+  const lib = student && student.teacherId
+    ? `<a class="btn secondary" style="margin-bottom:1rem;" href="materials.html?t=${encodeURIComponent(student.teacherId)}">فتح مكتبتي</a>` : "";
+  return `
+    <div class="card center">
+      <div class="big">أهلاً ${esc(student?.name || "")}</div>
+      <p class="muted">${esc(student?.stage || "")}</p>
+    </div>
+    <div class="card">
+      <div class="sec-title">امتحاناتي</div>
+      ${list}
+    </div>
+    ${lib}
+    <div class="center"><button class="link" id="signOutBtn">تسجيل خروج</button></div>
+  `;
+}
+
+async function renderDashboard(user, student) {
+  setView(`<div class="card center"><p class="muted">جاري تحميل لوحتك...</p></div>`);
+  try {
+    const { res, data } = await workerFetch("/my-dashboard", { method: "GET" });
+    if (res.ok && data && data.ok) {
+      setView(dashboardHtml(data.student, data.exams || []));
+      document.getElementById("signOutBtn").onclick = () => auth.signOut();
+      return;
+    }
+  } catch (e) { /* نكمل للشاشة البديلة */ }
+  setView(`
+    <div class="card center">
+      <div class="big">حسابك مربوط ✓</div>
+      <p class="muted">أهلاً <strong>${esc(student?.name || "")}</strong>${student?.stage ? " — " + esc(student.stage) : ""}</p>
+      <p class="muted">تعذر تحميل لوحتك دلوقتي.</p>
+      <button class="btn" id="retryDashBtn">حاول تاني</button>
+      <div class="center" style="margin-top:0.6rem;"><button class="link" id="signOutBtn">تسجيل خروج</button></div>
+    </div>`);
+  document.getElementById("retryDashBtn").onclick = () => renderDashboard(user, student);
+  document.getElementById("signOutBtn").onclick = () => auth.signOut();
 }
 
 function enrollErrorText(code) {
