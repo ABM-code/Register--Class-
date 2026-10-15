@@ -104,7 +104,11 @@
   .yt-speedmenu.open { display: flex; }
   .yt-speedmenu button { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; background: none; color: #fff; border: 1px solid rgba(255,255,255,0.28); border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.8rem; font-weight: 600; }
   .yt-speedmenu button.on { background: var(--yt-accent); color: #1B2420; border-color: transparent; }
-  .yt-player.plain .yt-shield, .yt-player.plain .yt-shield-b, .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
+  .yt-player.plain .yt-controls, .yt-player.plain .yt-bigplay, .yt-player.plain .yt-seekfx, .yt-player.plain .yt-toast, .yt-player.plain .yt-end, .yt-player.plain .yt-spinner, .yt-player.plain .yt-speedmenu { display: none !important; }
+  /* المشغّل العادي (يوتيوب): الأزرار الأصلية شغّالة، بس الشريط العلوي (عنوان الفيديو وروابط المشاركة والفتح في يوتيوب) مغطّى بطبقة شفافة ما بتسيبش الضغطة توصل ليه */
+  .yt-player.plain .yt-shield { bottom: auto; height: 22%; cursor: default; }
+  .yt-player.plain .yt-shield-b { display: none; }
+  .yt-player.plain.yt-raw .yt-shield { display: none; }
   .yt-help { background: #0F1F1C; color: var(--yt-fg); direction: rtl; border-radius: 0 0 12px 12px; }
   .yt-player:not(.plain) .yt-help { border-radius: 0; }
   .yt-help-btn { width: auto; box-shadow: none; font-family: inherit; cursor: pointer; display: block; margin: 0 auto; background: none; border: none; color: var(--yt-muted); font-size: 0.74rem; font-weight: 600; padding: 0.35rem 0.8rem 0.5rem; text-decoration: underline; text-underline-offset: 2px; }
@@ -414,6 +418,9 @@ function ytVariant() {
   if (ts && Date.now() - ts > 24 * 3600 * 1000) return 0;   // التحويل التلقائي بيخلص بعد 24 ساعة ونجرّب المطوّر تاني
   return n;
 }
+/* منع فتح اليوتيوب من جوه الفيديو: الـiframe من غير allow-popups ولا allow-top-navigation، فأي ضغطة على لوجو يوتيوب أو "شاهد على YouTube" أو أي رابط جواه مابتفتحش حاجة برّه التطبيق.
+   لو فيه فيديو مابقاش بيشتغل على جهاز معين بعد التحديث، خلّي القيمة دي "" (فاضية) وبلّغني. */
+const YT_SANDBOX = "allow-scripts allow-same-origin allow-presentation";
 function ytFrameHtml(id, fid, variant) {
   const origin = encodeURIComponent(location.origin);
   const host = variant === 2 ? "www.youtube.com" : "www.youtube-nocookie.com";
@@ -421,7 +428,7 @@ function ytFrameHtml(id, fid, variant) {
     ? "enablejsapi=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&origin=" + origin
     : "enablejsapi=1&rel=0&modestbranding=1&playsinline=1&origin=" + origin;
   const allow = variant === 0 ? "autoplay; encrypted-media" : "autoplay; encrypted-media; picture-in-picture; fullscreen";
-  return `<iframe id="${fid}" src="https://${host}/embed/${id}?${q}" allow="${allow}" referrerpolicy="strict-origin-when-cross-origin"${variant === 0 ? "" : " allowfullscreen"}></iframe>`;
+  return `<iframe id="${fid}" src="https://${host}/embed/${id}?${q}" allow="${allow}" referrerpolicy="strict-origin-when-cross-origin"${YT_SANDBOX ? ` sandbox="${YT_SANDBOX}"` : ""}${variant === 0 ? "" : " allowfullscreen"}></iframe>`;
 }
 function ytInAppName() {
   const ua = navigator.userAgent || "";
@@ -541,7 +548,7 @@ function ytMount(box, variant, note) {
   box.addEventListener("pointerdown", () => { box._touched = true; }, { once: true });
   ytBindHelp(box);
   if (!id) {                                               // رابط مش يوتيوب معروف: iframe عادي
-    box.classList.add("plain"); diag.api = "n/a";
+    box.classList.add("plain", "yt-raw"); diag.api = "n/a";
     stage.insertAdjacentHTML("afterbegin", `<iframe src="${escapeHtml(url)}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`);
     return;
   }
