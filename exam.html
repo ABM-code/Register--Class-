@@ -286,6 +286,93 @@ async function init() {
   }
 }
 
+// ===== ماسح كارنيه الحضور (QR) بالكاميرا =====
+let _jsQrLoading = null;
+function loadJsQr() {
+  if (window.jsQR) return Promise.resolve();
+  if (_jsQrLoading) return _jsQrLoading;
+  _jsQrLoading = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
+    s.onload = resolve;
+    s.onerror = () => { _jsQrLoading = null; reject(new Error("jsqr_load_failed")); };
+    document.head.appendChild(s);
+  });
+  return _jsQrLoading;
+}
+function openCardScanner(onResult) {
+  const old = document.getElementById("cardScanOverlay");
+  if (old) old.remove();
+  const ov = document.createElement("div");
+  ov.id = "cardScanOverlay";
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;gap:0.8rem;";
+  ov.innerHTML = `
+    <div style="color:#fff;font-weight:700;text-align:center;">وجّه الكاميرا ناحية الـQR اللي على كارنيه الحضور</div>
+    <video id="cardScanVideo" playsinline muted style="width:100%;max-width:360px;border-radius:14px;background:#000;"></video>
+    <div id="cardScanStatus" style="color:#fff;font-size:0.9rem;text-align:center;min-height:1.3em;"></div>
+    <button id="cardScanCancel" type="button" style="padding:0.7rem 1.6rem;border-radius:10px;border:none;font-size:1rem;cursor:pointer;">إلغاء</button>`;
+  document.body.appendChild(ov);
+  const video = ov.querySelector("#cardScanVideo");
+  const status = ov.querySelector("#cardScanStatus");
+  let stream = null, stopped = false, timer = null;
+  const stop = () => {
+    stopped = true;
+    clearTimeout(timer);
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    ov.remove();
+  };
+  ov.querySelector("#cardScanCancel").onclick = stop;
+  (async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent = "المتصفح ده مش بيدعم الكاميرا. افتح الرابط في Chrome.";
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+    } catch (e) {
+      status.textContent = "مقدرتش أفتح الكاميرا. اسمح للمتصفح باستخدام الكاميرا وحاول تاني.";
+      return;
+    }
+    if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    let detector = null;
+    if ("BarcodeDetector" in window) {
+      try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { detector = null; }
+    }
+    if (!detector) {
+      try { await loadJsQr(); }
+      catch (e) { status.textContent = "تعذر تحميل أداة قراءة الـQR. تأكد من الإنترنت."; return; }
+    }
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    status.textContent = "جاري البحث عن الكود...";
+    const tick = async () => {
+      if (stopped) return;
+      try {
+        if (video.readyState >= 2 && video.videoWidth) {
+          let text = "";
+          if (detector) {
+            const found = await detector.detect(video);
+            if (found && found.length) text = found[0].rawValue || "";
+          } else {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+            if (code) text = code.data || "";
+          }
+          if (text.startsWith("CR-ATT:")) { stop(); onResult(text); return; }
+          if (text) status.textContent = "ده مش كارنيه حضور. جرّب كارنيهك.";
+        }
+      } catch (e) { /* نكمل المحاولة */ }
+      timer = setTimeout(tick, 250);
+    };
+    tick();
+  })();
+}
+
 function renderStudentPicker() {
   const content = document.getElementById("content");
   content.innerHTML = `
@@ -293,6 +380,7 @@ function renderStudentPicker() {
       <label>اكتب اسمك للبحث</label>
       <input type="text" id="studentSearchInput" placeholder="اكتب أول كام حرف من اسمك" autocomplete="off">
       <div class="student-suggestions" id="studentSuggestions"></div>
+      <button type="button" id="scanCardBtn" style="margin-top:0.7rem;width:100%;padding:0.7rem;border-radius:10px;border:1px solid var(--c-muted);background:var(--c-field);color:var(--c-text);font-size:0.95rem;font-weight:600;cursor:pointer;">📷 أو امسح كارنيه الحضور (QR)</button>
     </div>
     <div class="card" id="pinCard" style="display:none;">
       <label id="pinLabel"></label>
@@ -372,7 +460,10 @@ function renderStudentPicker() {
     resetStart();
     resetPin();
     if (!selectedStudent) return;
-    pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
+    const needLen = selectedStudent.pinLength || 4;
+    pinInput.maxLength = needLen;
+    pinInput.placeholder = needLen + " أرقام";
+    pinLabel.textContent = "اكتب الرمز السري بتاعك (" + needLen + " أرقام)";
     pinCard.style.display = "block";
     const lu = lockUntilByStudent[lockKeyOf(selectedStudent)];
     if (lu && lu > Date.now()) startLockCountdown(lockKeyOf(selectedStudent), lu);
@@ -400,11 +491,11 @@ function renderStudentPicker() {
     try {
       const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-search?examId=${encodeURIComponent(exam.id)}&q=${encodeURIComponent(q)}`);
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) throw new Error("search_failed");
+      if (!r.ok || !d.ok) throw new Error(d.error || "search_failed");
       results = d.results || [];
     } catch (e) {
       if (mySeq !== searchSeq) return;
-      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">تعذر البحث. تأكد من الإنترنت وحاول تاني.</div>`;
+      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">${e && e.message === "too_many_requests" ? "طلبات كتير. استنى دقيقة وحاول تاني." : "تعذر البحث. تأكد من الإنترنت وحاول تاني."}</div>`;
       suggestionsBox.style.display = "block";
       return;
     }
@@ -420,7 +511,7 @@ function renderStudentPicker() {
       btn.addEventListener("click", () => {
         const chosen = results[Number(btn.dataset.i)];
         if (!chosen) return;
-        selectedStudent = { id: "", name: chosen.name, lookupToken: chosen.token };
+        selectedStudent = { id: "", name: chosen.name, lookupToken: chosen.token, pinLength: chosen.pinLength === 6 ? 6 : 4 };
         searchInput.value = chosen.name;
         onStudentChosen();
       });
@@ -503,7 +594,7 @@ function renderStudentPicker() {
   pinInput.addEventListener("input", async () => {
     const typed = pinInput.value.replace(/\D/g, "");
     pinInput.value = typed;
-    if (typed.length < 4 || !selectedStudent) {
+    if (!selectedStudent || typed.length < (selectedStudent.pinLength || 4)) {
       pinMsg.style.display = "none";
       startBtn.disabled = true;
       return;
@@ -537,6 +628,8 @@ function renderStudentPicker() {
       }
       pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح."
         : err.message === "invalid_lookup" ? "انتهت صلاحية اختيار الاسم. اكتب اسمك وأختاره تاني."
+        : err.message === "too_many_attempts_ip" ? "محاولات كتير من نفس الشبكة. استنى شوية وحاول تاني."
+        : err.message === "card_required_first_use" ? "أول مرة بتحدد فيها الرمز السري لازم تمسح كارنيه الحضور (زرار المسح فوق)."
         : "تعذر التحقق. حاول تاني.";
       pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
@@ -546,6 +639,29 @@ function renderStudentPicker() {
   });
 
   startBtn.addEventListener("click", renderExam);
+
+  // ===== مسح كارنيه الحضور: بيحل محل كتابة الاسم، والرمز السري لسه مطلوب =====
+  document.getElementById("scanCardBtn").addEventListener("click", () => {
+    openCardScanner(async (qrText) => {
+      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">جاري التحقق من الكارنيه...</div>`;
+      suggestionsBox.style.display = "block";
+      try {
+        const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-qr-lookup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ examId: exam.id, qr: qrText })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok || !d.ok) throw new Error(d.error || "invalid_card");
+        selectedStudent = { id: "", name: d.name, lookupToken: d.token, pinLength: d.pinLength === 6 ? 6 : 4 };
+        searchInput.value = d.name;
+        onStudentChosen();
+      } catch (e) {
+        suggestionsBox.innerHTML = `<div class="student-suggestion-empty">${e && e.message === "too_many_requests" ? "طلبات كتير. استنى دقيقة وحاول تاني." : "الكارنيه ده مش خاص بالامتحان ده."}</div>`;
+        suggestionsBox.style.display = "block";
+      }
+    });
+  });
 
   // ===== حساب مربوط بكارت: ندخل مباشرة من غير اسم ولا PIN =====
   function whenAuthReady() {

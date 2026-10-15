@@ -259,6 +259,7 @@ let selectedStage = "";
 let studentsInStage = [];
 let selectedStudent = null;
 let studentClaims = null;
+let limitedSession = false;   // دخول بالـQR بس: محتوى مجاني بس
 let allMaterials = [];
 let activeCategory = "الكل";
 let lockedCount = 0;
@@ -296,6 +297,172 @@ async function tryLinkedMaterials() {
   return true;
 }
 
+// ===== ماسح كارنيه الحضور (QR) بالكاميرا =====
+let _jsQrLoading = null;
+function loadJsQr() {
+  if (window.jsQR) return Promise.resolve();
+  if (_jsQrLoading) return _jsQrLoading;
+  _jsQrLoading = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
+    s.onload = resolve;
+    s.onerror = () => { _jsQrLoading = null; reject(new Error("jsqr_load_failed")); };
+    document.head.appendChild(s);
+  });
+  return _jsQrLoading;
+}
+function openCardScanner(onResult) {
+  const old = document.getElementById("cardScanOverlay");
+  if (old) old.remove();
+  const ov = document.createElement("div");
+  ov.id = "cardScanOverlay";
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;gap:0.8rem;";
+  ov.innerHTML = `
+    <div style="color:#fff;font-weight:700;text-align:center;">وجّه الكاميرا ناحية الـQR اللي على كارنيه الحضور</div>
+    <video id="cardScanVideo" playsinline muted style="width:100%;max-width:360px;border-radius:14px;background:#000;"></video>
+    <div id="cardScanStatus" style="color:#fff;font-size:0.9rem;text-align:center;min-height:1.3em;"></div>
+    <button id="cardScanCancel" type="button" style="padding:0.7rem 1.6rem;border-radius:10px;border:none;font-size:1rem;cursor:pointer;">إلغاء</button>`;
+  document.body.appendChild(ov);
+  const video = ov.querySelector("#cardScanVideo");
+  const status = ov.querySelector("#cardScanStatus");
+  let stream = null, stopped = false, timer = null;
+  const stop = () => {
+    stopped = true;
+    clearTimeout(timer);
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    ov.remove();
+  };
+  ov.querySelector("#cardScanCancel").onclick = stop;
+  (async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent = "المتصفح ده مش بيدعم الكاميرا. افتح الرابط في Chrome.";
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+    } catch (e) {
+      status.textContent = "مقدرتش أفتح الكاميرا. اسمح للمتصفح باستخدام الكاميرا وحاول تاني.";
+      return;
+    }
+    if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    let detector = null;
+    if ("BarcodeDetector" in window) {
+      try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { detector = null; }
+    }
+    if (!detector) {
+      try { await loadJsQr(); }
+      catch (e) { status.textContent = "تعذر تحميل أداة قراءة الـQR. تأكد من الإنترنت."; return; }
+    }
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    status.textContent = "جاري البحث عن الكود...";
+    const tick = async () => {
+      if (stopped) return;
+      try {
+        if (video.readyState >= 2 && video.videoWidth) {
+          let text = "";
+          if (detector) {
+            const found = await detector.detect(video);
+            if (found && found.length) text = found[0].rawValue || "";
+          } else {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
+            if (code) text = code.data || "";
+          }
+          if (text.startsWith("CR-ATT:")) { stop(); onResult(text); return; }
+          if (text) status.textContent = "ده مش كارنيه حضور. جرّب كارنيهك.";
+        }
+      } catch (e) { /* نكمل المحاولة */ }
+      timer = setTimeout(tick, 250);
+    };
+    tick();
+  })();
+}
+
+// ===== الدخول بكارنيه الحضور =====
+async function startCardEntry() {
+  clearError();
+  openCardScanner(async (qrText) => {
+    const content = document.getElementById("content");
+    content.innerHTML = `<div class="loading"><span class="spinner"></span>جاري التحقق من الكارنيه...</div>`;
+    try {
+      const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-qr-lookup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qr: qrText, teacher: LIBRARY_TEACHER_ID })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok || !d.ok) throw new Error(d.error || "invalid_card");
+      renderCardChoice(qrText, d);
+    } catch (e) {
+      renderStagePicker();
+      showError(e && e.message === "too_many_requests" ? "طلبات كتير. استنى دقيقة وحاول تاني." : "الكارنيه ده مش صالح لمكتبة المدرس ده.");
+    }
+  });
+}
+
+function renderCardChoice(qrText, d) {
+  document.getElementById("pageSub").textContent = [d.stage, TEACHER_DISPLAY_LINE].filter(Boolean).join(" — ");
+  const content = document.getElementById("content");
+  const secondary = 'style="background:var(--c-field);color:var(--c-text);border:1px solid var(--c-muted);"';
+  content.innerHTML = `
+    <div class="card">
+      <p style="margin:0 0 0.3rem;">أهلاً <strong>${escapeHtml(d.name)}</strong></p>
+      <p style="margin:0;font-size:0.88rem;color:var(--c-muted);">${escapeHtml(d.stage)}</p>
+    </div>
+    ${d.freeAccess ? `<button id="qrFreeBtn">ادخل للمحتوى المجاني (من غير رمز)</button>` : ""}
+    <button id="qrPinBtn" ${secondary}>ادخل بالرمز السري (كل المحتوى)</button>
+    <a href="#" id="qrBackLink" class="page-link">رجوع</a>
+  `;
+  const freeBtn = document.getElementById("qrFreeBtn");
+  if (freeBtn) freeBtn.addEventListener("click", () => qrFreeLogin(qrText, d));
+  document.getElementById("qrPinBtn").addEventListener("click", () => qrPinFlow(d));
+  document.getElementById("qrBackLink").addEventListener("click", (e) => { e.preventDefault(); renderStagePicker(); });
+}
+
+async function qrFreeLogin(qrText, d) {
+  const content = document.getElementById("content");
+  content.innerHTML = `<div class="loading"><span class="spinner"></span>جاري الدخول...</div>`;
+  try {
+    const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-qr-login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ qr: qrText, teacher: LIBRARY_TEACHER_ID })
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok || !j.customToken) throw new Error(j.error || "invalid_card");
+    await auth.signInWithCustomToken(j.customToken);
+    selectedStudent = { id: "", name: d.name };
+    selectedStage = d.stage;
+    const idTokenResult = await auth.currentUser.getIdTokenResult();
+    studentClaims = idTokenResult.claims;
+    await loadMaterials();
+  } catch (e) {
+    renderCardChoice(qrText, d);
+    showError(e && e.message === "qr_disabled" ? "الدخول بالكارنيه مقفول دلوقتي. ادخل بالرمز السري." : "تعذر الدخول. حاول تاني.");
+  }
+}
+
+async function qrPinFlow(d) {
+  selectedStage = d.stage;
+  try {
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/materials-students?stage=${encodeURIComponent(selectedStage)}${LIBRARY_TEACHER_ID ? "&teacher=" + encodeURIComponent(LIBRARY_TEACHER_ID) : ""}`);
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.ok) applyTeacherBrandFromServer(data.teacherBrand);
+  } catch (e) { /* الهوية اختيارية */ }
+  renderStudentPicker({ id: "", name: d.name, lookupToken: d.token, pinLength: d.pinLength === 6 ? 6 : 4 });
+}
+
+async function relogWithPin() {
+  try { await auth.signOut(); } catch (e) {}
+  location.reload();
+}
+
 function renderStagePicker() {
   const content = document.getElementById("content");
   content.innerHTML = `
@@ -307,10 +474,12 @@ function renderStagePicker() {
       </select>
     </div>
     <button id="stageNextBtn" disabled>التالي</button>
+    <button type="button" id="stageScanBtn" style="margin-top:0.7rem;width:100%;padding:0.7rem;border-radius:10px;border:1px solid var(--c-muted);background:var(--c-field);color:var(--c-text);font-size:0.95rem;font-weight:600;cursor:pointer;">📷 ادخل بكارنيه الحضور (QR)</button>
     <a href="redeem.html" class="page-link">${icon("ticket")} عندك كود شراء محتوى؟ فعّله من هنا</a>
   `;
   const select = document.getElementById("stageSelect");
   const nextBtn = document.getElementById("stageNextBtn");
+  document.getElementById("stageScanBtn").addEventListener("click", startCardEntry);
   select.addEventListener("change", () => {
     nextBtn.disabled = !select.value;
   });
@@ -335,7 +504,7 @@ function renderStagePicker() {
   });
 }
 
-function renderStudentPicker() {
+function renderStudentPicker(pre) {
   document.getElementById("pageSub").textContent = [selectedStage, TEACHER_DISPLAY_LINE].filter(Boolean).join(" — ");
   const content = document.getElementById("content");
   content.innerHTML = `
@@ -345,7 +514,7 @@ function renderStudentPicker() {
       <div class="student-suggestions" id="studentSuggestions"></div>
     </div>
     <div class="card" id="pinCard" style="display:none;">
-      <label>اكتب الرمز السري بتاعك (4 أرقام)</label>
+      <label id="pinLabel">اكتب الرمز السري بتاعك (4 أرقام)</label>
       <input type="text" id="pinInput" placeholder="4 أرقام" maxlength="4" inputmode="numeric">
       <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
     </div>
@@ -398,6 +567,13 @@ function renderStudentPicker() {
 
   const lockKeyOf = st => (st && (st.id || st.name)) || "";
 
+  function applyPinLength() {
+    const needLen = (selectedStudent && selectedStudent.pinLength) || 4;
+    pinInput.maxLength = needLen;
+    pinInput.placeholder = needLen + " أرقام";
+    document.getElementById("pinLabel").textContent = "اكتب الرمز السري بتاعك (" + needLen + " أرقام)";
+  }
+
   function resetPin() {
     stopLockTimer();
     pinCard.style.display = "none";
@@ -424,11 +600,11 @@ function renderStudentPicker() {
       const url = `${STUDENT_AUTH_WORKER_URL}/materials-search?stage=${encodeURIComponent(selectedStage)}${LIBRARY_TEACHER_ID ? "&teacher=" + encodeURIComponent(LIBRARY_TEACHER_ID) : ""}&q=${encodeURIComponent(q)}`;
       const r = await fetch(url);
       const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) throw new Error("search_failed");
+      if (!r.ok || !d.ok) throw new Error(d.error || "search_failed");
       results = d.results || [];
     } catch (e) {
       if (mySeq !== searchSeq) return;
-      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">تعذر البحث. تأكد من الإنترنت وحاول تاني.</div>`;
+      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">${e && e.message === "too_many_requests" ? "طلبات كتير. استنى دقيقة وحاول تاني." : "تعذر البحث. تأكد من الإنترنت وحاول تاني."}</div>`;
       suggestionsBox.style.display = "block";
       return;
     }
@@ -444,10 +620,11 @@ function renderStudentPicker() {
       btn.addEventListener("click", () => {
         const chosen = results[Number(btn.dataset.i)];
         if (!chosen) return;
-        selectedStudent = { id: "", name: chosen.name, lookupToken: chosen.token };
+        selectedStudent = { id: "", name: chosen.name, lookupToken: chosen.token, pinLength: chosen.pinLength === 6 ? 6 : 4 };
         searchInput.value = chosen.name;
         hideSuggestions();
         resetPin();
+        applyPinLength();
         pinCard.style.display = "block";
         const lu = lockUntilByStudent[lockKeyOf(selectedStudent)];
         if (lu && lu > Date.now()) startLockCountdown(lockKeyOf(selectedStudent), lu);
@@ -460,7 +637,7 @@ function renderStudentPicker() {
     const typed = pinInput.value.replace(/\D/g, "");
     pinInput.value = typed;
     pinMsg.style.display = "none";
-    enterBtn.disabled = typed.length !== 4 || !selectedStudent;
+    enterBtn.disabled = !selectedStudent || typed.length !== (selectedStudent.pinLength || 4);
   });
 
   enterBtn.addEventListener("click", async () => {
@@ -492,6 +669,8 @@ function renderStudentPicker() {
       }
       pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح."
         : err.message === "invalid_lookup" ? "انتهت صلاحية اختيار الاسم. اكتب اسمك وأختاره تاني."
+        : err.message === "too_many_attempts_ip" ? "محاولات كتير من نفس الشبكة. استنى شوية وحاول تاني."
+        : err.message === "card_required_first_use" ? "أول مرة بتحدد فيها الرمز السري لازم تدخل بمسح كارنيه الحضور (من أول الصفحة)."
         : "تعذر التحقق. حاول تاني.";
       pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
@@ -499,6 +678,15 @@ function renderStudentPicker() {
       enterBtn.textContent = "ادخل المكتبة";
     }
   });
+
+  // جاي من مسح الكارنيه: الاسم متحدد، فنفتح خانة الرمز السري على طول
+  if (pre) {
+    selectedStudent = pre;
+    searchInput.value = pre.name;
+    applyPinLength();
+    pinCard.style.display = "block";
+    pinInput.focus();
+  }
 }
 
 async function loadMaterials() {
@@ -514,6 +702,7 @@ async function loadMaterials() {
     allMaterials = data.materials || [];
     lockedCount = data.lockedCount || 0;
     isSubscribed = !!data.isSubscribed;
+    limitedSession = !!data.limited;
     subscriptionExpiry = data.subscriptionExpiry || null;
     allMaterials.sort((a, b) => {
       const at = a.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -538,7 +727,9 @@ function renderMaterialsBrowser() {
   const pillsHtml = categories.map(c => `<button type="button" class="category-pill ${c === activeCategory ? 'active' : ''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
 
   let bannerHtml = "";
-  if (isSubscribed && subscriptionExpiry) {
+  if (limitedSession) {
+    bannerHtml = `<div class="card banner lock"><span class="banner-line">${icon("lock")} دخلت بكارنيه الحضور: المحتوى المجاني بس</span><p>للمحتوى الكامل ادخل بالرمز السري</p><button type="button" onclick="relogWithPin()" style="margin-top:0.6rem;">دخول بالرمز السري</button></div>`;
+  } else if (isSubscribed && subscriptionExpiry) {
     bannerHtml = `<div class="card banner ok"><span class="banner-line">${icon("check-circle")} اشتراكك ساري لحد ${escapeHtml(subscriptionExpiry)}</span></div>`;
   } else if (lockedCount > 0) {
     bannerHtml = `<div class="card banner lock"><span class="banner-line">${icon("lock")} فيه ${lockedCount} محتوى إضافي للمشتركين بس</span><p>كلّم المعلم عشان تشترك</p></div>`;

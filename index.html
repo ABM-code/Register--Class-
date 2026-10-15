@@ -727,6 +727,10 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span class="info-chip-label">إظهار العدد</span>
     </span>
+    <span class="info-chip" id="linkFilterChip" onclick="cycleLinkFilter()" title="اضغط لتصفية الطلاب: غير مربوط / مربوط / الكل">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span class="info-chip-label">الربط</span>
+    </span>
     <span class="info-chip info-chip-accent" id="enrollMgrChip" onclick="openEnrollmentManager()" title="أكواد الدعوة وطلبات التسجيل">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
       <span class="info-chip-label">طلبات التسجيل</span>
@@ -4087,6 +4091,12 @@ function toggleNoParentFilter() {
   studentsPage = 1;
   render();
 }
+function cycleLinkFilter() {
+  linkFilter = linkFilter === "" ? "unlinked" : (linkFilter === "unlinked" ? "linked" : "");
+  studentsListVisible = true;
+  studentsPage = 1;
+  render();
+}
 function toggleStudentCount() {
   showStudentCount = !showStudentCount;
   render();
@@ -6872,6 +6882,7 @@ async function goToStudentProfile(studentId) {
     exemptOnly = false;
     bookletFilter = null;
     noParentOnly = false;
+    linkFilter = "";
     const mainList = students.filter(s => s.group !== "torail");
     const idx = mainList.findIndex(s => s.id === studentId);
     if (idx >= 0) studentsPage = Math.floor(idx / PAGE_SIZE) + 1;
@@ -7861,6 +7872,7 @@ let overdueOnly = false;
 let exemptOnly = false;
 let bookletFilter = null;
 let noParentOnly = false;
+let linkFilter = "";   // "" = الكل | "linked" | "unlinked"
 let showStudentCount = false;
 let showTorailStudentCount = false;
 let studentsListVisible = false;
@@ -7941,10 +7953,22 @@ function render() {
   if (noParentOnly) {
     filtered = filtered.filter(s => !s.parentPhone);
   }
+  if (linkFilter === "linked") filtered = filtered.filter(s => !!s.linkedUid);
+  else if (linkFilter === "unlinked") filtered = filtered.filter(s => !s.linkedUid);
 
   document.getElementById("studentCount").querySelector(".info-chip-label").textContent = showStudentCount
     ? (mainStudents.length + (mainStudents.length === 1 ? " student" : " students"))
     : "إظهار العدد";
+
+  const linkChip = document.getElementById("linkFilterChip");
+  if (linkChip) {
+    const linkedN = mainStudents.filter(s => !!s.linkedUid).length;
+    linkChip.querySelector(".info-chip-label").textContent =
+      linkFilter === "linked" ? `مربوط فقط (${linkedN})`
+      : linkFilter === "unlinked" ? `غير مربوط فقط (${mainStudents.length - linkedN})`
+      : `الربط: ${linkedN}/${mainStudents.length}`;
+    linkChip.classList.toggle("info-chip-accent", !!linkFilter);
+  }
 
   const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
   const counts = {};
@@ -8016,7 +8040,7 @@ function render() {
         : (bookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
         : (bookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
         : (noParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
-        : "No matches for that search.")))))));
+        : (linkFilter ? (linkFilter === "linked" ? "لسه محدش ربط حسابه." : "كل الطلاب ربطوا حساباتهم ✓") : "No matches for that search."))))))));
     emptyEl.style.display = "block";
     updateStudentsSelectionUI();
     return;
@@ -8074,6 +8098,7 @@ function render() {
             ${s.pin
               ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مفعّل</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
               : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">لسه ما اتحددش</span>`}
+            <button class="wa-send-btn" onclick="setStudentPinLength('${s.id}', ${s.pinLength === 6 ? 4 : 6})">${s.pinLength === 6 ? "رمز 6 أرقام ✓ (رجّعه لـ 4)" : "خليه 6 أرقام"}</button>
           </span></div>
           <div class="detail-row"><span class="detail-label">ربط الحساب</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             ${s.linkedUid
@@ -8272,6 +8297,7 @@ function renderTorail() {
             ${s.pin
               ? `<span class="mini-badge" style="background:var(--c-successbg);color:var(--c-success);">مفعّل</span><button class="wa-send-btn" style="background:var(--c-danger);" onclick="resetStudentPin('${s.id}')">إعادة تعيين</button>`
               : `<span class="mini-badge" style="background:var(--c-cardalt);color:var(--c-mutedoncard);">لسه ما اتحددش</span>`}
+            <button class="wa-send-btn" onclick="setStudentPinLength('${s.id}', ${s.pinLength === 6 ? 4 : 6})">${s.pinLength === 6 ? "رمز 6 أرقام ✓ (رجّعه لـ 4)" : "خليه 6 أرقام"}</button>
           </span></div>
           <div class="detail-row"><span class="detail-label">ربط الحساب</span><span class="detail-value" style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
             ${s.linkedUid
@@ -8592,6 +8618,24 @@ async function enrollRequestsClick(ev) {
   } catch (e) {
     showError("تعذر تنفيذ العملية. تأكد من الإنترنت.");
     btn.disabled = false;
+  }
+}
+
+async function setStudentPinLength(studentId, len) {
+  const msg = len === 6
+    ? "هيتمسح الرمز الحالي، والطالب هيحدد رمز جديد من 6 أرقام في أول دخول. متأكد؟"
+    : "هيتمسح الرمز الحالي، والطالب هيحدد رمز جديد من 4 أرقام في أول دخول. متأكد؟";
+  if (!confirm(msg)) return;
+  try {
+    await studentsCol.doc(studentId).update({
+      pinLength: len,
+      pin: firebase.firestore.FieldValue.delete(),
+      loginFailCount: 0,
+      loginLockUntil: ""
+    });
+    showSuccess(len === 6 ? "تم. الطالب هيحدد رمز من 6 أرقام." : "تم. الطالب هيحدد رمز من 4 أرقام.");
+  } catch (err) {
+    showError("تعذر تغيير طول الرمز. تأكد من اتصالك بالإنترنت.");
   }
 }
 
