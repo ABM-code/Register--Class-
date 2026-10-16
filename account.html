@@ -279,6 +279,16 @@ async function renderLinkState(user) {
     await renderDashboard(user, data.student);
     return;
   }
+  if (data && data.ok && data.removed) {
+    setView(`
+      <div class="card center">
+        <div class="big">حسابك متوقف حاليًا</div>
+        <p class="muted">كارت الطالب المربوط بحسابك اتحذف من السنتر. كلّم المدرس لو ده حصل بالغلط.</p>
+        <div class="center" style="margin-top:0.6rem;"><button class="link" id="signOutBtn">تسجيل خروج</button></div>
+      </div>`);
+    document.getElementById("signOutBtn").onclick = () => auth.signOut();
+    return;
+  }
 
   let enr = { status: "none" };
   try {
