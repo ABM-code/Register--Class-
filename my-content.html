@@ -1017,17 +1017,33 @@ async function submitCurrentExam() {
   btn.textContent = "جاري التسليم...";
   const answers = currentExam.questions.map((q, i) => ({ questionIndex: i, given: currentAnswers[i] ?? null }));
   try {
-    const idToken = await auth.currentUser.getIdToken();
-    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/voucher-submit-result`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-      body: JSON.stringify({ examId: currentExam.examId, answers }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error("submit_failed");
+    // بنحاول لحد 3 مرات (شبكة ضعيفة أو سيرفر مشغول). الإعادة آمنة: لو التسليم الأول وصل، السيرفر بيرجّع نفس النتيجة.
+    let data = null, lastErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/voucher-submit-result`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          body: JSON.stringify({ examId: currentExam.examId, answers }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok && d.ok) { data = d; break; }
+        lastErr = new Error(d.error || ("http_" + res.status));
+        lastErr.detail = d.debugMessage || "";
+        if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) break;   // خطأ مش هيتحل بالإعادة
+      } catch (e) { lastErr = e; }
+      if (attempt < 3) {
+        btn.textContent = "جاري إعادة المحاولة...";
+        await new Promise(r => setTimeout(r, 1200 * attempt));
+      }
+    }
+    if (!data) throw lastErr || new Error("submit_failed");
     openExam(currentExam.examId, true);
   } catch (err) {
-    showError("تعذر تسليم الإجابات. حاول تاني.");
+    const code = (err && err.message) || "";
+    const known = { not_allowed: "مش مسموحلك تسلّم الامتحان ده. كلّم المدرس.", invalid_auth: "انتهت الجلسة. سجّل دخول تاني.", missing_auth: "انتهت الجلسة. سجّل دخول تاني." };
+    showError(known[code] || ("تعذر تسليم الإجابات. إجاباتك محفوظة، اضغط تسليم تاني. لو استمرت المشكلة صوّر الرسالة دي وابعتها للمدرس." + (code ? " (" + code + (err.detail ? ": " + err.detail : "") + ")" : "")));
     btn.disabled = false;
     btn.textContent = "تسليم الإجابات";
   }

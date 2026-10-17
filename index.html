@@ -626,6 +626,7 @@
     <button class="sd-item" id="smartSearchBtn" onclick="closeSettingsDrawer(); openSmartSearch()"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>البحث الشامل</span></button>
     <button class="sd-item" id="themeToggleBtn" onclick="toggleTheme()"><svg class="ic" aria-hidden="true"><use href="#i-sun"/></svg><span>الشكل الفاتح</span></button>
     <button class="sd-item" id="notifSoundBtn" onclick="toggleNotifSound()"><svg class="ic" aria-hidden="true"><use href="#i-volume-2"/></svg><span>صوت الإشعارات: شغّال</span></button>
+    <button class="sd-item" id="resultsHealthBtn" onclick="closeSettingsDrawer(); openResultsHealth()"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><span>فحص استقبال النتايج</span></button>
     <div class="sd-sep"></div>
     <button class="sd-item" id="brandSettingsBtn" onclick="closeSettingsDrawer(); openBrandSettings()"><svg class="ic" aria-hidden="true"><use href="#i-tag"/></svg><span>الهوية والعلامة</span></button>
     <button class="sd-item" id="changePasswordBtn" onclick="closeSettingsDrawer(); openChangePassword()"><svg class="ic" aria-hidden="true"><use href="#i-lock"/></svg><span>كلمة السر</span></button>
@@ -731,7 +732,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       <span class="info-chip-label">الربط</span>
     </span>
-    <span class="info-chip info-chip-accent" id="enrollMgrChip" onclick="openEnrollmentManager()" title="أكواد الدعوة وطلبات التسجيل">
+    <span class="info-chip info-chip-accent" id="enrollMgrChip" onclick="openEnrollmentManager('normal')" title="أكواد الدعوة وطلبات التسجيل">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
       <span class="info-chip-label">طلبات التسجيل</span>
     </span>
@@ -1520,6 +1521,14 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <span class="info-chip-label">إظهار العدد</span>
     </span>
+    <span class="info-chip" id="torailLinkFilterChip" onclick="cycleTorailLinkFilter()" title="اضغط لتصفية الطلاب: غير مربوط / مربوط / الكل">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span class="info-chip-label">الربط</span>
+    </span>
+    <span class="info-chip info-chip-accent" onclick="openEnrollmentManager('torail')" title="أكواد الدعوة وطلبات التسجيل (توريل)">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+      <span class="info-chip-label">طلبات التسجيل</span>
+    </span>
   </div>
 
   <div id="torailStageCounts" class="stage-counts"></div>
@@ -1969,6 +1978,8 @@ async function handleFirestoreSyncError(err, label) {
   }
   if (err && err.code === "permission-denied") {
     showError("انتهت صلاحية الجلسة الحالية. برجاء تسجيل الخروج وتسجيل الدخول تاني.");
+  } else if (err && err.code === "resource-exhausted") {
+    showError("حصة Firebase اليومية (القراءات) خلصت، عشان كده النتايج الجديدة مش بتظهر. هترجع تلقائيًا بعد تجديد الحصة (حوالي 10 صباحًا بتوقيت القاهرة)، أو رقّي الخطة من Firebase.");
   } else {
     showError(`تعذر تحميل ${label}. تأكد من اتصالك بالإنترنت.`);
   }
@@ -2032,7 +2043,7 @@ function startSync() {
     });
     if (!firstResultsSnapshot) {
       snapshot.docChanges().forEach(change => {
-        if (change.type === "added" && !change.doc.metadata.hasPendingWrites && !change.doc.data().deletedAt) {
+        if (change.type === "added" && !change.doc.metadata.hasPendingWrites && !change.doc.data().deletedAt && !change.doc.data().imported) {
           maybeNotifyNewResult({ id: change.doc.id, ...change.doc.data() });
         }
       });
@@ -4090,6 +4101,10 @@ function toggleNoParentFilter() {
   studentsListVisible = true;
   studentsPage = 1;
   render();
+}
+function cycleTorailLinkFilter() {
+  torailLinkFilter = torailLinkFilter === "" ? "unlinked" : (torailLinkFilter === "unlinked" ? "linked" : "");
+  renderTorail();
 }
 function cycleLinkFilter() {
   linkFilter = linkFilter === "" ? "unlinked" : (linkFilter === "unlinked" ? "linked" : "");
@@ -7430,7 +7445,7 @@ function renderExamResultsList() {
           <div style="display:flex; align-items:center; gap:0.6rem;">
             <input type="checkbox" onclick="event.stopPropagation()" onchange="toggleResultSelect('${r.id}', this.checked)" ${selectedResultIds.has(r.id) ? 'checked' : ''}>
             <div>
-              <div class="result-row-name">${escapeHtml(r.studentName)}${rankBadgeHtml(rankMap, r)}${isResultTorail(r) ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>' : ''}${r.manual ? ' <span class="mini-badge" style="background:var(--c-infobg);color:var(--c-infotext);">غير مسجل</span>' : ''}</div>
+              <div class="result-row-name">${escapeHtml(r.studentName)}${rankBadgeHtml(rankMap, r)}${isResultTorail(r) ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">توريل</span>' : ''}${r.manual ? ' <span class="mini-badge" style="background:var(--c-infobg);color:var(--c-infotext);">غير مسجل</span>' : ''}${r.needsReview ? ' <span class="mini-badge" style="background:var(--c-warnbg);color:var(--c-warntext);">⚠ تصحيح مبدئي</span>' : ''}</div>
               <div class="result-row-date">${dateStr}</div>
             </div>
           </div>
@@ -7924,6 +7939,7 @@ let torailOverdueOnly = false;
 let torailExemptOnly = false;
 let torailBookletFilter = null;
 let torailNoParentOnly = false;
+let torailLinkFilter = "";   // "" = الكل | "linked" | "unlinked"
 
 function render() {
   const mainStudents = students.filter(s => s.group !== "torail");
@@ -8168,6 +8184,8 @@ function renderTorail() {
   if (torailNoParentOnly) {
     filtered = filtered.filter(s => !s.parentPhone);
   }
+  if (torailLinkFilter === "linked") filtered = filtered.filter(s => !!s.linkedUid);
+  else if (torailLinkFilter === "unlinked") filtered = filtered.filter(s => !s.linkedUid);
 
   const stages = ["Prep 1","Prep 2","Prep 3","Sec 1","Sec 2","Sec 3"];
   const counts = {};
@@ -8177,6 +8195,16 @@ function renderTorail() {
   document.getElementById("torailStudentCount").querySelector(".info-chip-label").textContent = showTorailStudentCount
     ? (torailStudents.length + (torailStudents.length === 1 ? " student" : " students"))
     : "إظهار العدد";
+
+  const tLinkChip = document.getElementById("torailLinkFilterChip");
+  if (tLinkChip) {
+    const tLinkedN = torailStudents.filter(s => !!s.linkedUid).length;
+    tLinkChip.querySelector(".info-chip-label").textContent =
+      torailLinkFilter === "linked" ? `مربوط فقط (${tLinkedN})`
+      : torailLinkFilter === "unlinked" ? `غير مربوط فقط (${torailStudents.length - tLinkedN})`
+      : `الربط: ${tLinkedN}/${torailStudents.length}`;
+    tLinkChip.classList.toggle("info-chip-accent", !!torailLinkFilter);
+  }
 
   const stageCountsEl = document.getElementById("torailStageCounts");
   stageCountsEl.innerHTML = stages.map(st => {
@@ -8239,7 +8267,7 @@ function renderTorail() {
         : (torailBookletFilter === "term2_received" ? "لسه محدش استلم مذكرة ترم تاني."
         : (torailBookletFilter === "term2_missing" ? "كل الطلاب استلموا مذكرة ترم تاني ✓"
         : (torailNoParentOnly ? "كل الطلاب عندهم رقم ولي أمر مسجل ✓"
-        : "No matches for that search.")))))));
+        : (torailLinkFilter ? (torailLinkFilter === "linked" ? "لسه محدش ربط حسابه." : "كل الطلاب ربطوا حساباتهم ✓") : "No matches for that search."))))))));
     emptyEl.style.display = "block";
     updateTorailStudentsSelectionUI();
     return;
@@ -8455,7 +8483,7 @@ function enrollErrText(code) {
   return map[code] || "حصل خطأ، حاول تاني.";
 }
 
-function openEnrollmentManager() {
+function openEnrollmentManager(defaultGroup) {
   const old = document.getElementById("enrollOverlay");
   if (old) old.remove();
   const ov = document.createElement("div");
@@ -8477,6 +8505,9 @@ function openEnrollmentManager() {
             <option value="Prep 1">Prep 1</option><option value="Prep 2">Prep 2</option><option value="Prep 3">Prep 3</option>
             <option value="Sec 1">Sec 1</option><option value="Sec 2">Sec 2</option><option value="Sec 3">Sec 3</option>
           </select>
+          <select id="enrollGroupSel" class="reg-input" style="flex:1;min-width:110px;">
+            <option value="normal">طلاب عاديين</option><option value="torail">طلاب توريل</option>
+          </select>
           <select id="enrollDaysSel" class="reg-input" style="flex:1;min-width:110px;">
             <option value="7">صالح 7 أيام</option><option value="14" selected>صالح 14 يوم</option><option value="30">صالح 30 يوم</option>
           </select>
@@ -8496,6 +8527,7 @@ function openEnrollmentManager() {
       </div>
     </div>`;
   document.body.appendChild(ov);
+  document.getElementById("enrollGroupSel").value = defaultGroup === "torail" ? "torail" : "normal";
   document.getElementById("enrollCloseBtn").onclick = () => ov.remove();
   document.getElementById("enrollCreateBtn").onclick = enrollCreateCode;
   document.getElementById("enrollCodesBox").onclick = enrollCodesClick;
@@ -8508,16 +8540,17 @@ async function enrollCreateCode() {
   const btn = document.getElementById("enrollCreateBtn");
   const stage = document.getElementById("enrollStageSel").value;
   const days = Number(document.getElementById("enrollDaysSel").value);
+  const group = document.getElementById("enrollGroupSel").value;
   btn.disabled = true;
   try {
-    const { res, data } = await enrollApi("/teacher-enroll-code", "POST", { stage, days });
+    const { res, data } = await enrollApi("/teacher-enroll-code", "POST", { stage, days, group });
     if (!res.ok || !data.ok) { showError(enrollErrText(data.error)); return; }
     const until = data.expiresAt ? new Date(data.expiresAt).toLocaleDateString("ar-EG") : "";
     const box = document.getElementById("enrollNewCode");
     box.style.display = "block";
     box.innerHTML = `
       <div style="font-size:1.7rem;font-weight:800;letter-spacing:0.15em;direction:ltr;padding:0.5rem;border:2px dashed var(--c-border, #999);border-radius:10px;">${escapeHtml(data.code)}</div>
-      <div style="font-size:0.82rem;margin:0.4rem 0;">${escapeHtml(data.stage)} — صالح لحد ${escapeHtml(until)}</div>
+      <div style="font-size:0.82rem;margin:0.4rem 0;">${escapeHtml(data.stage)} · ${data.group === "torail" ? "توريل" : "عادي"} — صالح لحد ${escapeHtml(until)}</div>
       <button id="enrollCopyBtn" class="backup-btn" style="margin:0;">نسخ الكود</button>`;
     document.getElementById("enrollCopyBtn").onclick = async () => {
       try { await navigator.clipboard.writeText(data.code); showSuccess("اتنسخ الكود."); }
@@ -8543,7 +8576,7 @@ async function loadEnrollCodes() {
       const revoke = state === "فعّال"
         ? `<button class="wa-send-btn" style="background:var(--c-danger, #c62828);" data-act="revoke" data-id="${escapeHtml(c.id)}">إلغاء</button>` : "";
       return `<div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;padding:0.35rem 0;border-bottom:1px solid var(--c-border, rgba(0,0,0,0.1));">
-        <span>${escapeHtml(c.stage)} · <span style="color:${color};">${state}</span> · لحد ${escapeHtml(until)}</span>${revoke}</div>`;
+        <span>${escapeHtml(c.stage)} · ${c.group === "torail" ? "توريل" : "عادي"} · <span style="color:${color};">${state}</span> · لحد ${escapeHtml(until)}</span>${revoke}</div>`;
     }).join("");
   } catch (e) { box.textContent = "تعذر تحميل الأكواد."; }
 }
@@ -8580,11 +8613,11 @@ async function loadEnrollRequests() {
            </div>` : "";
       return `<div style="border:1px solid var(--c-border, rgba(0,0,0,0.15));border-radius:10px;padding:0.6rem;margin-bottom:0.6rem;">
         <div style="font-weight:700;">${escapeHtml(r.name)}</div>
-        <div style="font-size:0.84rem;opacity:0.85;">${escapeHtml(r.stage)} · ولي الأمر: <span dir="ltr">${escapeHtml(r.parentPhone)}</span>${r.studentPhone ? ` · الطالب: <span dir="ltr">${escapeHtml(r.studentPhone)}</span>` : ""}</div>
+        <div style="font-size:0.84rem;opacity:0.85;">${escapeHtml(r.stage)}${r.group === "torail" ? " · توريل" : ""} · ولي الأمر: <span dir="ltr">${escapeHtml(r.parentPhone)}</span>${r.studentPhone ? ` · الطالب: <span dir="ltr">${escapeHtml(r.studentPhone)}</span>` : ""}</div>
         <div style="font-size:0.78rem;opacity:0.7;direction:ltr;text-align:right;">${escapeHtml(r.email)}</div>
         ${sim}
         <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
-          <button class="backup-btn" style="margin:0;flex:1;" data-act="approve-new" data-uid="${escapeHtml(r.uid)}">موافقة (طالب جديد)</button>
+          <button class="backup-btn" style="margin:0;flex:1;" data-act="approve-new" data-group="${r.group === "torail" ? "torail" : "normal"}" data-uid="${escapeHtml(r.uid)}">${r.group === "torail" ? "موافقة (طالب توريل جديد)" : "موافقة (طالب جديد)"}</button>
           <button class="backup-btn" style="margin:0;flex:1;background:var(--c-danger, #c62828);" data-act="reject" data-uid="${escapeHtml(r.uid)}">رفض</button>
         </div>
       </div>`;
@@ -8600,7 +8633,7 @@ async function enrollRequestsClick(ev) {
   let body, ask;
   if (act === "approve-new") {
     body = { uid, decision: "approve" };
-    ask = "هيتعمل كارت طالب جديد ويتربط بالحساب ده. متأكد؟";
+    ask = btn.dataset.group === "torail" ? "هيتعمل كارت طالب توريل جديد ويتربط بالحساب ده. متأكد؟" : "هيتعمل كارت طالب جديد ويتربط بالحساب ده. متأكد؟";
   } else if (act === "approve-existing") {
     body = { uid, decision: "approve", existingStudentId: btn.dataset.sid };
     ask = "الحساب ده هيتربط بكارت الطالب الموجود (من غير ما يتعمل كارت جديد). متأكد إنه نفس الطالب؟";
@@ -8637,6 +8670,105 @@ async function setStudentPinLength(studentId, len) {
   } catch (err) {
     showError("تعذر تغيير طول الرمز. تأكد من اتصالك بالإنترنت.");
   }
+}
+
+// ===== فحص استقبال النتايج (Worker v108/v109) =====
+function healthReasonText(reason) {
+  const r = String(reason || "");
+  if (r === "exam_closed") return "الامتحان كان مقفول وقت التسليم";
+  if (r === "not_allowed") return "الطالب مش مسموح له بالامتحان ده (مرحلة أو معلم مختلف)";
+  if (r === "exam_paid") return "الامتحان ده للمشتركين بالأكواد";
+  if (/firestore_429|resource.?exhausted/i.test(r)) return "حصة Firebase اليومية خلصت";
+  return r;
+}
+function healthEventText(e) {
+  const who = e.student ? ` — ${escapeHtml(e.student)}` : "";
+  if (e.type === "rejected") return `⛔ تسليم اترفض${who}: ${escapeHtml(healthReasonText(e.reason))}`;
+  if (e.type === "provisional") return `⚠ تصحيح مبدئي${who}: الذكاء الاصطناعي مكانش متاح. افتح النتيجة واعمل "إعادة تصحيح بالذكاء الاصطناعي".`;
+  if (e.type === "error") return `❌ خطأ في السيرفر${who}: ${escapeHtml(healthReasonText(e.reason))}`;
+  if (e.type === "mirror_failed") return `⚠ تعذر نسخ نتيجة مشترك بكود لقايمتك${who}. اضغط "استيراد" تحت.`;
+  return escapeHtml(e.type || "");
+}
+
+async function openResultsHealth() {
+  const old = document.getElementById("resultsHealthOverlay");
+  if (old) old.remove();
+  const ov = document.createElement("div");
+  ov.id = "resultsHealthOverlay";
+  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9998;display:flex;align-items:flex-start;justify-content:center;padding:1rem;overflow:auto;";
+  const box = "border:1px solid var(--c-border, rgba(0,0,0,0.15));border-radius:12px;padding:0.8rem;margin-bottom:0.8rem;";
+  ov.innerHTML = `
+    <div style="background:var(--c-card, #fff);color:var(--c-text, #111);border-radius:14px;padding:1rem;max-width:520px;width:100%;margin:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+        <h3 style="margin:0;">فحص استقبال النتايج</h3>
+        <button id="rhClose" class="backup-btn" style="margin:0;">إغلاق</button>
+      </div>
+      <p style="font-size:0.82rem;margin:0 0 0.8rem;opacity:0.8;">لو نتيجة طالب مش ظاهرة في "المحفوظة على السيرفر" تحت، يبقى التسليم ماوصلش. ولو ظاهرة هناك ومش ظاهرة في تطبيقك (علامة ✗)، المشكلة في تحميل التطبيق للنتايج.</p>
+      <div style="${box}"><strong>آخر النتايج المحفوظة على السيرفر</strong><div id="rhResults" style="margin-top:0.5rem;font-size:0.88rem;">جاري التحميل...</div></div>
+      <div style="${box}"><strong>آخر المشاكل</strong><div id="rhEvents" style="margin-top:0.5rem;font-size:0.88rem;"></div></div>
+      <div style="${box}margin-bottom:0;">
+        <strong>نتايج المشتركين بالأكواد القديمة</strong>
+        <p style="font-size:0.82rem;margin:0.3rem 0 0.6rem;opacity:0.8;">النتايج اللي اتسلّمت قبل التحديث ماكانتش بتوصلك. الزرار ده بينقلها لقايمة نتايجك (من غير إشعارات). تقدر تضغطه أكتر من مرة بأمان.</p>
+        <button id="rhSync" class="backup-btn" style="width:100%;margin:0;">استيراد نتايج المشتركين بالأكواد</button>
+        <div id="rhSyncMsg" style="margin-top:0.5rem;font-size:0.88rem;"></div>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  document.getElementById("rhClose").onclick = () => ov.remove();
+  document.getElementById("rhSync").onclick = syncVoucherResults;
+
+  const resBox = document.getElementById("rhResults");
+  const evBox = document.getElementById("rhEvents");
+  try {
+    const { res, data } = await enrollApi("/results-health");
+    if (!res.ok || !data.ok) {
+      resBox.textContent = data.error === "not_allowed" ? "الحساب ده مش حساب معلم." : `تعذر الفحص (${data.debugMessage || data.error || res.status}).`;
+      evBox.textContent = "";
+      return;
+    }
+    const fmt = iso => { const d = new Date(iso); return isNaN(d.getTime()) ? "" : d.toLocaleString("ar-EG", { dateStyle: "short", timeStyle: "short" }); };
+    if (data.results === null) {
+      resBox.textContent = `تعذر قراءة النتايج من السيرفر (${data.resultsError || "؟"}).`;
+    } else if (!data.results.length) {
+      resBox.textContent = "مفيش أي نتيجة محفوظة على السيرفر.";
+    } else {
+      resBox.innerHTML = data.results.map(r => {
+        const inApp = (examResults || []).some(x => x.id === r.id);
+        return `<div style="padding:0.35rem 0;border-bottom:1px solid var(--c-border, rgba(0,0,0,0.1));">
+          <div><strong>${escapeHtml(r.studentName || "—")}</strong> — ${escapeHtml(r.examTitle || "")}</div>
+          <div style="font-size:0.8rem;opacity:0.85;">${escapeHtml(String(r.score))} / ${escapeHtml(String(r.total))}${r.needsReview ? " · ⚠ تصحيح مبدئي" : ""} · ${escapeHtml(fmt(r.submittedAt))} · ${inApp ? "✓ ظاهرة في تطبيقك" : "✗ مش ظاهرة في تطبيقك"}</div>
+        </div>`;
+      }).join("");
+    }
+    evBox.innerHTML = (data.events || []).length
+      ? data.events.map(e => `<div style="padding:0.35rem 0;border-bottom:1px solid var(--c-border, rgba(0,0,0,0.1));"><div>${healthEventText(e)}</div><div style="font-size:0.78rem;opacity:0.75;">${escapeHtml(fmt(e.at))}</div></div>`).join("")
+      : "مفيش مشاكل متسجلة.";
+  } catch (e) {
+    resBox.textContent = "تعذر الاتصال بالسيرفر. تأكد من الإنترنت.";
+  }
+}
+
+async function syncVoucherResults() {
+  const btn = document.getElementById("rhSync");
+  const msg = document.getElementById("rhSyncMsg");
+  btn.disabled = true;
+  msg.textContent = "جاري الاستيراد...";
+  let created = 0, there = 0;
+  try {
+    for (let i = 0; i < 6; i++) {
+      const { res, data } = await enrollApi("/sync-voucher-results", "POST", {});
+      if (!res.ok || !data.ok) { msg.textContent = `تعذر الاستيراد (${data.debugMessage || data.error || res.status}).`; btn.disabled = false; return; }
+      created += data.created || 0;
+      there = data.alreadyThere || there;
+      if (!data.remaining) break;
+    }
+    msg.textContent = created
+      ? `تم استيراد ${created} نتيجة. هتلاقيها في قايمة نتايج الامتحانات.`
+      : `مفيش جديد للاستيراد (${there} نتيجة موجودة بالفعل في قايمتك).`;
+  } catch (e) {
+    msg.textContent = "تعذر الاتصال بالسيرفر. تأكد من الإنترنت.";
+  }
+  btn.disabled = false;
 }
 
 async function resetStudentPin(studentId) {

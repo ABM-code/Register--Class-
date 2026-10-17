@@ -1068,35 +1068,68 @@ async function submitExam(isTimeout) {
     submitBtn.textContent = isTimeout ? "انتهى الوقت، جاري التسليم..." : "جاري التسليم...";
   }
   const { answerDetails } = gradeExam();
+  const payload = JSON.stringify({
+    examId: exam.id,
+    answers: answerDetails.map(a => ({ questionIndex: a.questionIndex, given: a.given })),
+    timedOut: !!isTimeout
+  });
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous || !selectedStudent?.id) throw new Error("not_authenticated");
-    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/submit-result`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${await auth.currentUser.getIdToken()}`
-      },
-      body: JSON.stringify({
-        examId: exam.id,
-        answers: answerDetails.map(a => ({ questionIndex: a.questionIndex, given: a.given })),
-        timedOut: !!isTimeout
-      })
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.ok) throw new Error(data.error || "submit_failed");
+    // بنحاول لحد 3 مرات (شبكة ضعيفة أو سيرفر مشغول). الإعادة آمنة: لو التسليم الأول وصل، السيرفر بيرجّع نفس النتيجة.
+    let data = null, lastErr = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/submit-result`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${await auth.currentUser.getIdToken()}`
+          },
+          body: payload
+        });
+        const d = await res.json().catch(() => ({}));
+        if (res.ok && d.ok) { data = d; break; }
+        lastErr = new Error(d.error || ("http_" + res.status));
+        lastErr.detail = d.debugMessage || "";
+        if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) break;   // خطأ مش هيتحل بالإعادة
+      } catch (e) { lastErr = e; }
+      if (attempt < 3) {
+        if (submitBtn) submitBtn.textContent = "جاري إعادة المحاولة...";
+        await new Promise(r => setTimeout(r, 1200 * attempt));
+      }
+    }
+    if (!data) throw lastErr || new Error("submit_failed");
     try { localStorage.removeItem(getTimerStorageKey()); } catch (e) {}
     try { localStorage.removeItem(getAnswersStorageKey()); } catch (e) {}
     examInProgress = false;
     clearLeftMarker();
     lastRankInfo = data.rank ? { rank: data.rank, total: data.rankTotal, tied: data.rankTied || 0 } : null;
+    lastResultProvisional = !!data.provisional;
+    // بعد التسليم الأسئلة بتيجي بإجاباتها الصحيحة (عشان شاشة النتيجة تعرض "الإجابة الصحيحة")
+    try { await loadExamFromWorker(); } catch (e) { /* لو فشل، النتيجة لسه بتظهر من غير الإجابة الصحيحة */ }
     renderResult(data.score, data.total, data.answerDetails || answerDetails, true, isTimeout);
   } catch (err) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = "تسليم الإجابات";
     }
-    showError("تعذر تسليم الإجابات. تأكد من اتصالك بالإنترنت وحاول تاني.");
+    showError(submitErrorText(err));
   }
+}
+
+function submitErrorText(err) {
+  const code = (err && err.message) || "";
+  const map = {
+    exam_closed: "الامتحان اتقفل قبل ما تسلّم. كلّم المدرس.",
+    not_allowed: "مش مسموحلك تسلّم الامتحان ده. كلّم المدرس.",
+    exam_paid: "الامتحان ده لأصحاب الأكواد بس.",
+    not_authenticated: "انتهت الجلسة. ارجع لأول الصفحة وادخل تاني.",
+    invalid_auth: "انتهت الجلسة. ارجع لأول الصفحة وادخل تاني.",
+    missing_auth: "انتهت الجلسة. ارجع لأول الصفحة وادخل تاني.",
+  };
+  if (map[code]) return map[code];
+  const detail = code ? " (" + code + (err.detail ? ": " + err.detail : "") + ")" : "";
+  return "تعذر تسليم الإجابات. إجاباتك محفوظة، اضغط تسليم تاني. لو استمرت المشكلة صوّر الرسالة دي وابعتها للمدرس." + detail;
 }
 
 // ============ صوت ظهور النتيجة (Web Audio API — بدون ملفات خارجية) ============
@@ -1136,6 +1169,7 @@ function rankLabelAr(n) {
   return n >= 1 && n <= 10 ? "المركز " + w[n] : "المركز " + n;
 }
 let lastRankInfo = null;   // ترتيب الطالب (من الـWorker) بعد التسليم مباشرة
+let lastResultProvisional = false;   // التصحيح الآلي مكانش متاح: النتيجة مبدئية والمدرس هيراجعها
 function rankChipHtml() {
   const r = lastRankInfo;
   if (!r || !r.rank || !r.total) return "";
@@ -1204,7 +1238,7 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
 
   const subMessage = !isFreshSubmission
     ? "مراجعة إجابتك السابقة."
-    : (wasTimedOut ? "انتهى وقت الامتحان، وتم تسليم إجاباتك تلقائيًا." : "تم إرسال نتيجتك للمدرّس بنجاح.");
+    : ((wasTimedOut ? "انتهى وقت الامتحان، وتم تسليم إجاباتك تلقائيًا." : "تم إرسال نتيجتك للمدرّس بنجاح.") + (lastResultProvisional ? " التصحيح مبدئي، والمدرس هيراجع إجاباتك ويحدّث الدرجة." : ""));
 
   const tier = tierOf(pct);
   const tierText = { high: "ممتاز، كمّل كده", mid: "كويس، راجع الأخطاء تحت", low: "محتاج مراجعة، راجع الأخطاء تحت" }[tier];
