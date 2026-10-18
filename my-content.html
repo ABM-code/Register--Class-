@@ -978,6 +978,13 @@ function renderExamForm() {
   }).join("");
 
   content.innerHTML = `${backBtn}
+    <div class="card" id="studentInfoCard">
+      <label>اسم الطالب</label>
+      <input type="text" id="examStudentName" placeholder="اكتب اسمك الكامل" autocomplete="off" maxlength="60">
+      <label style="margin-top:0.6rem; display:block;">رقم ولي الأمر</label>
+      <input type="tel" id="examParentPhone" placeholder="01xxxxxxxxx" inputmode="tel" autocomplete="off" maxlength="20">
+      <p id="studentInfoMsg" style="font-size:0.82rem; margin:0.5rem 0 0; color:var(--c-mutedoncard);">النتيجة هتتبعت للمدرس باسمك ورقم ولي الأمر.</p>
+    </div>
     <div class="exam-bar">
       <h2 class="exam-title">${escapeHtml(currentExam.title)}</h2>
       <div class="exam-progress-text" id="examProgressText"></div>
@@ -1011,7 +1018,34 @@ function renderExamForm() {
   updateExamProgress();
 }
 
+function normalizeDigits(s) {
+  return String(s || "").replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 1632));
+}
+
+function readStudentInfo() {
+  const name = (document.getElementById("examStudentName")?.value || "").replace(/\s+/g, " ").trim();
+  const phone = normalizeDigits(document.getElementById("examParentPhone")?.value || "").replace(/[\s-]/g, "");
+  if (!/^[\p{L}][\p{L}\s.'-]{1,59}$/u.test(name)) {
+    return { error: "اكتب اسمك الكامل (حرفين على الأقل) قبل التسليم." };
+  }
+  if (!/^\+?\d{10,15}$/.test(phone)) {
+    return { error: "اكتب رقم ولي الأمر صح (10 أرقام على الأقل)." };
+  }
+  return { name, phone };
+}
+
 async function submitCurrentExam() {
+  const info = readStudentInfo();
+  const infoMsg = document.getElementById("studentInfoMsg");
+  if (info.error) {
+    infoMsg.textContent = info.error;
+    infoMsg.style.color = "var(--c-danger)";
+    document.getElementById("examStudentName")?.focus();
+    return;
+  }
+  infoMsg.textContent = "النتيجة هتتبعت للمدرس باسمك ورقم ولي الأمر.";
+  infoMsg.style.color = "var(--c-mutedoncard)";
+
   const btn = document.getElementById("submitExamBtn");
   btn.disabled = true;
   btn.textContent = "جاري التسليم...";
@@ -1025,7 +1059,7 @@ async function submitCurrentExam() {
         const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/voucher-submit-result`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
-          body: JSON.stringify({ examId: currentExam.examId, answers }),
+          body: JSON.stringify({ examId: currentExam.examId, answers, studentName: info.name, parentPhone: info.phone }),
         });
         const d = await res.json().catch(() => ({}));
         if (res.ok && d.ok) { data = d; break; }
