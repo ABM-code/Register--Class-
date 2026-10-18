@@ -116,7 +116,12 @@ const ERROR_MESSAGES = {
 let mode = "login"; // login | signup
 
 function renderAuthForm() {
+  const pending = getPendingRedeemCode();
+  const pendingBanner = pending
+    ? `<div class="card" style="margin-bottom:0.8rem;">كود الكارت: <b dir="ltr">${escapeHtml(pending)}</b><div style="font-size:0.85rem; margin-top:0.4rem;">سجّل دخولك أو اعمل حساب جديد عشان تفعّل الكود.</div></div>`
+    : "";
   document.getElementById("content").innerHTML = `
+    ${pendingBanner}
     <div class="card">
       <label>البريد الإلكتروني</label>
       <input type="email" id="emailInput" autocomplete="email">
