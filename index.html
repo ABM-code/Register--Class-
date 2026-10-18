@@ -6944,6 +6944,19 @@ function cancelManualEdits(resultId) {
   delete pendingManualEdits[resultId];
   renderExamResultsList();
 }
+async function syncVoucherRegrade(resultId) {
+  // لو النتيجة لطالب كارت، نحدّث النسخة اللي الطالب بيشوفها بعد أي تعديل
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    await fetch(`${STUDENT_AUTH_WORKER_URL}/voucher-sync-regrade`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+      body: JSON.stringify({ resultId }),
+    });
+  } catch (e) {
+    console.error("voucher sync failed", e);
+  }
+}
 async function saveManualRegrade(resultId) {
   const edited = pendingManualEdits[resultId];
   if (!edited) return;
@@ -6964,6 +6977,7 @@ async function saveManualRegrade(resultId) {
       total,
     });
     delete pendingManualEdits[resultId];
+    await syncVoucherRegrade(resultId);
   } catch (err) {
     showError("تعذر حفظ التصحيح اليدوي: " + (err.message || err));
   }
@@ -6995,6 +7009,7 @@ async function aiRegrade(resultId, examId, studentId) {
     alert("خطأ في الجافاسكريبت قبل ما الطلب يخلص:\n" + (err && err.message ? err.message : String(err)));
     showError("تعذر إعادة التصحيح بالذكاء الاصطناعي. تأكد من الاتصال بالإنترنت.");
   } finally {
+    await syncVoucherRegrade(resultId);
     if (btn) { btn.disabled = false; btn.innerHTML = icon("refresh") + " إعادة تصحيح بالذكاء الاصطناعي"; }
   }
 }
