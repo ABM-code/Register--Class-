@@ -277,100 +277,13 @@ async function init() {
     exam = { id: examId, title: data.title || "امتحان", stage: data.stage || "" };
     document.getElementById("examTitle").textContent = exam.title;
     document.getElementById("examSub").textContent = [exam.stage || "", TEACHER_DISPLAY_LINE].filter(Boolean).join(" — ");
-    studentsInStage = [];   // قايمة الطلاب الكاملة مابقتش بتتحمّل؛ البحث بيتم من الـWorker حرف بحرف
+    studentsInStage = (data.students || []).sort((a,b) => (a.name||"").localeCompare(b.name||""));
     renderStudentPicker();
   } catch (err) {
     document.getElementById("examTitle").textContent = "تعذر فتح الامتحان";
     document.getElementById("content").innerHTML = "";
     showError("تعذر تحميل الامتحان. تأكد من الرابط والإنترنت وحاول تاني.");
   }
-}
-
-// ===== ماسح كارنيه الحضور (QR) بالكاميرا =====
-let _jsQrLoading = null;
-function loadJsQr() {
-  if (window.jsQR) return Promise.resolve();
-  if (_jsQrLoading) return _jsQrLoading;
-  _jsQrLoading = new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
-    s.onload = resolve;
-    s.onerror = () => { _jsQrLoading = null; reject(new Error("jsqr_load_failed")); };
-    document.head.appendChild(s);
-  });
-  return _jsQrLoading;
-}
-function openCardScanner(onResult) {
-  const old = document.getElementById("cardScanOverlay");
-  if (old) old.remove();
-  const ov = document.createElement("div");
-  ov.id = "cardScanOverlay";
-  ov.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;gap:0.8rem;";
-  ov.innerHTML = `
-    <div style="color:#fff;font-weight:700;text-align:center;">وجّه الكاميرا ناحية الـQR اللي على كارنيه الحضور</div>
-    <video id="cardScanVideo" playsinline muted style="width:100%;max-width:360px;border-radius:14px;background:#000;"></video>
-    <div id="cardScanStatus" style="color:#fff;font-size:0.9rem;text-align:center;min-height:1.3em;"></div>
-    <button id="cardScanCancel" type="button" style="padding:0.7rem 1.6rem;border-radius:10px;border:none;font-size:1rem;cursor:pointer;">إلغاء</button>`;
-  document.body.appendChild(ov);
-  const video = ov.querySelector("#cardScanVideo");
-  const status = ov.querySelector("#cardScanStatus");
-  let stream = null, stopped = false, timer = null;
-  const stop = () => {
-    stopped = true;
-    clearTimeout(timer);
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    ov.remove();
-  };
-  ov.querySelector("#cardScanCancel").onclick = stop;
-  (async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      status.textContent = "المتصفح ده مش بيدعم الكاميرا. افتح الرابط في Chrome.";
-      return;
-    }
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
-    } catch (e) {
-      status.textContent = "مقدرتش أفتح الكاميرا. اسمح للمتصفح باستخدام الكاميرا وحاول تاني.";
-      return;
-    }
-    if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }
-    video.srcObject = stream;
-    await video.play().catch(() => {});
-    let detector = null;
-    if ("BarcodeDetector" in window) {
-      try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { detector = null; }
-    }
-    if (!detector) {
-      try { await loadJsQr(); }
-      catch (e) { status.textContent = "تعذر تحميل أداة قراءة الـQR. تأكد من الإنترنت."; return; }
-    }
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    status.textContent = "جاري البحث عن الكود...";
-    const tick = async () => {
-      if (stopped) return;
-      try {
-        if (video.readyState >= 2 && video.videoWidth) {
-          let text = "";
-          if (detector) {
-            const found = await detector.detect(video);
-            if (found && found.length) text = found[0].rawValue || "";
-          } else {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
-            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const code = window.jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
-            if (code) text = code.data || "";
-          }
-          if (text.startsWith("CR-ATT:")) { stop(); onResult(text); return; }
-          if (text) status.textContent = "ده مش كارنيه حضور. جرّب كارنيهك.";
-        }
-      } catch (e) { /* نكمل المحاولة */ }
-      timer = setTimeout(tick, 250);
-    };
-    tick();
-  })();
 }
 
 function renderStudentPicker() {
@@ -380,7 +293,6 @@ function renderStudentPicker() {
       <label>اكتب اسمك للبحث</label>
       <input type="text" id="studentSearchInput" placeholder="اكتب أول كام حرف من اسمك" autocomplete="off">
       <div class="student-suggestions" id="studentSuggestions"></div>
-      <button type="button" id="scanCardBtn" style="margin-top:0.7rem;width:100%;padding:0.7rem;border-radius:10px;border:1px solid var(--c-muted);background:var(--c-field);color:var(--c-text);font-size:0.95rem;font-weight:600;cursor:pointer;">📷 أو امسح كارنيه الحضور (QR)</button>
     </div>
     <div class="card" id="pinCard" style="display:none;">
       <label id="pinLabel"></label>
@@ -388,7 +300,6 @@ function renderStudentPicker() {
       <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
     </div>
     <div id="alreadySubmittedMsg"></div>
-    <p style="text-align:center; font-size:0.88rem; margin:0.9rem 0 0;">ليس عندك حساب؟ <a href="account.html">اربط حسابك من هنا</a></p>
     <button id="startBtn" disabled>ابدأ الامتحان</button>
   `;
   const searchInput = document.getElementById("studentSearchInput");
@@ -427,7 +338,7 @@ function renderStudentPicker() {
         stopLockTimer();
         delete lockUntilByStudent[studentId];
         pinMsg.style.display = "none";
-        if (selectedStudent && lockKeyOf(selectedStudent) === studentId) pinInput.focus();
+        if (selectedStudent && selectedStudent.id === studentId) pinInput.focus();
         return;
       }
       const mm = String(Math.floor(left / 60)).padStart(2, "0");
@@ -439,8 +350,6 @@ function renderStudentPicker() {
     tick();
     lockTimer = setInterval(tick, 1000);
   }
-
-  const lockKeyOf = st => (st && (st.id || st.name)) || "";
 
   function resetPin() {
     stopLockTimer();
@@ -460,13 +369,10 @@ function renderStudentPicker() {
     resetStart();
     resetPin();
     if (!selectedStudent) return;
-    const needLen = selectedStudent.pinLength || 4;
-    pinInput.maxLength = needLen;
-    pinInput.placeholder = needLen + " أرقام";
-    pinLabel.textContent = "اكتب الرمز السري بتاعك (" + needLen + " أرقام)";
+    pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
     pinCard.style.display = "block";
-    const lu = lockUntilByStudent[lockKeyOf(selectedStudent)];
-    if (lu && lu > Date.now()) startLockCountdown(lockKeyOf(selectedStudent), lu);
+    const lu = lockUntilByStudent[selectedStudent.id];
+    if (lu && lu > Date.now()) startLockCountdown(selectedStudent.id, lu);
     else pinInput.focus();
   }
 
@@ -477,46 +383,25 @@ function renderStudentPicker() {
       resetPin();
     }
     const q = searchInput.value.trim();
-    if (q.length < 2) { searchSeq++; clearTimeout(searchTimer); hideSuggestions(); return; }
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => runStudentSearch(q), 250);
-  });
-
-  // بحث بالاسم من الـWorker: بيرجّع أسماء + توكن مشفّر لكل اسم (من غير أي رقم طالب)
-  let searchTimer = null;
-  let searchSeq = 0;
-  async function runStudentSearch(q) {
-    const mySeq = ++searchSeq;
-    let results = [];
-    try {
-      const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-search?examId=${encodeURIComponent(exam.id)}&q=${encodeURIComponent(q)}`);
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) throw new Error(d.error || "search_failed");
-      results = d.results || [];
-    } catch (e) {
-      if (mySeq !== searchSeq) return;
-      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">${e && e.message === "too_many_requests" ? "طلبات كتير. استنى دقيقة وحاول تاني." : "تعذر البحث. تأكد من الإنترنت وحاول تاني."}</div>`;
-      suggestionsBox.style.display = "block";
-      return;
-    }
-    if (mySeq !== searchSeq) return;   // نتيجة قديمة، المستخدم كتب حاجة جديدة
-    if (results.length === 0) {
+    if (q.length < 2) { hideSuggestions(); return; }
+    const normQ = normalizeArabic(q.toLowerCase());
+    const matches = studentsInStage.filter(s => normalizeArabic((s.name || "").toLowerCase()).includes(normQ)).slice(0, 6);
+    if (matches.length === 0) {
       suggestionsBox.innerHTML = `<div class="student-suggestion-empty">مفيش اسم متطابق. تأكد من كتابة اسمك صح.</div>`;
       suggestionsBox.style.display = "block";
       return;
     }
-    suggestionsBox.innerHTML = results.map((s, i) => `<button type="button" class="student-suggestion-item" data-i="${i}">${escapeHtml(s.name)}</button>`).join("");
+    suggestionsBox.innerHTML = matches.map(s => `<button type="button" class="student-suggestion-item" data-id="${s.id}">${escapeHtml(s.name)}</button>`).join("");
     suggestionsBox.style.display = "block";
     suggestionsBox.querySelectorAll(".student-suggestion-item").forEach(btn => {
       btn.addEventListener("click", () => {
-        const chosen = results[Number(btn.dataset.i)];
-        if (!chosen) return;
-        selectedStudent = { id: "", name: chosen.name, lookupToken: chosen.token, pinLength: chosen.pinLength === 6 ? 6 : 4 };
-        searchInput.value = chosen.name;
+        const chosen = studentsInStage.find(s => s.id === btn.dataset.id) || null;
+        selectedStudent = chosen;
+        searchInput.value = chosen ? chosen.name : "";
         onStudentChosen();
       });
     });
-  }
+  });
 
   async function checkAlreadySubmitted() {
     startBtn.disabled = true;
@@ -531,20 +416,25 @@ function renderStudentPicker() {
           .get();
         if (!snap.empty) snapDoc = snap.docs[0];
       } else {
-        // لا يوجد studentId = لا يوجد تحقق آمن. ممنوع البحث بالاسم (كان بيكشف نتايج كل الزملاء).
-        throw new Error("student_id_missing");
+        const snap = await db.collection("examResults")
+          .where("examId", "==", exam.id)
+          .get();
+        const targetNorm = normalizeArabic(selectedStudent.name);
+        const match = snap.docs.find(d => normalizeArabic(d.data().studentName) === targetNorm);
+        if (match) snapDoc = match;
       }
       if (snapDoc) {
         const prev = snapDoc.data();
-        // صلاحية الإعادة بتيجي من الـWorker (مش من Firestore مباشرة)
         let canRetake = false;
         try {
-          const token = await auth.currentUser.getIdToken();
-          const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/exam-questions?examId=${encodeURIComponent(exam.id)}`, {
-            headers: { "Authorization": `Bearer ${token}` }
-          });
-          const d = await r.json().catch(() => ({}));
-          canRetake = !!(d && d.ok && d.canRetake);
+          const examDocForRetake = await db.collection("exams").doc(exam.id).get();
+          if (examDocForRetake.exists) {
+            const examData = examDocForRetake.data();
+            if (examData.allowRetake && selectedStudent.id && examData.allowRetake[selectedStudent.id]) {
+              canRetake = true;
+              exam = { id: examDocForRetake.id, ...examData };
+            }
+          }
         } catch (e) { /* تجاهل، هيتعامل كأنه مش مسموح بالإعادة */ }
 
         if (canRetake) {
@@ -569,7 +459,8 @@ function renderStudentPicker() {
           btn.textContent = "جاري التحميل...";
           try {
             if (!exam.questions) {
-              await loadExamFromWorker();
+              const examDoc = await db.collection("exams").doc(exam.id).get();
+              if (examDoc.exists) exam = { id: examDoc.id, ...examDoc.data() };
             }
             renderResult(prev.score, prev.total, prev.answers || [], false);
           } catch (e) {
@@ -594,7 +485,7 @@ function renderStudentPicker() {
   pinInput.addEventListener("input", async () => {
     const typed = pinInput.value.replace(/\D/g, "");
     pinInput.value = typed;
-    if (!selectedStudent || typed.length < (selectedStudent.pinLength || 4)) {
+    if (typed.length < 4 || !selectedStudent) {
       pinMsg.style.display = "none";
       startBtn.disabled = true;
       return;
@@ -602,10 +493,10 @@ function renderStudentPicker() {
     startBtn.disabled = true;
     startBtn.textContent = "جاري التحقق...";
     try {
-      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-login-v2`, {
+      const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ examId: exam.id, lookupToken: selectedStudent.lookupToken, pin: typed })
+        body: JSON.stringify({ examId: exam.id, studentId: selectedStudent.id, pin: typed })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok || !data.customToken) {
@@ -622,15 +513,11 @@ function renderStudentPicker() {
     } catch (err) {
       if (err.message === "locked") {
         const endMs = Date.now() + (Number(err.remainingMin) || 5) * 60000;
-        lockUntilByStudent[lockKeyOf(selectedStudent)] = endMs;
-        startLockCountdown(lockKeyOf(selectedStudent), endMs);
+        lockUntilByStudent[selectedStudent.id] = endMs;
+        startLockCountdown(selectedStudent.id, endMs);
         return;
       }
-      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح."
-        : err.message === "invalid_lookup" ? "انتهت صلاحية اختيار الاسم. اكتب اسمك وأختاره تاني."
-        : err.message === "too_many_attempts_ip" ? "محاولات كتير من نفس الشبكة. استنى شوية وحاول تاني."
-        : err.message === "card_required_first_use" ? "أول مرة بتحدد فيها الرمز السري لازم تمسح كارنيه الحضور (زرار المسح فوق)."
-        : "تعذر التحقق. حاول تاني.";
+      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
       pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
       startBtn.disabled = true;
@@ -639,106 +526,6 @@ function renderStudentPicker() {
   });
 
   startBtn.addEventListener("click", renderExam);
-
-  // ===== مسح كارنيه الحضور: بيحل محل كتابة الاسم، والرمز السري لسه مطلوب =====
-  document.getElementById("scanCardBtn").addEventListener("click", () => {
-    openCardScanner(async (qrText) => {
-      suggestionsBox.innerHTML = `<div class="student-suggestion-empty">جاري التحقق من الكارنيه...</div>`;
-      suggestionsBox.style.display = "block";
-      try {
-        const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-qr-lookup`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ examId: exam.id, qr: qrText })
-        });
-        const d = await r.json().catch(() => ({}));
-        if (!r.ok || !d.ok) throw new Error(d.error || "invalid_card");
-        selectedStudent = { id: "", name: d.name, lookupToken: d.token, pinLength: d.pinLength === 6 ? 6 : 4 };
-        searchInput.value = d.name;
-        onStudentChosen();
-      } catch (e) {
-        suggestionsBox.innerHTML = `<div class="student-suggestion-empty">${e && e.message === "too_many_requests" ? "طلبات كتير. استنى دقيقة وحاول تاني." : "الكارنيه ده مش خاص بالامتحان ده."}</div>`;
-        suggestionsBox.style.display = "block";
-      }
-    });
-  });
-
-  // ===== حساب مربوط بكارت: ندخل مباشرة من غير اسم ولا PIN =====
-  function whenAuthReady() {
-    return new Promise(resolve => {
-      const unsub = auth.onAuthStateChanged(() => { unsub(); resolve(); });
-    });
-  }
-  async function tryLinkedAutoStart() {
-    await whenAuthReady();
-    const u = auth.currentUser;
-    if (!u || u.isAnonymous) return false;
-    const provs = (u.providerData || []).map(p => p.providerId);
-    const isAccount = provs.includes("google.com") || provs.includes("password");
-    if (!isAccount) return false;
-    if (provs.includes("password") && !u.emailVerified) return false;
-
-    let link;
-    try {
-      const token = await u.getIdToken();
-      const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/my-link`, { headers: { "Authorization": `Bearer ${token}` } });
-      link = await r.json().catch(() => ({}));
-      if (!r.ok || !link.ok || !link.linked || !link.student) return false;
-    } catch (e) { return false; }
-
-    selectedStudent = { id: link.student.id, name: link.student.name, stage: link.student.stage };
-    searchInput.closest(".card").style.display = "none";
-    pinCard.style.display = "none";
-    msgBox.innerHTML = `<div class="card who">${icon("user")}<strong>${escapeHtml(selectedStudent.name)}</strong></div>`;
-    startBtn.disabled = true;
-    startBtn.textContent = "جاري التحقق...";
-
-    try {
-      const token = await auth.currentUser.getIdToken();
-      const r = await fetch(`${STUDENT_AUTH_WORKER_URL}/exam-questions?examId=${encodeURIComponent(exam.id)}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok || !d.ok) {
-        const map = {
-          exam_closed: "الامتحان ده مقفول دلوقتي.",
-          exam_paid: "الامتحان ده متاح لأصحاب الكود بس.",
-          not_allowed: "الامتحان ده مش متاح لمرحلتك.",
-          not_linked: "حسابك مش مربوط بكارت. اربط حسابك الأول."
-        };
-        msgBox.innerHTML += `<div class="card note-card bad"><p style="margin:0;">${escapeHtml(map[d.error] || "تعذر فتح الامتحان.")}</p></div>`;
-        startBtn.textContent = "ابدأ الامتحان";
-        return true;
-      }
-      if (d.alreadySubmitted && !d.canRetake && d.prevResult) {
-        const pr = d.prevResult;
-        const pct = pr.total > 0 ? Math.round((pr.score / pr.total) * 100) : 0;
-        msgBox.innerHTML += `<div class="card note-card bad">
-          <strong>${icon("alert")} لقد قدّمت هذا الامتحان من قبل</strong>
-          <p>نتيجتك السابقة: ${pr.score} / ${pr.total} (${pct}%)</p>
-          <button id="reviewPrevBtn" class="btn-green">مراجعة إجاباتك</button>
-        </div>`;
-        document.getElementById("reviewPrevBtn").addEventListener("click", async () => {
-          try {
-            await loadExamFromWorker();
-            renderResult(pr.score, pr.total, pr.answers || [], false);
-          } catch (e) { showError("تعذر تحميل الأسئلة. حاول تاني."); }
-        });
-        startBtn.textContent = "ابدأ الامتحان";
-        return true;
-      }
-      if (d.canRetake) {
-        msgBox.innerHTML += `<div class="card note-card ok"><strong>${icon("refresh")} المعلم سمحلك بإعادة الامتحان</strong></div>`;
-      }
-      startBtn.disabled = false;
-      startBtn.textContent = "ابدأ الامتحان";
-    } catch (e) {
-      showError("تعذر التحقق من الامتحان. تأكد من اتصالك بالإنترنت.");
-      startBtn.textContent = "ابدأ الامتحان";
-    }
-    return true;
-  }
-  tryLinkedAutoStart();
 }
 
 let answers = {};
@@ -842,28 +629,12 @@ function updateExamProgress() {
   }
 }
 
-// تحميل الامتحان (الأسئلة + إعدادات العرض) من الـWorker بعد التحقق من الصلاحية.
-// الأسئلة قبل التسليم بتيجي من غير الإجابات الصحيحة، وبعد التسليم بتيجي كاملة للمراجعة.
-async function loadExamFromWorker() {
-  const token = await auth.currentUser.getIdToken();
-  const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/exam-questions?examId=${encodeURIComponent(exam.id)}`, {
-    headers: { "Authorization": `Bearer ${token}` }
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data.ok) throw new Error(data.error || "exam_missing");
-  exam = {
-    ...exam,
-    id: exam.id,
-    title: data.title || exam.title,
-    timeLimitMinutes: data.timeLimitMinutes || 0,
-    questions: data.questions || []
-  };
-}
-
 async function renderExam() {
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error("not_authenticated");
-    await loadExamFromWorker();
+    const doc = await db.collection("exams").doc(exam.id).get();
+    if (!doc.exists) throw new Error("exam_missing");
+    exam = { id: doc.id, ...doc.data() };
   } catch (e) {
     showError("تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.");
     return;
@@ -1068,68 +839,35 @@ async function submitExam(isTimeout) {
     submitBtn.textContent = isTimeout ? "انتهى الوقت، جاري التسليم..." : "جاري التسليم...";
   }
   const { answerDetails } = gradeExam();
-  const payload = JSON.stringify({
-    examId: exam.id,
-    answers: answerDetails.map(a => ({ questionIndex: a.questionIndex, given: a.given })),
-    timedOut: !!isTimeout
-  });
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous || !selectedStudent?.id) throw new Error("not_authenticated");
-    // بنحاول لحد 3 مرات (شبكة ضعيفة أو سيرفر مشغول). الإعادة آمنة: لو التسليم الأول وصل، السيرفر بيرجّع نفس النتيجة.
-    let data = null, lastErr = null;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/submit-result`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${await auth.currentUser.getIdToken()}`
-          },
-          body: payload
-        });
-        const d = await res.json().catch(() => ({}));
-        if (res.ok && d.ok) { data = d; break; }
-        lastErr = new Error(d.error || ("http_" + res.status));
-        lastErr.detail = d.debugMessage || "";
-        if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) break;   // خطأ مش هيتحل بالإعادة
-      } catch (e) { lastErr = e; }
-      if (attempt < 3) {
-        if (submitBtn) submitBtn.textContent = "جاري إعادة المحاولة...";
-        await new Promise(r => setTimeout(r, 1200 * attempt));
-      }
-    }
-    if (!data) throw lastErr || new Error("submit_failed");
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/submit-result`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${await auth.currentUser.getIdToken()}`
+      },
+      body: JSON.stringify({
+        examId: exam.id,
+        answers: answerDetails.map(a => ({ questionIndex: a.questionIndex, given: a.given })),
+        timedOut: !!isTimeout
+      })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || "submit_failed");
     try { localStorage.removeItem(getTimerStorageKey()); } catch (e) {}
     try { localStorage.removeItem(getAnswersStorageKey()); } catch (e) {}
     examInProgress = false;
     clearLeftMarker();
     lastRankInfo = data.rank ? { rank: data.rank, total: data.rankTotal, tied: data.rankTied || 0 } : null;
-    lastResultProvisional = !!data.provisional;
-    // بعد التسليم الأسئلة بتيجي بإجاباتها الصحيحة (عشان شاشة النتيجة تعرض "الإجابة الصحيحة")
-    try { await loadExamFromWorker(); } catch (e) { /* لو فشل، النتيجة لسه بتظهر من غير الإجابة الصحيحة */ }
     renderResult(data.score, data.total, data.answerDetails || answerDetails, true, isTimeout);
   } catch (err) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = "تسليم الإجابات";
     }
-    showError(submitErrorText(err));
+    showError("تعذر تسليم الإجابات. تأكد من اتصالك بالإنترنت وحاول تاني.");
   }
-}
-
-function submitErrorText(err) {
-  const code = (err && err.message) || "";
-  const map = {
-    exam_closed: "الامتحان اتقفل قبل ما تسلّم. كلّم المدرس.",
-    not_allowed: "مش مسموحلك تسلّم الامتحان ده. كلّم المدرس.",
-    exam_paid: "الامتحان ده لأصحاب الأكواد بس.",
-    not_authenticated: "انتهت الجلسة. ارجع لأول الصفحة وادخل تاني.",
-    invalid_auth: "انتهت الجلسة. ارجع لأول الصفحة وادخل تاني.",
-    missing_auth: "انتهت الجلسة. ارجع لأول الصفحة وادخل تاني.",
-  };
-  if (map[code]) return map[code];
-  const detail = code ? " (" + code + (err.detail ? ": " + err.detail : "") + ")" : "";
-  return "تعذر تسليم الإجابات. إجاباتك محفوظة، اضغط تسليم تاني. لو استمرت المشكلة صوّر الرسالة دي وابعتها للمدرس." + detail;
 }
 
 // ============ صوت ظهور النتيجة (Web Audio API — بدون ملفات خارجية) ============
@@ -1169,7 +907,6 @@ function rankLabelAr(n) {
   return n >= 1 && n <= 10 ? "المركز " + w[n] : "المركز " + n;
 }
 let lastRankInfo = null;   // ترتيب الطالب (من الـWorker) بعد التسليم مباشرة
-let lastResultProvisional = false;   // التصحيح الآلي مكانش متاح: النتيجة مبدئية والمدرس هيراجعها
 function rankChipHtml() {
   const r = lastRankInfo;
   if (!r || !r.rank || !r.total) return "";
@@ -1238,7 +975,7 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
 
   const subMessage = !isFreshSubmission
     ? "مراجعة إجابتك السابقة."
-    : ((wasTimedOut ? "انتهى وقت الامتحان، وتم تسليم إجاباتك تلقائيًا." : "تم إرسال نتيجتك للمدرّس بنجاح.") + (lastResultProvisional ? " التصحيح مبدئي، والمدرس هيراجع إجاباتك ويحدّث الدرجة." : ""));
+    : (wasTimedOut ? "انتهى وقت الامتحان، وتم تسليم إجاباتك تلقائيًا." : "تم إرسال نتيجتك للمدرّس بنجاح.");
 
   const tier = tierOf(pct);
   const tierText = { high: "ممتاز، كمّل كده", mid: "كويس، راجع الأخطاء تحت", low: "محتاج مراجعة، راجع الأخطاء تحت" }[tier];
