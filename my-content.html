@@ -142,6 +142,10 @@
   .timer-chip { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--c-cardbg); color: var(--c-textoncard); border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.85rem; margin-bottom: 0.4rem; }
   .timer-chip .timer-value { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
   .timer-chip.timer-warning .timer-value { color: var(--c-danger); }
+  .explain-actions { display: flex; gap: 0.5rem; margin-top: 0.7rem; flex-wrap: wrap; }
+  .explain-btn { background: none; border: 1px solid var(--c-mutedoncard); color: var(--c-textoncard); border-radius: 9px; padding: 0.45rem 0.75rem; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem; width: auto; box-shadow: none; }
+  .explain-btn[disabled] { opacity: 0.5; cursor: default; }
+  .explain-box { margin-top: 0.6rem; background: var(--c-cardalt, rgba(0,0,0,0.04)); border-radius: 10px; padding: 0.7rem 0.85rem; font-size: 0.85rem; line-height: 1.6; color: var(--c-textoncard); unicode-bidi: plaintext; text-align: start; }
   .exam-title { font-family: 'Fraunces', serif; color: var(--c-onpage); font-size: 1.15rem; margin: 0.2rem 0 0.6rem; }
   .exam-progress-text { display: flex; justify-content: space-between; color: var(--c-mutedonpage); font-size: 0.8rem; margin-bottom: 0.35rem; }
   .exam-progress-track { height: 8px; border-radius: 8px; background: rgba(159,184,173,0.25); overflow: hidden; }
@@ -197,6 +201,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 const STUDENT_AUTH_WORKER_URL = "https://register-class-auth.abm319.workers.dev";
+const AI_EXPLAIN_WORKER_URL = "https://register-class.abm319.workers.dev/explain";
 const firebaseConfig = {
   apiKey: "AIzaSyBcWhyLvCSnpyLSLWw9rHVSvODYgK67Wh0",
   authDomain: "register-class-302e6.firebaseapp.com",
@@ -1168,7 +1173,8 @@ function renderExamReview(data, isFreshSubmission) {
   const itemsHtml = questions.map((q, i) => {
     const ad = answers.find(a => a.questionIndex === i) || {};
     let givenText = "", correctText = "";
-    if (q.type === "mcq" || q.type === "translation_mcq") {
+    const isMcq = q.type === "mcq" || q.type === "translation_mcq";
+    if (isMcq) {
       const opts = q.options || [];
       givenText = (typeof ad.given === "number" && opts[ad.given] !== undefined) ? opts[ad.given] : "(لم يُجب)";
       correctText = opts[q.correctIndex] !== undefined ? opts[q.correctIndex] : "";
@@ -1176,10 +1182,27 @@ function renderExamReview(data, isFreshSubmission) {
       givenText = ad.given || "(لم يُجب)";
       correctText = (q.correctAnswers && q.correctAnswers[0]) || "";
     }
+    const explainId = `explain_${i}`;
+    const payload = {
+      type: q.type,
+      passage: q.passage || "",
+      prompt: q.prompt || "",
+      options: isMcq ? (q.options || []) : [],
+      correctAnswer: correctText,
+      studentAnswer: givenText === "(لم يُجب)" ? "" : givenText,
+    };
+    const payloadAttr = escapeHtml(JSON.stringify(payload));
+    const passageHtml = q.passage ? `<div class="passage">${escapeHtml(q.passage)}</div>` : "";
     return `<div class="card q-card ${ad.correct ? 'review-correct' : 'review-wrong'}">
       <div class="q-head"><span class="q-num">${i + 1}</span><div class="q-title">${escapeHtml(q.prompt)}</div></div>
+      ${passageHtml}
       <div class="answer-line ${ad.correct ? 'ok' : 'bad'}">${icon(ad.correct ? "check-circle" : "x-circle")}<span>إجابتك: <strong>${escapeHtml(givenText)}</strong></span></div>
-      ${!ad.correct ? `<div class="answer-line ok">${icon("check-circle")}<span>الإجابة الصحيحة: <strong>${escapeHtml(correctText)}</strong></span></div>` : ""}
+      <div class="answer-line ok">${icon("check-circle")}<span>الإجابة الصحيحة: <strong>${escapeHtml(correctText)}</strong></span></div>
+      <div class="explain-actions">
+        <button class="explain-btn" id="${explainId}_explainBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'explain', this)">${icon("lightbulb")} اشرحلي السبب</button>
+        <button class="explain-btn" id="${explainId}_translateBtn" data-payload="${payloadAttr}" onclick="requestExplain('${explainId}', 'translate', this)">${icon("globe")} ترجملي السؤال</button>
+      </div>
+      <div class="explain-box" id="${explainId}_box" style="display:none;"></div>
     </div>`;
   }).join("");
 
@@ -1201,6 +1224,57 @@ function renderExamReview(data, isFreshSubmission) {
     </div>
     ${itemsHtml}`;
   document.getElementById("backBtn").addEventListener("click", renderAccessList);
+}
+
+async function requestExplain(explainId, action, btnEl) {
+  const box = document.getElementById(`${explainId}_box`);
+  const explainBtn = document.getElementById(`${explainId}_explainBtn`);
+  const translateBtn = document.getElementById(`${explainId}_translateBtn`);
+  if (!box || !btnEl) return;
+
+  const payload = JSON.parse(btnEl.getAttribute("data-payload"));
+  payload.action = action;
+
+  // نفس الشرح لنفس السؤال والإجابة بيتخزّن على الجهاز، فالضغطة التانية فورية
+  const cacheKey = "exExplain:" + action + ":" + payload.prompt + "|" + payload.studentAnswer + "|" + payload.correctAnswer;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) { box.style.display = "block"; box.textContent = cached; return; }
+  } catch (e) {}
+
+  explainBtn.disabled = true;
+  translateBtn.disabled = true;
+  const originalHtml = btnEl.innerHTML;
+  btnEl.textContent = "جاري التحميل...";
+  box.style.display = "block";
+  box.textContent = "";
+
+  try {
+    const res = await fetch(AI_EXPLAIN_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data || !data.text) {
+      if (data && data.error === "quota_exceeded" && data.scope === "daily") {
+        box.textContent = "الشرح والترجمة مش متاحين دلوقتي لأن حد الاستخدام اليومي خلص. جرّب تاني بكرة أو اسأل المعلم.";
+      } else if (data && (data.error === "quota_exceeded" || data.error === "ai_busy")) {
+        box.textContent = `الخدمة مشغولة دلوقتي. جرّب تاني بعد ${Math.max(5, data.retryAfterSec || 15)} ثانية تقريبًا.`;
+      } else {
+        box.textContent = "معلش، حصلت مشكلة وإحنا بنجيب الشرح. جرّب تاني كمان شوية.";
+      }
+    } else {
+      box.textContent = data.text;
+      try { localStorage.setItem(cacheKey, data.text); } catch (e) {}
+    }
+  } catch (err) {
+    box.textContent = "معلش، حصلت مشكلة في الاتصال. جرّب تاني كمان شوية.";
+  } finally {
+    explainBtn.disabled = false;
+    translateBtn.disabled = false;
+    btnEl.innerHTML = originalHtml;
+  }
 }
 
 auth.onAuthStateChanged(user => {
