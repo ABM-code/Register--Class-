@@ -139,6 +139,9 @@
 
   /* تجربة الامتحان */
   .exam-bar { position: sticky; top: 0; z-index: 5; background: var(--c-page); padding: 0.5rem 0 0.8rem; margin-bottom: 0.4rem; }
+  .timer-chip { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--c-cardbg); color: var(--c-textoncard); border-radius: 999px; padding: 0.3rem 0.75rem; font-size: 0.85rem; margin-bottom: 0.4rem; }
+  .timer-chip .timer-value { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); }
+  .timer-chip.timer-warning .timer-value { color: var(--c-danger); }
   .exam-title { font-family: 'Fraunces', serif; color: var(--c-onpage); font-size: 1.15rem; margin: 0.2rem 0 0.6rem; }
   .exam-progress-text { display: flex; justify-content: space-between; color: var(--c-mutedonpage); font-size: 0.8rem; margin-bottom: 0.35rem; }
   .exam-progress-track { height: 8px; border-radius: 8px; background: rgba(159,184,173,0.25); overflow: hidden; }
@@ -926,7 +929,7 @@ async function openExam(examId, isFreshSubmission) {
       renderExamReview(data, !!isFreshSubmission);
       return;
     }
-    currentExam = { examId, title: data.title, questions: data.questions };
+    currentExam = { examId, title: data.title, questions: data.questions, timeLimitMinutes: data.timeLimitMinutes || null };
     currentAnswers = {};
     renderExamForm();
   } catch (err) {
@@ -949,7 +952,7 @@ function updateExamProgress() {
     if (card) card.classList.toggle("answered", ok);
   });
   const left = total - answered;
-  document.getElementById("examProgressText").innerHTML = `<span>أجبت على ${answered} من ${total}</span><span>${total ? Math.round((answered / total) * 100) : 0}%</span>`;
+  document.getElementById("examProgressText").innerHTML = `<span>محلول: ${answered} من ${total}</span><span>متبقي: ${left}</span>`;
   document.getElementById("examProgressFill").style.width = (total ? (answered / total) * 100 : 0) + "%";
   const hint = document.getElementById("submitHint");
   hint.className = "submit-hint" + (left > 0 ? " pending" : "");
@@ -977,6 +980,9 @@ function renderExamForm() {
     </div>`;
   }).join("");
 
+  const timerChipHtml = currentExam.timeLimitMinutes
+    ? `<div class="timer-chip" id="timerBar">${icon("clock")}<span>الوقت المتبقي:</span> <span class="timer-value" id="timerValue">--:--</span></div>`
+    : "";
   content.innerHTML = `${backBtn}
     <div class="card" id="studentInfoCard">
       <label>اسم الطالب</label>
@@ -987,6 +993,7 @@ function renderExamForm() {
     </div>
     <div class="exam-bar">
       <h2 class="exam-title">${escapeHtml(currentExam.title)}</h2>
+      ${timerChipHtml}
       <div class="exam-progress-text" id="examProgressText"></div>
       <div class="exam-progress-track"><div class="exam-progress-fill" id="examProgressFill"></div></div>
     </div>
@@ -1016,6 +1023,43 @@ function renderExamForm() {
   });
   document.getElementById("submitExamBtn").addEventListener("click", submitCurrentExam);
   updateExamProgress();
+  if (currentExam.timeLimitMinutes) startVoucherTimer();
+}
+
+let voucherTimerInterval = null;
+function voucherTimerKey() { return "voucherExamStart_" + currentExam.examId; }
+function clearVoucherTimer() {
+  if (voucherTimerInterval) { clearInterval(voucherTimerInterval); voucherTimerInterval = null; }
+  try { localStorage.removeItem(voucherTimerKey()); } catch (e) {}
+}
+function startVoucherTimer() {
+  clearVoucherTimer();
+  // وقت البداية بيتحفظ عشان الريفريش ما يرجعش الوقت من أول
+  let startTime = 0;
+  try { startTime = parseInt(localStorage.getItem(voucherTimerKey()) || "0", 10); } catch (e) {}
+  if (!startTime) {
+    startTime = Date.now();
+    try { localStorage.setItem(voucherTimerKey(), String(startTime)); } catch (e) {}
+  }
+  const totalMs = currentExam.timeLimitMinutes * 60 * 1000;
+  function tick() {
+    const valueEl = document.getElementById("timerValue");
+    const barEl = document.getElementById("timerBar");
+    if (!valueEl) { clearInterval(voucherTimerInterval); voucherTimerInterval = null; return; }
+    const remaining = startTime + totalMs - Date.now();
+    if (remaining <= 0) {
+      valueEl.textContent = "00:00";
+      clearInterval(voucherTimerInterval); voucherTimerInterval = null;
+      submitCurrentExam();   // التسليم التلقائي عند انتهاء الوقت
+      return;
+    }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    valueEl.textContent = String(mins).padStart(2, "0") + ":" + String(secs).padStart(2, "0");
+    if (remaining <= 60000 && barEl) barEl.classList.add("timer-warning");
+  }
+  tick();
+  voucherTimerInterval = setInterval(tick, 1000);
 }
 
 function normalizeDigits(s) {
@@ -1073,6 +1117,7 @@ async function submitCurrentExam() {
       }
     }
     if (!data) throw lastErr || new Error("submit_failed");
+    clearVoucherTimer();
     openExam(currentExam.examId, true);
   } catch (err) {
     const code = (err && err.message) || "";
