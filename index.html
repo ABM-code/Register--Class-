@@ -6896,6 +6896,7 @@ function markExamSeen(examId) {
 }
 async function viewExamResults(examId, opts) {
   viewingExamId = examId;
+  repairVoucherResults(examId);
   if (!(opts && opts.keepUnseen)) markExamSeen(examId);   // opts.keepUnseen: فتح من إشعار واحد من غير ما نعلّم باقي نتائج الامتحان كمقروءة
   const ex = exams.find(e => e.id === examId);
   document.getElementById("examResultsTitle").textContent = ex ? ex.title : "النتائج";
