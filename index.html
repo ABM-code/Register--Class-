@@ -711,7 +711,6 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
     <div class="search-wrap">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="searchInput" placeholder="Search by name, phone, or stage">
-    <select id="searchStageSelect" class="reg-input" onchange="setSearchStageFilter(this.value)" style="margin-top:0.5rem;"><option value="">كل المراحل</option><option value="Prep 1">Prep 1</option><option value="Prep 2">Prep 2</option><option value="Prep 3">Prep 3</option><option value="Sec 1">Sec 1</option><option value="Sec 2">Sec 2</option><option value="Sec 3">Sec 3</option></select>
     </div>
     <button id="addBtn">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B2420" stroke-width="2.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
@@ -1491,7 +1490,6 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
     <div class="search-wrap">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="torailSearchInput" placeholder="Search by name, phone, or stage">
-    <select id="torailSearchStageSelect" class="reg-input" onchange="torailSetSearchStageFilter(this.value)" style="margin-top:0.5rem;"><option value="">كل المراحل</option><option value="Prep 1">Prep 1</option><option value="Prep 2">Prep 2</option><option value="Prep 3">Prep 3</option><option value="Sec 1">Sec 1</option><option value="Sec 2">Sec 2</option><option value="Sec 3">Sec 3</option></select>
     </div>
     <button id="torailAddBtn">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B2420" stroke-width="2.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
@@ -4047,12 +4045,7 @@ function toggleTorailExpand(id) {
 function filterByStage(stage) {
   studentsListVisible = true;
   studentsPage = 1;
-  const input = document.getElementById("searchInput");
-  if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
-    input.value = "";
-  } else {
-    input.value = stage;
-  }
+  searchStageFilter = searchStageFilter === stage ? "" : stage;
   render();
 }
 function toggleOverdueFilter() {
@@ -7919,16 +7912,6 @@ let torailNoParentOnly = false;
 
 let searchStageFilter = "";
 let torailSearchStageFilter = "";
-function setSearchStageFilter(v) {
-  searchStageFilter = v || "";
-  studentsPage = 1;
-  render();
-}
-function torailSetSearchStageFilter(v) {
-  torailSearchStageFilter = v || "";
-  torailPage = 1;
-  render();
-}
 function render() {
   const mainStudents = students.filter(s => s.group !== "torail");
   const rawQuery = document.getElementById("searchInput").value.trim().toLowerCase();
@@ -7969,7 +7952,7 @@ function render() {
   mainStudents.forEach(s => { if (s.stage && counts.hasOwnProperty(s.stage)) counts[s.stage]++; });
   const stageCountsEl = document.getElementById("stageCounts");
   stageCountsEl.innerHTML = stages.map(st => {
-    const isActive = rawQuery === st.toLowerCase();
+    const isActive = searchStageFilter === st;
     const countLabel = showStageCounts ? counts[st] : "؟";
     return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="filterByStage('${st}')">${st} <span class="count" onclick="event.stopPropagation(); toggleStageCounts();">${countLabel}</span></span>`;
   }).join("");
@@ -8168,7 +8151,7 @@ function renderTorail() {
 
   const stageCountsEl = document.getElementById("torailStageCounts");
   stageCountsEl.innerHTML = stages.map(st => {
-    const isActive = rawQuery === st.toLowerCase();
+    const isActive = torailSearchStageFilter === st;
     const countLabel = showStageCounts ? counts[st] : "؟";
     return `<span class="stage-pill${isActive ? ' active' : ''}" onclick="torailFilterByStage('${st}')">${st} <span class="count" onclick="event.stopPropagation(); toggleStageCounts();">${countLabel}</span></span>`;
   }).join("");
@@ -8322,14 +8305,10 @@ function renderTorail() {
 }
 
 function torailFilterByStage(stage) {
+  torailStudentsListVisible = true;
   torailPage = 1;
-  const input = document.getElementById("torailSearchInput");
-  if (input.value.trim().toLowerCase() === stage.toLowerCase()) {
-    input.value = "";
-  } else {
-    input.value = stage;
-  }
-  renderTorail();
+  torailSearchStageFilter = torailSearchStageFilter === stage ? "" : stage;
+  render();
 }
 function torailToggleOverdueFilter() { torailOverdueOnly = !torailOverdueOnly; torailPage = 1; renderTorail(); }
 function torailToggleExemptFilter() { torailExemptOnly = !torailExemptOnly; torailPage = 1; renderTorail(); }
