@@ -1212,7 +1212,16 @@ function renderExamReview(data, isFreshSubmission) {
   const tier = tierOf(pct);
   const tierText = { high: "ممتاز، كمّل كده", mid: "كويس، راجع الأخطاء تحت", low: "محتاج مراجعة، راجع الأخطاء تحت" }[tier];
 
+  const infoCardHtml = data.studentName ? "" : `
+    <div class="card" id="resultInfoCard">
+      <p style="margin:0 0 0.5rem; font-weight:700;">اكتب اسمك ورقم ولي الأمر عشان نتيجتك تظهر للمدرس باسمك</p>
+      <input type="text" id="examStudentName" placeholder="اكتب اسمك الكامل" autocomplete="off" maxlength="60">
+      <input type="tel" id="examParentPhone" placeholder="01xxxxxxxxx" inputmode="tel" autocomplete="off" maxlength="20" style="margin-top:0.5rem;">
+      <p id="studentInfoMsg" style="font-size:0.82rem; margin:0.5rem 0 0; color:var(--c-mutedoncard);"></p>
+      <button class="btn-primary" style="margin-top:0.6rem;" onclick="saveResultInfo('${escapeHtml(currentExam.examId)}')">حفظ الاسم</button>
+    </div>`;
   document.getElementById("content").innerHTML = `${backBtn}
+    ${infoCardHtml}
     <div class="card result-card">
       <div class="score-ring ${tier}${isFreshSubmission ? " animate" : ""}" style="--p:${pct}"><div class="score-ring-inner"><span class="score-pct">${pct}%</span></div></div>
       <div class="result-score">${score} / ${total}</div>
@@ -1224,6 +1233,32 @@ function renderExamReview(data, isFreshSubmission) {
     </div>
     ${itemsHtml}`;
   document.getElementById("backBtn").addEventListener("click", renderAccessList);
+}
+
+async function saveResultInfo(examId) {
+  const info = readStudentInfo();
+  const msg = document.getElementById("studentInfoMsg");
+  if (info.error) {
+    msg.textContent = info.error;
+    msg.style.color = "var(--c-danger)";
+    return;
+  }
+  msg.textContent = "جاري الحفظ...";
+  msg.style.color = "var(--c-mutedoncard)";
+  try {
+    const token = await auth.currentUser.getIdToken();
+    const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/voucher-update-info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ examId, studentName: info.name, parentPhone: info.phone }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) throw new Error(data?.error || res.status);
+    openExam(examId, false);
+  } catch (e) {
+    msg.textContent = "تعذر الحفظ، حاول تاني. (" + (e.message || "error") + ")";
+    msg.style.color = "var(--c-danger)";
+  }
 }
 
 async function requestExplain(explainId, action, btnEl) {
