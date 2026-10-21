@@ -909,7 +909,7 @@ function renderItemRow(it, isExpired) {
     return `<div><div class="item-row"><span class="item-title">${icon(typeIcon)} ${escapeHtml(it.title)}</span></div>${bodyHtml}</div>`;
   }
   if (it.type === "exam") {
-    if (isExpired) return unavailable("clipboard", it.title);
+    if (isExpired && !it.submitted) return unavailable("clipboard", it.title);
     const pct = it.total > 0 ? Math.round((it.score / it.total) * 100) : 0;
     const actionHtml = it.submitted
       ? `<button class="score-chip ${tierOf(pct)}" data-exam-open="${escapeHtml(String(it.id))}">${it.score}/${it.total}</button>`
