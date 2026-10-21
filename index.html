@@ -1364,6 +1364,10 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
           <option value="permanent">دائم</option>
           <option value="days">محدد بعدد أيام</option>
         </select>
+        <label style="display:flex; align-items:center; gap:0.5rem; margin-top:0.6rem; cursor:pointer;">
+          <input type="checkbox" id="productFreeInput" style="width:auto;">
+          <span>مجاني لكل الطلاب (بدون كود)</span>
+        </label>
       </div>
       <div class="field-group" id="productDurationDaysGroup" style="display:none;">
         <label>عدد الأيام من لحظة التفعيل</label>
@@ -2168,6 +2172,7 @@ async function openProductBuilder(productId) {
   document.getElementById("productBuilderTitle").textContent = existing ? "تعديل منتج" : "منتج جديد";
   document.getElementById("productTitleInput").value = existing ? (existing.title || "") : "";
   document.getElementById("productDurationType").value = existing ? (existing.accessDurationType || "permanent") : "permanent";
+  document.getElementById("productFreeInput").checked = !!(existing && existing.isFree);
   document.getElementById("productDurationDaysInput").value = existing && existing.accessDurationDays ? existing.accessDurationDays : "";
   onProductDurationTypeChange();
   renderProductPickers(existing ? existing.items : []);
@@ -2207,6 +2212,7 @@ async function saveProduct() {
     accessDurationType: durationType,
     accessDurationDays: durationDays,
     archived: false,
+    isFree: !!document.getElementById("productFreeInput")?.checked,
   };
   try {
     if (editingProductId) {
