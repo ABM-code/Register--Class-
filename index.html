@@ -7429,8 +7429,8 @@ function renderExamResultsList() {
           <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
             <span class="result-row-score ${pct >= 85 ? 'sc-high' : pct >= 50 ? 'sc-mid' : 'sc-low'}">${r.score}/${r.total} (${pct}%)</span>
             ${r.studentId ? `<button class="wa-send-btn" style="background:var(--c-infosolid);" onclick="event.stopPropagation(); goToStudentProfile('${r.studentId}')">بيانات الطالب</button>` : ""}
-            ${r.parentPhone ? `<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>` : ""}
-            ${r.parentPhone ? `<button class="wa-send-btn" style="background:#128C7E;" onclick="event.stopPropagation(); sendExamResultWhatsappWithImage('${r.id}')">واتساب + صورة</button>` : ""}
+            ${`<button class="wa-send-btn" onclick='event.stopPropagation(); sendExamResultWhatsapp(${JSON.stringify(r).replace(/'/g,"&apos;")})'>واتساب</button>`}
+            ${`<button class="wa-send-btn" style="background:#128C7E;" onclick="event.stopPropagation(); sendExamResultWhatsappWithImage('${r.id}')">واتساب + صورة</button>`}
             ${r.studentId ? (() => {
               const alreadyAllowed = !!(ex && ex.allowRetake && ex.allowRetake[r.studentId]);
               return alreadyAllowed
@@ -7446,9 +7446,15 @@ function renderExamResultsList() {
   updateResultsSelectionUI();
 }
 
+function askWaNumber(r) {
+  const stored = formatPhoneForWhatsapp(r.parentPhone);
+  if (stored) return stored;
+  const typed = prompt("مفيش رقم ولي أمر محفوظ للنتيجة دي. اكتب رقم واتساب ولي الأمر:", "");
+  return formatPhoneForWhatsapp(typed || "");
+}
 function sendExamResultWhatsapp(r) {
-  const waNumber = formatPhoneForWhatsapp(r.parentPhone);
-  if (!waNumber) { showError("مفيش رقم ولي أمر مسجل لهذا الطالب."); return; }
+  const waNumber = askWaNumber(r);
+  if (!waNumber) { showError("مفيش رقم واتساب، النتيجة ما اتبعتتش."); return; }
   const pct = r.total > 0 ? Math.round((r.score / r.total) * 100) : 0;
   const message = waMsg(`تحية طيبة،\nنتيجة الطالب/ة ${r.studentName} في امتحان "${r.examTitle}":\n${r.score} من ${r.total} (${pct}%).\n${TEACHER_NAME}`);
   const url = "https://wa.me/" + waNumber + "?text=" + encodeURIComponent(message);
@@ -7638,7 +7644,9 @@ async function shareResultImageWithMessage(blobOrPromise, studentName, message, 
 async function sendExamResultWhatsappWithImage(resultId) {
   const r = examResults.find(x => x.id === resultId);
   if (!r) return;
-  await shareResultImageWithMessage(buildResultCardBlob(r), r.studentName, examResultWhatsappMessage(r), formatPhoneForWhatsapp(r.parentPhone));
+  const waNumber = askWaNumber(r);
+  if (!waNumber) { showError("مفيش رقم واتساب، النتيجة ما اتبعتتش."); return; }
+  await shareResultImageWithMessage(buildResultCardBlob(r), r.studentName, examResultWhatsappMessage(r), waNumber);
 }
 
 let waQueue = [];
