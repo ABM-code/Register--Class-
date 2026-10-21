@@ -711,6 +711,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
     <div class="search-wrap">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="searchInput" placeholder="Search by name, phone, or stage">
+    <select id="searchStageSelect" class="reg-input" onchange="setSearchStageFilter(this.value)" style="margin-top:0.5rem;"><option value="">كل المراحل</option><option value="Prep 1">Prep 1</option><option value="Prep 2">Prep 2</option><option value="Prep 3">Prep 3</option><option value="Sec 1">Sec 1</option><option value="Sec 2">Sec 2</option><option value="Sec 3">Sec 3</option></select>
     </div>
     <button id="addBtn">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B2420" stroke-width="2.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
@@ -1490,6 +1491,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeSetting
     <div class="search-wrap">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7FA98D" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       <input id="torailSearchInput" placeholder="Search by name, phone, or stage">
+    <select id="torailSearchStageSelect" class="reg-input" onchange="torailSetSearchStageFilter(this.value)" style="margin-top:0.5rem;"><option value="">كل المراحل</option><option value="Prep 1">Prep 1</option><option value="Prep 2">Prep 2</option><option value="Prep 3">Prep 3</option><option value="Sec 1">Sec 1</option><option value="Sec 2">Sec 2</option><option value="Sec 3">Sec 3</option></select>
     </div>
     <button id="torailAddBtn">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1B2420" stroke-width="2.25"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
@@ -7915,6 +7917,18 @@ let torailExemptOnly = false;
 let torailBookletFilter = null;
 let torailNoParentOnly = false;
 
+let searchStageFilter = "";
+let torailSearchStageFilter = "";
+function setSearchStageFilter(v) {
+  searchStageFilter = v || "";
+  studentsPage = 1;
+  render();
+}
+function torailSetSearchStageFilter(v) {
+  torailSearchStageFilter = v || "";
+  torailPage = 1;
+  render();
+}
 function render() {
   const mainStudents = students.filter(s => s.group !== "torail");
   const rawQuery = document.getElementById("searchInput").value.trim().toLowerCase();
@@ -7925,6 +7939,7 @@ function render() {
     (s.parentPhone||"").includes(rawQuery) ||
     (s.stage||"").toLowerCase().includes(rawQuery)
   );
+  if (searchStageFilter) filtered = filtered.filter(s => s.stage === searchStageFilter);
   if (overdueOnly) {
     filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
   }
@@ -8122,6 +8137,7 @@ function renderTorail() {
     (s.parentPhone||"").includes(rawQuery) ||
     (s.stage||"").toLowerCase().includes(rawQuery)
   );
+  if (torailSearchStageFilter) filtered = filtered.filter(s => s.stage === torailSearchStageFilter);
   if (torailOverdueOnly) {
     filtered = filtered.filter(s => paymentBadge(getPayments(s), s.exempt).tone === "bad");
   }
