@@ -427,14 +427,8 @@ function renderStudentPicker() {
         const prev = snapDoc.data();
         let canRetake = false;
         try {
-          const examDocForRetake = await db.collection("exams").doc(exam.id).get();
-          if (examDocForRetake.exists) {
-            const examData = examDocForRetake.data();
-            if (examData.allowRetake && selectedStudent.id && examData.allowRetake[selectedStudent.id]) {
-              canRetake = true;
-              exam = { id: examDocForRetake.id, ...examData };
-            }
-          }
+          const chk = await fetchExamFromWorker(exam.id, "check");
+          if (chk.canRetake) canRetake = true;
         } catch (e) { /* تجاهل، هيتعامل كأنه مش مسموح بالإعادة */ }
 
         if (canRetake) {
@@ -459,8 +453,8 @@ function renderStudentPicker() {
           btn.textContent = "جاري التحميل...";
           try {
             if (!exam.questions) {
-              const examDoc = await db.collection("exams").doc(exam.id).get();
-              if (examDoc.exists) exam = { id: examDoc.id, ...examDoc.data() };
+              const rv = await fetchExamFromWorker(exam.id, "review");
+              exam = { ...exam, title: rv.title, questions: rv.questions };
             }
             renderResult(prev.score, prev.total, prev.answers || [], false);
           } catch (e) {
@@ -629,17 +623,30 @@ function updateExamProgress() {
   }
 }
 
+async function fetchExamFromWorker(examId, mode) {
+  const token = await auth.currentUser.getIdToken();
+  const res = await fetch(`${STUDENT_AUTH_WORKER_URL}/student-exam-questions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+    body: JSON.stringify({ examId, mode }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.ok) throw new Error(data.error || "exam_load_failed");
+  return data;
+}
+
 async function renderExam() {
   try {
     if (!auth.currentUser || auth.currentUser.isAnonymous) throw new Error("not_authenticated");
-    const doc = await db.collection("exams").doc(exam.id).get();
-    if (!doc.exists) throw new Error("exam_missing");
-    exam = { id: doc.id, ...doc.data() };
+    const data = await fetchExamFromWorker(exam.id, "take");
+    exam = { ...exam, title: data.title, timeLimitMinutes: data.timeLimitMinutes, questions: data.questions };
   } catch (e) {
     console.error("renderExam failed:", e.code || e.message, e);
     let msg = "تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.";
     if (e.message === "exam_missing") msg = "الامتحان ده مش موجود. كلم المدرس.";
-    if (e.code === "permission-denied") msg = "مفيش صلاحية لفتح الامتحان. كلم المدرس.";
+    if (e.message === "exam_closed") msg = "الامتحان ده مقفول دلوقتي. كلم المدرس.";
+    if (e.message === "exam_paid") msg = "الامتحان ده متاح لمن اشترى كود الوصول بس.";
+    if (e.message === "not_allowed") msg = "الامتحان ده مش متاح ليك.";
     showError(msg);
     return;
   }
@@ -859,6 +866,10 @@ async function submitExam(isTimeout) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.ok) throw new Error(data.error || "submit_failed");
+    try {
+      const rv = await fetchExamFromWorker(exam.id, "review");
+      exam = { ...exam, title: rv.title, questions: rv.questions };
+    } catch (e) { /* لو فشل، المراجعة هتظهر من غير الإجابات الصحيحة */ }
     try { localStorage.removeItem(getTimerStorageKey()); } catch (e) {}
     try { localStorage.removeItem(getAnswersStorageKey()); } catch (e) {}
     examInProgress = false;
