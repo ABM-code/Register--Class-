@@ -636,7 +636,11 @@ async function renderExam() {
     if (!doc.exists) throw new Error("exam_missing");
     exam = { id: doc.id, ...doc.data() };
   } catch (e) {
-    showError("تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.");
+    console.error("renderExam failed:", e.code || e.message, e);
+    let msg = "تعذر فتح أسئلة الامتحان. حاول تسجيل الدخول بالرمز مرة أخرى.";
+    if (e.message === "exam_missing") msg = "الامتحان ده مش موجود. كلم المدرس.";
+    if (e.code === "permission-denied") msg = "مفيش صلاحية لفتح الامتحان. كلم المدرس.";
+    showError(msg);
     return;
   }
   const leftBefore = hasLeftMarker();
