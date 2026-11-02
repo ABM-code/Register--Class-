@@ -296,7 +296,7 @@ function renderStudentPicker() {
     </div>
     <div class="card" id="pinCard" style="display:none;">
       <label id="pinLabel"></label>
-      <input type="text" id="pinInput" placeholder="4 أرقام" maxlength="4" inputmode="numeric">
+      <input type="text" id="pinInput" placeholder="6 خانات: أرقام أو حروف أو رموز" maxlength="6" autocomplete="off" autocapitalize="none" spellcheck="false">
       <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
     </div>
     <div id="alreadySubmittedMsg"></div>
@@ -369,7 +369,7 @@ function renderStudentPicker() {
     resetStart();
     resetPin();
     if (!selectedStudent) return;
-    pinLabel.textContent = "اكتب الرمز السري بتاعك (4 أرقام)";
+    pinLabel.textContent = "اكتب الرمز السري بتاعك (6 خانات: أرقام أو حروف أو رموز)";
     pinCard.style.display = "block";
     const lu = lockUntilByStudent[selectedStudent.id];
     if (lu && lu > Date.now()) startLockCountdown(selectedStudent.id, lu);
@@ -477,7 +477,7 @@ function renderStudentPicker() {
   }
 
   pinInput.addEventListener("input", async () => {
-    const typed = pinInput.value.replace(/\D/g, "");
+    const typed = pinInput.value.replace(/\s/g, "").slice(0, 6);
     pinInput.value = typed;
     if (typed.length < 4 || !selectedStudent) {
       pinMsg.style.display = "none";
@@ -511,7 +511,8 @@ function renderStudentPicker() {
         startLockCountdown(selectedStudent.id, endMs);
         return;
       }
-      pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
+      if (err.message === "invalid_new_pin") pinMsg.textContent = "الرمز الجديد لازم يكون 6 خانات (أرقام أو حروف أو رموز) من غير مسافات.";
+      else pinMsg.textContent = err.message === "invalid_pin" ? "الرمز غير صحيح." : "تعذر التحقق. حاول تاني.";
       pinMsg.style.color = "var(--c-danger)";
       pinMsg.style.display = "block";
       startBtn.disabled = true;
