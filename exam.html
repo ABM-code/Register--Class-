@@ -217,6 +217,8 @@ let exam = null;
 let studentsInStage = [];
 let selectedStudent = null;
 
+const EXAM_SESSION_KEY = "cr_student_session_v1";
+
 async function init() {
   // رابط قصير: /e/CODE (404.html بيحوّله لـ exam.html?code=CODE). بنحوّل الكود لـexamId
   // عن طريق الـWorker ونرجّع العنوان لشكل /e/CODE من غير إعادة تحميل.
@@ -368,6 +370,7 @@ function renderStudentPicker() {
     hideSuggestions();
     resetStart();
     resetPin();
+    lastTriedPin = null;
     if (!selectedStudent) return;
     pinLabel.textContent = "اكتب الرمز السري بتاعك (6 خانات: أرقام أو حروف أو رموز)";
     pinCard.style.display = "block";
@@ -476,6 +479,12 @@ function renderStudentPicker() {
     }
   }
 
+  let lastTriedPin = null;
+  let pinSubmitRequested = false;
+  pinInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") { pinSubmitRequested = true; pinInput.dispatchEvent(new Event("input")); }
+  });
+  pinInput.addEventListener("change", () => { pinSubmitRequested = true; pinInput.dispatchEvent(new Event("input")); });
   pinInput.addEventListener("input", async () => {
     const typed = pinInput.value.replace(/\s/g, "").slice(0, 6);
     pinInput.value = typed;
@@ -484,6 +493,12 @@ function renderStudentPicker() {
       startBtn.disabled = true;
       return;
     }
+    if (typed === lastTriedPin || (typed.length < 6 && !pinSubmitRequested)) {
+      pinSubmitRequested = false;
+      return;
+    }
+    pinSubmitRequested = false;
+    lastTriedPin = typed;
     startBtn.disabled = true;
     startBtn.textContent = "جاري التحقق...";
     try {
@@ -500,6 +515,7 @@ function renderStudentPicker() {
       }
       await auth.signInWithCustomToken(data.customToken);
       selectedStudent = { ...selectedStudent, ...(data.student || {}) };
+      try { localStorage.setItem(EXAM_SESSION_KEY, JSON.stringify({ id: selectedStudent.id, name: selectedStudent.name, stage: selectedStudent.stage, group: selectedStudent.group })); } catch (_) {}
       pinMsg.innerHTML = icon("check-circle") + " تم التأكيد";
       pinMsg.style.color = "var(--c-success)";
       pinMsg.style.display = "block";
@@ -519,6 +535,24 @@ function renderStudentPicker() {
       startBtn.textContent = "ابدأ الامتحان";
     }
   });
+
+  // جلسة محفوظة: لو الطالب ده لسه مسجّل دخول على الجهاز، بنكمّل من غير ما نطلب الرمز تاني
+  (async () => {
+    try {
+      await new Promise(resolve => { const unsub = auth.onAuthStateChanged(() => { unsub(); resolve(); }); });
+      const user = auth.currentUser;
+      if (!user || user.isAnonymous) return;
+      const saved = JSON.parse(localStorage.getItem(EXAM_SESSION_KEY) || "null");
+      if (!saved || saved.id !== user.uid) return;
+      if (saved.stage && exam.stage && saved.stage !== exam.stage) return;
+      const claims = (await user.getIdTokenResult()).claims;
+      if (claims.role !== "student") return;
+      selectedStudent = { ...saved };
+      const nameInput = document.getElementById("studentSearchInput");
+      if (nameInput) nameInput.value = saved.name || "";
+      await checkAlreadySubmitted();
+    } catch (e) { /* مفيش جلسة صالحة: الطالب يدخل برمزه عادي */ }
+  })();
 
   startBtn.addEventListener("click", renderExam);
 }

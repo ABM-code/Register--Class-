@@ -230,7 +230,7 @@ document.addEventListener("click", e => {
   let done = false;
   const once = () => { if (!done) { done = true; go(); } };
   setTimeout(once, 1500); // لو الخروج اتأخر، منعلّقش المستخدم
-  auth.signOut().then(once, once);
+  once();
 });
 
 const STAGES = ["Prep 1", "Prep 2", "Prep 3", "Sec 1", "Sec 2", "Sec 3"];
@@ -270,10 +270,29 @@ let lockedCount = 0;
 let isSubscribed = false;
 let subscriptionExpiry = null;
 
+const MAT_SESSION_KEY = "cr_materials_session_v1";
+
+async function tryRestoreMaterialsSession() {
+  try {
+    await new Promise(resolve => { const unsub = auth.onAuthStateChanged(() => { unsub(); resolve(); }); });
+    const u = auth.currentUser;
+    if (!u || u.isAnonymous) return false;
+    const saved = JSON.parse(localStorage.getItem(MAT_SESSION_KEY) || "null");
+    if (!saved || saved.id !== u.uid) return false;
+    const claims = (await u.getIdTokenResult()).claims;
+    if (claims.role !== "student") return false;
+    studentClaims = claims;
+    selectedStudent = { id: saved.id, name: saved.name, stage: saved.stage };
+    selectedStage = saved.stage;
+    await loadMaterials();
+    return true;
+  } catch (e) { return false; }
+}
+
 async function init() {
   document.getElementById("content").innerHTML = `<div class="loading"><span class="spinner"></span>جاري التحميل...</div>`;
   const linked = await tryLinkedMaterials();
-  if (!linked) renderStagePicker();
+  if (!linked && !(await tryRestoreMaterialsSession())) renderStagePicker();
 }
 
 // حساب مربوط بكارت: ندخل المكتبة مباشرة من غير اختيار مرحلة ولا اسم ولا PIN
@@ -663,6 +682,7 @@ function renderStudentPicker(pre) {
       await auth.signInWithCustomToken(data.customToken);
       const idTokenResult = await auth.currentUser.getIdTokenResult();
       studentClaims = idTokenResult.claims;
+      try { localStorage.setItem(MAT_SESSION_KEY, JSON.stringify({ id: data.student.id, name: data.student.name, stage: data.student.stage })); } catch (_) {}
       await loadMaterials();
     } catch (err) {
       if (err.message === "locked") {
