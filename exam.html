@@ -458,6 +458,7 @@ function renderStudentPicker() {
             if (!exam.questions) {
               const rv = await fetchExamFromWorker(exam.id, "review");
               exam = { ...exam, title: rv.title, questions: rv.questions };
+              lastRankInfo = rv.rank ? { rank: rv.rank, total: rv.rankTotal, tied: rv.rankTied || 0 } : null;
             }
             renderResult(prev.score, prev.total, prev.answers || [], false);
           } catch (e) {
@@ -962,7 +963,7 @@ function rankChipHtml() {
   if (!r || !r.rank || !r.total) return "";
   let text;
   if (r.total < 2) text = "أنت أول طالب بيسلّم الامتحان ده";
-  else text = "ترتيبك لحد دلوقتي: " + rankLabelAr(r.rank) + " من " + r.total + " طالب" + (r.tied > 0 ? " (بالتساوي مع " + r.tied + ")" : "");
+  else text = "ترتيبك: " + rankLabelAr(r.rank) + " من " + r.total + " طالب" + (r.tied > 0 ? " (بالتساوي مع " + r.tied + ")" : "");
   return `<div class="rank-chip">${icon("trophy")} ${text}</div>`;
 }
 function renderResult(score, total, answerDetails, isFreshSubmission = true, wasTimedOut = false) {
@@ -1036,7 +1037,7 @@ function renderResult(score, total, answerDetails, isFreshSubmission = true, was
       <div class="score-ring ${tier}${isFreshSubmission ? " animate" : ""}" style="--p:${pct}"><div class="score-ring-inner"><span class="score-pct">${pct}%</span></div></div>
       <div class="result-score">${score} / ${total}</div>
       <div class="tier-chip ${tier}">${tierText}</div>
-      ${isFreshSubmission ? rankChipHtml() : ""}
+      ${rankChipHtml()}
       <div class="result-counts">
         <span class="mini ok">${icon("check-circle")} ${correctCount} صح</span>
         <span class="mini bad">${icon("x-circle")} ${wrongCount} غلط</span>
