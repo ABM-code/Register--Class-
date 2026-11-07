@@ -519,7 +519,7 @@ function renderStudentPicker(pre) {
     </div>
     <div class="card" id="pinCard" style="display:none;">
       <label id="pinLabel">اكتب الرمز السري بتاعك (4 أرقام)</label>
-      <input type="text" id="pinInput" placeholder="4 أرقام" maxlength="4" inputmode="numeric">
+      <input type="text" id="pinInput" placeholder="6 خانات" maxlength="6" autocomplete="off" autocapitalize="none" spellcheck="false">
       <p id="pinMsg" style="font-size:0.82rem; margin:0.5rem 0 0; display:none;"></p>
     </div>
     <button id="enterBtn" disabled>ادخل المكتبة</button>
@@ -574,8 +574,8 @@ function renderStudentPicker(pre) {
   function applyPinLength() {
     const needLen = (selectedStudent && selectedStudent.pinLength) || 4;
     pinInput.maxLength = needLen;
-    pinInput.placeholder = needLen + " أرقام";
-    document.getElementById("pinLabel").textContent = "اكتب الرمز السري بتاعك (" + needLen + " أرقام)";
+    pinInput.placeholder = needLen + " خانات";
+    document.getElementById("pinLabel").textContent = "اكتب الرمز السري بتاعك (6 خانات: أرقام أو حروف أو رموز)";
   }
 
   function resetPin() {
@@ -638,10 +638,10 @@ function renderStudentPicker(pre) {
   }
 
   pinInput.addEventListener("input", () => {
-    const typed = pinInput.value.replace(/\D/g, "");
+    const typed = pinInput.value.replace(/\s/g, "").slice(0, 6);
     pinInput.value = typed;
     pinMsg.style.display = "none";
-    enterBtn.disabled = !selectedStudent || typed.length !== (selectedStudent.pinLength || 4);
+    enterBtn.disabled = !selectedStudent || typed.length < 4;
   });
 
   enterBtn.addEventListener("click", async () => {
